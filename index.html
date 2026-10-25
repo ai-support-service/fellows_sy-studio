@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Reel Studio">
+<meta name="theme-color" content="#16110d">
+<title>Fellows Reel Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Shippori+Mincho+B1:wght@800&display=swap">
+<style>
+:root{
+  --bg:#16110d; --card:#241c15; --line:#3a2f24; --text:#f3ead8; --sub:#cbbd9f; --dim:#8f8270;
+  --accent:#d98a0b; --accent-text:#16110d; --warn:#ffb020; --err:#ff6b5a; --ok:#7ccf7a; --ai:#ff8a65; --man:#7ccf7a;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans",sans-serif;font-size:15px;
+  -webkit-text-size-adjust:100%}
+header.top{position:sticky;top:0;z-index:20;background:rgba(22,17,13,.96);display:flex;align-items:center;justify-content:space-between;
+  padding:calc(8px + env(safe-area-inset-top)) 16px 8px;border-bottom:1px solid var(--line)}
+header.top h1{font-size:17px;margin:0}
+main{max-width:640px;margin:0 auto;padding:12px 16px calc(84px + env(safe-area-inset-bottom))}
+.tab{display:none}.tab.on{display:block}
+h2{font-size:14px;margin:0 0 8px;color:var(--sub);font-weight:600}
+h3{font-size:13px;margin:12px 0 6px;color:var(--sub);font-weight:600}
+.card{background:var(--card);border-radius:14px;padding:14px;margin-bottom:12px}
+.t{font-size:13px;color:var(--sub);margin:6px 0;line-height:1.55}
+.t b{color:var(--text)}
+.small{font-size:12px;color:var(--dim)}
+.warn{color:var(--warn)}.err{color:var(--err)}.ok{color:var(--ok)}
+button{font:inherit;background:var(--line);color:var(--text);border:0;border-radius:10px;padding:11px 12px;font-size:14px;font-weight:600}
+button.primary{background:var(--accent);color:var(--accent-text);font-weight:700;width:100%;padding:13px 14px;font-size:15px}
+button.full{width:100%}
+button.mini{padding:7px 9px;font-size:12px;border-radius:8px}
+button.icon{background:transparent;color:var(--sub);padding:6px 8px;font-size:13px;border:1px solid var(--line)}
+button:disabled{opacity:.4}
+.row{display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap}
+.row>button{flex:1}
+.row.nw{flex-wrap:nowrap}
+input[type=text],input[type=password],input[type=number],select,textarea{font:inherit;font-size:16px;background:var(--bg);color:var(--text);
+  border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
+textarea{resize:vertical;min-height:44px}
+input[type=number]{width:84px;text-align:center;padding:8px 4px}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=checkbox],input[type=radio]{accent-color:var(--accent);width:18px;height:18px}
+label.fld{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:6px;background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:7px 12px;font-size:14px}
+.chip.on{border-color:var(--accent)}
+.opt{display:flex;gap:10px;align-items:flex-start;background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:8px}
+.opt.on{border-color:var(--accent)}
+.opt small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:10px}
+.bar>div{height:100%;width:0;background:var(--accent);transition:width .2s}
+/* sources */
+.src{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line)}
+.src:last-child{border-bottom:0}
+.src img,.src .ph{width:54px;height:96px;object-fit:cover;border-radius:6px;background:#000;flex:none}
+.src .meta{flex:1;min-width:0;font-size:13px}
+.src .meta b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:14px}
+.badge{display:inline-block;font-size:11px;border-radius:6px;padding:1px 6px;margin-right:4px;border:1px solid var(--line);color:var(--sub)}
+.badge.ai{border-color:var(--ai);color:var(--ai)}.badge.local{border-color:var(--accent);color:var(--accent)}.badge.man{border-color:var(--man);color:var(--man)}
+/* analysis */
+#anaVideo{width:100%;max-height:42vh;background:#000;border-radius:10px;display:block}
+#anaCanvas{width:100%;height:64px;display:block;margin-top:8px;border-radius:8px;background:#0e0b08}
+.hl{display:flex;gap:8px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.hl .tm{width:52px;flex:none;font-variant-numeric:tabular-nums}
+.hl .bd{flex:1;min-width:0}
+.hl input[type=text]{font-size:16px;padding:6px 8px;margin-top:4px}
+.hl.off{opacity:.45}
+/* candidates */
+.cand{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--line)}
+.cand .rk{width:30px;height:30px;border-radius:50%;background:var(--line);display:flex;align-items:center;justify-content:center;font-weight:700;flex:none}
+.cand:first-child .rk{background:var(--accent);color:var(--accent-text)}
+.cand .bd{flex:1;min-width:0}
+.cand .sc{font-size:20px;font-weight:800;color:var(--accent)}
+.cand .cm{font-size:12px;color:var(--sub);margin-top:2px;line-height:1.5}
+.cand .side{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+/* editor */
+.stage{position:relative;width:min(100%,calc(58vh * 9 / 16));aspect-ratio:9/16;margin:0 auto;background:#000;border-radius:10px;overflow:hidden}
+.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.stage canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.ctl{display:flex;gap:8px;align-items:center;margin-top:8px}
+.ctl button{flex:none;width:56px}
+.ctl .tm{font-variant-numeric:tabular-nums;font-size:13px;color:var(--sub);width:96px;text-align:right;flex:none}
+details.sec{background:var(--card);border-radius:14px;padding:12px 14px;margin-bottom:12px}
+details.sec>summary{font-weight:700;font-size:14px;list-style:none;display:flex;justify-content:space-between}
+details.sec>summary::after{content:"＋";color:var(--sub)}
+details.sec[open]>summary::after{content:"－"}
+.item{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px}
+.item.sel{border-color:var(--accent)}
+.item .hd{display:flex;justify-content:space-between;align-items:center;font-size:13px;gap:6px}
+.item .hd b{font-size:14px}
+.num{display:flex;align-items:center;gap:4px}
+.num button{padding:7px 8px;font-size:12px}
+.lbl{font-size:12px;color:var(--sub);width:34px;flex:none}
+/* export */
+.res{border-top:1px solid var(--line);padding-top:10px;margin-top:10px}
+.res video{width:100%;max-height:50vh;background:#000;border-radius:10px}
+/* nav */
+nav#tabs{position:fixed;left:0;right:0;bottom:0;z-index:30;display:flex;background:rgba(22,17,13,.97);border-top:1px solid var(--line);
+  padding:6px 6px calc(6px + env(safe-area-inset-bottom))}
+nav#tabs button{flex:1;background:transparent;color:var(--dim);font-size:12px;padding:8px 2px;border-radius:8px}
+nav#tabs button.on{color:var(--accent);background:var(--card)}
+nav#tabs button .n{display:block;font-size:11px;opacity:.7}
+/* sheet & busy */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:50;display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--bg);width:100%;max-width:640px;max-height:92vh;overflow:auto;border-radius:16px 16px 0 0;
+  padding:16px 16px calc(24px + env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+.sheet .hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+#busy{align-items:center;z-index:60}
+#busy .box{background:var(--card);border-radius:16px;padding:18px;width:min(92vw,420px)}
+#busy .ttl{font-weight:700;margin-bottom:6px}
+#log{font-size:11px;color:#d8ccb2;white-space:pre-wrap;word-break:break-all;background:#0e0b08;border-radius:8px;padding:10px;margin-top:8px;max-height:40vh;overflow:auto}
+#toast{position:fixed;left:50%;bottom:calc(84px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#000;color:#fff;
+  border:1px solid var(--line);padding:10px 14px;border-radius:10px;font-size:13px;z-index:70;max-width:90vw;opacity:0;transition:opacity .25s;pointer-events:none}
+#toast.on{opacity:1}
+.empty{color:var(--dim);font-size:13px;text-align:center;padding:16px 0}
+.foot{font-size:11px;color:#6f6352;text-align:center;margin-top:10px}
+[hidden]{display:none!important}
+@media (max-width:768px){
+  main{padding:10px 12px calc(84px + env(safe-area-inset-bottom))}
+  .card{padding:12px}
+  input[type=number]{width:72px}
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <h1>🎣 Fellows Reel Studio</h1>
+  <button class="icon" id="btnSettings">設定</button>
+</header>
+
+<main>
+<!-- ============ 1. 素材 ============ -->
+<section class="tab on" id="tab-src">
+  <div class="card">
+    <h2>素材</h2>
+    <input type="file" id="fileIn" accept="video/*,.mov,.mp4,.m4v" multiple hidden>
+    <button class="primary" id="btnAdd">動画を追加（複数選択できます）</button>
+    <div class="t">写真またはファイルApp（iCloud Drive）から選べます。1本3分以内がおすすめです。</div>
+    <div id="srcList"></div>
+  </div>
+  <div class="card" id="restoreCard" hidden>
+    <div class="t" id="restoreText"></div>
+    <div class="row"><button id="btnRestore">前回の編集を復元</button><button id="btnRestoreDel">破棄</button></div>
+  </div>
+  <button class="primary" id="goAna">次へ：見どころ解析</button>
+</section>
+
+<!-- ============ 2. 解析 ============ -->
+<section class="tab" id="tab-ana">
+  <div class="card">
+    <h2>見どころ解析</h2>
+    <div class="t" id="anaMode"></div>
+    <div class="row"><button class="primary" id="btnAnalyze">解析する</button></div>
+    <label class="row small" style="margin-top:10px"><input type="checkbox" id="anaForce"> 解析済みの動画もやり直す</label>
+  </div>
+  <div class="card" id="anaView" hidden>
+    <select id="anaSrcSel"></select>
+    <video id="anaVideo" playsinline controls preload="metadata" style="margin-top:8px"></video>
+    <canvas id="anaCanvas"></canvas>
+    <div class="small" style="margin-top:4px">オレンジ線＝音の大きさ、白線＝動き、縦線＝見どころ（<span style="color:var(--ai)">AI</span>・<span style="color:var(--accent)">自動</span>・<span style="color:var(--man)">手動</span>）。グラフをタップでその位置へ</div>
+    <div class="row nw">
+      <select id="manType" style="flex:1"></select>
+      <button id="btnAddHl" style="flex:1.4">再生位置を見どころに追加</button>
+    </div>
+    <h3>見どころ一覧（チェックを外すと使いません）</h3>
+    <div id="hlList"></div>
+  </div>
+  <button class="primary" id="goGen">次へ：動画を生成</button>
+</section>
+
+<!-- ============ 3. 生成 ============ -->
+<section class="tab" id="tab-gen">
+  <div class="card">
+    <h2>テロップに使う情報</h2>
+    <label class="fld">日付</label><input type="text" id="mDate" placeholder="2026.10.04">
+    <label class="fld">船名</label><input type="text" id="mBoat" list="boatList" placeholder="例：翔星丸"><datalist id="boatList"></datalist>
+    <label class="fld">魚種（AI解析で自動入力されます）</label><input type="text" id="mFish" placeholder="例：真鯛">
+    <label class="fld">タイトル（任意・冒頭に表示。改行可）</label><textarea id="mTitle" rows="2" placeholder="例：フルボでフルボッコ!?"></textarea>
+  </div>
+  <div class="card">
+    <h2>編集スタイル（複数選択可）</h2>
+    <div id="styleOpts"></div>
+    <h3>尺</h3>
+    <div class="chips" id="durOpts"></div>
+    <h3>構成パターン</h3>
+    <div class="chips" id="patOpts"></div>
+    <h3>音</h3>
+    <label class="row small"><input type="checkbox" id="gAutoSE" checked> 効果音を自動で付ける</label>
+    <label class="fld">BGM</label><select id="gBgm"></select>
+    <div class="small" style="margin-top:4px">BGMは設定から追加できます。流行りの音源は投稿時にInstagram/TikTok側で付けるのがおすすめです。</div>
+  </div>
+  <button class="primary" id="btnGen">候補を生成してランキング</button>
+  <div class="card" id="candCard" hidden style="margin-top:12px">
+    <h2 id="candTitle">ランキング</h2>
+    <div id="candList"></div>
+    <div class="row"><button id="btnBatch">チェックした候補を一括書き出し</button></div>
+  </div>
+</section>
+
+<!-- ============ 4. 編集 ============ -->
+<section class="tab" id="tab-edit">
+  <div class="card" id="editEmpty"><div class="empty">「生成」タブで候補を開くと、ここで編集できます</div></div>
+  <div id="editor" hidden>
+    <div class="card">
+      <div class="t" id="edName" style="margin-top:0"></div>
+      <div class="stage"><video id="pvVideo" playsinline preload="auto"></video><canvas id="pvCanvas"></canvas></div>
+      <input type="range" id="pvSeek" min="0" max="1" step="0.01" value="0" style="margin-top:10px">
+      <div class="ctl">
+        <button id="pvPlay">▶</button>
+        <button id="pvSplit" style="flex:1;width:auto">再生位置で分割</button>
+        <div class="tm" id="pvTime">0.0 / 0.0</div>
+      </div>
+      <div class="small" style="margin-top:6px">プレビューは簡易再生です（つなぎ目で一瞬止まることがあります）。音量のバランスは書き出し後に確認してください。</div>
+    </div>
+    <details class="sec" id="secClips" open><summary>カット <span class="small" id="clipSum"></span></summary>
+      <div id="clipList"></div>
+      <div class="item">
+        <div class="hd"><b>クリップを追加</b></div>
+        <div class="row nw"><select id="addSrc" style="flex:1"></select></div>
+        <div class="row nw"><span class="lbl">開始</span><input type="number" id="addIn" step="0.1" value="0"><span class="lbl">長さ</span><input type="number" id="addLen" step="0.1" value="3"><button id="btnAddClip" class="mini">追加</button></div>
+      </div>
+    </details>
+    <details class="sec" id="secTel"><summary>テロップ <span class="small" id="telSum"></span></summary>
+      <div id="telList"></div>
+      <div class="row"><button id="btnAddTel">＋ 再生位置にテロップを追加</button></div>
+    </details>
+    <details class="sec" id="secAudio"><summary>音（元の音・BGM・効果音）</summary>
+      <label class="row small"><input type="checkbox" id="aOrig"> 元の動画の音を使う</label>
+      <label class="fld">元の音の音量 <span id="aOrigV"></span></label><input type="range" id="aOrigVol" min="0" max="2" step="0.05">
+      <label class="fld">BGM</label><select id="aBgm"></select>
+      <label class="fld">BGMの音量 <span id="aBgmV"></span></label><input type="range" id="aBgmVol" min="0" max="1" step="0.05">
+      <label class="row small"><input type="checkbox" id="aBgmFade"> 最後の2秒でフェードアウト</label>
+      <h3>効果音</h3>
+      <div id="seList"></div>
+      <div class="row nw"><select id="seAddKind" style="flex:1"></select><button id="btnAddSE" style="flex:1">再生位置に追加</button></div>
+    </details>
+    <details class="sec" id="secLogo"><summary>ロゴ</summary>
+      <label class="row small"><input type="checkbox" id="lgOn"> ロゴを表示する</label>
+      <div class="row"><img id="lgPrev" alt="" style="max-height:48px;max-width:40%;background:#0e0b08;border-radius:6px" hidden><button id="btnLogo" class="mini">ロゴ画像を選ぶ</button></div>
+      <label class="fld">位置</label><select id="lgPos"><option value="tr">右上</option><option value="tl">左上</option><option value="br">右下</option><option value="bl">左下</option></select>
+      <label class="fld">大きさ</label><input type="range" id="lgSize" min="0.08" max="0.4" step="0.01">
+      <label class="fld">不透明度</label><input type="range" id="lgOp" min="0.2" max="1" step="0.05">
+    </details>
+    <button class="primary" id="goExp">次へ：書き出し</button>
+  </div>
+</section>
+
+<!-- ============ 5. 書き出し ============ -->
+<section class="tab" id="tab-exp">
+  <div class="card">
+    <h2>書き出し</h2>
+    <div id="qOpts"></div>
+    <div class="row"><button class="primary" id="btnExport">編集中の動画を書き出す</button></div>
+    <div class="t" id="expHint"></div>
+  </div>
+  <div class="card">
+    <h2>書き出した動画</h2>
+    <div id="resList"><div class="empty">まだありません</div></div>
+    <div class="row"><button id="btnSaveAll" hidden>すべて保存</button></div>
+    <div class="small" style="margin-top:8px">「保存」→共有シートの「ビデオを保存」で写真へ、「"ファイル"に保存」でiCloud Driveへ保存できます。</div>
+  </div>
+</section>
+<div class="foot" id="buildLbl"></div>
+</main>
+
+<nav id="tabs">
+  <button data-tab="src" class="on"><span class="n">1</span>素材</button>
+  <button data-tab="ana"><span class="n">2</span>解析</button>
+  <button data-tab="gen"><span class="n">3</span>生成</button>
+  <button data-tab="edit"><span class="n">4</span>編集</button>
+  <button data-tab="exp"><span class="n">5</span>書き出し</button>
+</nav>
+
+<!-- 設定 -->
+<div class="overlay" id="sheetSettings" hidden>
+  <div class="sheet">
+    <div class="hd"><h2 style="margin:0">設定</h2><button class="icon" id="btnCloseSettings">閉じる</button></div>
+    <div class="card">
+      <h2>Gemini（AI解析・AI評価）</h2>
+      <div class="t">Google AI StudioのAPIキーを入れるとAIで解析・評価します。空欄でも自動解析で動きます。キーはこの端末にだけ保存されます。</div>
+      <label class="fld">APIキー</label>
+      <div class="row nw" style="margin-top:0"><input type="password" id="sKey" autocomplete="off" placeholder="AIza..."><button class="mini" id="btnKeyShow" style="flex:none">表示</button></div>
+      <label class="fld">モデル</label><select id="sModel"></select>
+      <div class="row"><button id="btnModels">モデル一覧を取得</button><button id="btnTest">接続テスト</button></div>
+      <div class="t" id="sGemMsg"></div>
+    </div>
+    <div class="card">
+      <h2>BGMライブラリ</h2>
+      <div id="bgmLib"></div>
+      <input type="file" id="bgmIn" accept="audio/*,.mp3,.m4a,.wav,.aac" multiple hidden>
+      <div class="row"><button id="btnBgmAdd">BGMを追加</button></div>
+      <div class="small" style="margin-top:6px">著作権フリー（商用・SNS利用可）の音源だけを使ってください。</div>
+    </div>
+    <div class="card">
+      <h2>自作の効果音</h2>
+      <div id="seLib"></div>
+      <input type="file" id="seIn" accept="audio/*,.mp3,.m4a,.wav,.aac" multiple hidden>
+      <div class="row"><button id="btnSeAdd">効果音を追加</button></div>
+    </div>
+    <div class="card">
+      <h2>データ</h2>
+      <div class="row"><button id="btnClearBoats">船名の履歴を消す</button><button id="btnClearCache">解析キャッシュを消す</button></div>
+    </div>
+    <div class="card">
+      <h2>診断ログ</h2>
+      <div class="small">不具合のときはコピーして送ってください。</div>
+      <div id="log"></div>
+      <div class="row"><button id="btnCopyLog">ログをコピー</button></div>
+    </div>
+  </div>
+</div>
+<input type="file" id="logoIn" accept="image/*" hidden>
+<input type="file" id="bgmIn2" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden>
+
+<!-- 処理中 -->
+<div class="overlay" id="busy" hidden>
+  <div class="box">
+    <div class="ttl" id="busyTtl">処理中</div>
+    <div class="t" id="busyMsg"></div>
+    <div class="bar"><div id="busyBar"></div></div>
+    <div class="small" id="busyTime" style="margin-top:6px"></div>
+    <div class="small" style="margin-top:4px">処理中は画面を閉じたり、他のアプリに切り替えたりしないでください。</div>
+    <div class="row"><button id="busyCancel">中止</button></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
+<script>
+"use strict";
+/* =====================================================================
+   Fellows Reel Studio
+   構成：設定 / ユーティリティ / 保存(IDB) / FFmpeg / 素材 / 解析(ローカル+Gemini)
+        / スタイル・テロップ描画 / 効果音 / 候補生成 / ランキング / 編集・プレビュー
+        / 書き出し / 画面制御
+   ===================================================================== */
+const BUILD = "2026-10-25a";
+const FF_BASE   = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
+const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm"; // classWorkerURL指定時はモジュールWorker→ESM版が必須
+const GEM_URL = "https://generativelanguage.googleapis.com/v1beta";
+const GEM_DEFAULT = "gemini-3.8-flash";
+const GEM_LITE = "gemini-3.5-flash-lite";
+const FPS = 30;
+const QUALITY = {
+  std:  { label:"標準（1080p）", sub:"おすすめ。60秒の動画で数分かかります", w:1080, h:1920, preset:"ultrafast", crf:20, fastDecode:false },
+  fast: { label:"高速（720p）",  sub:"確認用。標準より2〜3割速い", w:720,  h:1280, preset:"ultrafast", crf:22, fastDecode:true },
+  hq:   { label:"高画質（1080p）", sub:"画質優先。標準の約2倍の時間", w:1080, h:1920, preset:"veryfast", crf:20, fastDecode:false }
+};
+const TYPE_JA = { hit:"ヒット", fight:"やり取り", landing:"取り込み", fish:"魚", scenery:"景色", talk:"しゃべり", other:"その他", peak:"盛り上がり", manual:"手動" };
+const PATTERNS = { story:"時系列", hook:"冒頭フック", tempo:"テンポ重視" };
+const SE_BUILTIN = { don:"ドン（衝撃）", whoosh:"シュッ（切替）", pikon:"ピコン", jan:"ジャーン", pop:"ポン" };
+
+/* ---------- ユーティリティ ---------- */
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clamp = (x, a, b) => Math.min(b, Math.max(a, x));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const q = t => Math.round(t * FPS) / FPS;
+const f1 = x => (Math.round(x * 10) / 10).toFixed(1);
+const mb = n => (n / 1048576).toFixed(1) + " MB";
+const uid = () => Math.random().toString(36).slice(2, 9);
+const mmss = t => { t = Math.max(0, t); const m = Math.floor(t / 60); return m + ":" + (t - m * 60).toFixed(1).padStart(4, "0"); };
+const deep = o => JSON.parse(JSON.stringify(o));
+function h(tag, props, ...kids){
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props || {})) {
+    if (v == null || v === false) continue;
+    if (k === "class") e.className = v;
+    else if (k === "style") e.style.cssText = v;
+    else if (k.startsWith("on") && typeof v === "function") e.addEventListener(k.slice(2), v);
+    else if (k in e && k !== "list") e[k] = v;
+    else e.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids.flat()) { if (c == null || c === false) continue; e.append(c.nodeType ? c : document.createTextNode(String(c))); }
+  return e;
+}
+function once(el, ev, ms){
+  return new Promise((res, rej) => {
+    let to = null;
+    const ok = () => { clearTimeout(to); el.removeEventListener(ev, ok); el.removeEventListener("error", ng); res(); };
+    const ng = () => { clearTimeout(to); el.removeEventListener(ev, ok); el.removeEventListener("error", ng); rej(new Error(ev + " error")); };
+    el.addEventListener(ev, ok); el.addEventListener("error", ng);
+    if (ms) to = setTimeout(() => { el.removeEventListener(ev, ok); el.removeEventListener("error", ng); rej(new Error(ev + " timeout")); }, ms);
+  });
+}
+function median(a){ const s = [...a].sort((x, y) => x - y); return s.length ? s[Math.floor(s.length / 2)] : 0; }
+function robustZ(a){
+  const m = median(a); const mad = median(a.map(x => Math.abs(x - m))) * 1.4826 + 1e-6;
+  return a.map(x => (x - m) / mad);
+}
+function blobToB64(blob){
+  return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(",")[1]); r.onerror = () => rej(r.error); r.readAsDataURL(blob); });
+}
+function todayStr(d){ d = d || new Date(); return d.getFullYear() + "." + String(d.getMonth() + 1).padStart(2, "0") + "." + String(d.getDate()).padStart(2, "0"); }
+
+/* ---------- ログ・トースト ---------- */
+const logLines = [];
+function log(m){
+  const t = new Date().toTimeString().slice(0, 8);
+  logLines.push("[" + t + "] " + m);
+  if (logLines.length > 600) logLines.splice(0, logLines.length - 600);
+  const el = $("#log"); if (el && !$("#sheetSettings").hidden) el.textContent = logLines.join("\n");
+}
+let toastTimer = null;
+function toast(m, ms){
+  const el = $("#toast"); el.textContent = m; el.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("on"), ms || 2600);
+}
+window.addEventListener("error", ev => log("JSエラー: " + ev.message + " @" + (ev.lineno || "")));
+window.addEventListener("unhandledrejection", ev => log("未処理エラー: " + (ev.reason && ev.reason.message || ev.reason)));
+
+/* ---------- 設定 ---------- */
+const DEF_SETTINGS = {
+  apiKey:"", model:GEM_DEFAULT, quality:"std", boats:[], autoSE:true, defaultBgm:"",
+  styles:["fellows"], durs:[30], pats:["story","hook"],
+  logo:{ enabled:false, pos:"tr", size:0.2, opacity:0.9 }
+};
+let settings = (() => { try { return Object.assign(deep(DEF_SETTINGS), JSON.parse(localStorage.getItem("frs_settings") || "{}")); } catch (_) { return deep(DEF_SETTINGS); } })();
+settings.logo = Object.assign(deep(DEF_SETTINGS.logo), settings.logo || {});
+function saveSettings(){ try { localStorage.setItem("frs_settings", JSON.stringify(settings)); } catch (_) {} }
+function lsGet(k){ try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (_) { return null; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (_) { return false; } }
+
+/* ---------- IndexedDB（ロゴ・BGM・効果音） ---------- */
+const DB = {
+  db:null,
+  async open(){
+    if (this.db) return this.db;
+    this.db = await new Promise((res, rej) => {
+      const r = indexedDB.open("frs", 1);
+      r.onupgradeneeded = () => r.result.createObjectStore("blobs", { keyPath:"key" });
+      r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+    });
+    return this.db;
+  },
+  async tx(mode, fn){
+    const db = await this.open();
+    return new Promise((res, rej) => {
+      const t = db.transaction("blobs", mode); const st = t.objectStore("blobs");
+      const r = fn(st); t.oncomplete = () => res(r && r.result); t.onerror = () => rej(t.error);
+    });
+  },
+  put(rec){ return this.tx("readwrite", st => st.put(rec)); },
+  get(key){ return this.tx("readonly", st => st.get(key)); },
+  del(key){ return this.tx("readwrite", st => st.delete(key)); },
+  all(){ return this.tx("readonly", st => st.getAll()); }
+};
+let lib = { bgm:[], se:[], logo:null };   // {key,name,type,blob}
+async function loadLib(){
+  try {
+    const all = await DB.all();
+    lib.bgm = all.filter(r => r.key.startsWith("bgm:")).sort((a, b) => a.created - b.created);
+    lib.se = all.filter(r => r.key.startsWith("se:")).sort((a, b) => a.created - b.created);
+    lib.logo = all.find(r => r.key === "logo") || null;
+  } catch (e) { log("IDB読込エラー: " + e.message); }
+}
+let logoImg = null;
+async function loadLogoImg(){
+  logoImg = null;
+  if (!lib.logo) return;
+  const img = new Image(); img.src = URL.createObjectURL(lib.logo.blob);
+  try { await once(img, "load", 8000); logoImg = img; } catch (_) { log("ロゴ画像の読込失敗"); }
+}
+
+/* ---------- 処理中オーバーレイ ---------- */
+const Busy = {
+  on:false, cancelled:false, t0:0, timer:null, abort:null,
+  show(title){
+    this.on = true; this.cancelled = false; this.t0 = Date.now(); this.abort = null;
+    $("#busyTtl").textContent = title; $("#busyMsg").textContent = ""; $("#busyBar").style.width = "0";
+    $("#busy").hidden = false; $("#busyCancel").disabled = false;
+    clearInterval(this.timer);
+    this.timer = setInterval(() => { $("#busyTime").textContent = "経過 " + Math.round((Date.now() - this.t0) / 1000) + "秒"; }, 500);
+    Wake.on();
+  },
+  set(p, msg){ if (p != null) $("#busyBar").style.width = clamp(p * 100, 0, 100) + "%"; if (msg != null) $("#busyMsg").textContent = msg; },
+  hide(){ this.on = false; clearInterval(this.timer); $("#busy").hidden = true; Wake.off(); },
+  check(){ if (this.cancelled) throw new Error("__cancel__"); }
+};
+$("#busyCancel").onclick = () => {
+  Busy.cancelled = true; $("#busyCancel").disabled = true; $("#busyMsg").textContent = "中止しています…";
+  try { if (Busy.abort) Busy.abort.abort(); } catch (_) {}
+  FF.terminate();
+};
+const Wake = {
+  lock:null,
+  async on(){ try { if ("wakeLock" in navigator) this.lock = await navigator.wakeLock.request("screen"); } catch (_) {} },
+  off(){ try { if (this.lock) this.lock.release(); } catch (_) {} this.lock = null; }
+};
+async function runJob(title, fn){
+  if (Busy.on) { toast("処理中です"); return null; }
+  Busy.show(title);
+  try { return await fn(); }
+  catch (e) {
+    if (e && e.message === "__cancel__" || Busy.cancelled) { toast("中止しました"); log(title + "：中止"); }
+    else { log(title + " エラー: " + (e && e.message || e)); alert(title + "でエラー：" + (e && e.message || e)); }
+    return null;
+  } finally { Busy.hide(); }
+}
+
+/* ---------- FFmpeg ---------- */
+const FF = {
+  inst:null, loaded:false, urls:null, tail:[], capture:null, onProg:null, dur:0, mounted:"",
+  async load(){
+    if (this.loaded) return;
+    if (typeof FFmpegWASM === "undefined" || typeof FFmpegUtil === "undefined") throw new Error("編集エンジンの読込に失敗しました（通信を確認して再読み込み）");
+    const t0 = performance.now();
+    if (!this.urls) {
+      Busy.set(null, "編集エンジンを準備中…（初回のみ約30MB）");
+      const { toBlobURL } = FFmpegUtil;
+      this.urls = {
+        classWorkerURL: await toBlobURL(FF_BASE + "/814.ffmpeg.js", "text/javascript"),
+        coreURL:        await toBlobURL(CORE_BASE + "/ffmpeg-core.js", "text/javascript"),
+        wasmURL:        await toBlobURL(CORE_BASE + "/ffmpeg-core.wasm", "application/wasm")
+      };
+    }
+    const { FFmpeg } = FFmpegWASM;
+    this.inst = new FFmpeg();
+    this.inst.on("log", ({ message }) => {
+      if (this.capture) this.capture.push(message);
+      this.tail.push(message); if (this.tail.length > 80) this.tail.shift();
+      const m = message.match(/time=\s*(-?\d+):(\d+):(\d+(?:\.\d+)?)/);
+      if (m && this.onProg && this.dur > 0) this.onProg(clamp(((+m[1]) * 3600 + (+m[2]) * 60 + parseFloat(m[3])) / this.dur, 0, 1));
+    });
+    await this.inst.load(this.urls);
+    this.loaded = true; this.mounted = "";
+    log("FFmpeg読込: " + ((performance.now() - t0) / 1000).toFixed(1) + "秒");
+  },
+  terminate(){
+    try { if (this.inst) this.inst.terminate(); } catch (_) {}
+    this.inst = null; this.loaded = false; this.mounted = "";
+  },
+  async mountSources(){
+    const key = state.sources.map(s => s.ffName).join("|");
+    if (this.mounted === key) return;
+    try { await this.inst.unmount("/in"); } catch (_) {}
+    try { await this.inst.deleteDir("/in"); } catch (_) {}
+    await this.inst.createDir("/in");
+    await this.inst.mount("WORKERFS", { files: state.sources.map(s => s.ffFile) }, "/in");
+    this.mounted = key;
+  },
+  async exec(args, opt){
+    opt = opt || {};
+    Busy.check();
+    this.tail = []; this.capture = opt.capture ? [] : null; this.onProg = opt.onProg || null; this.dur = opt.dur || 0;
+    let code;
+    try { code = await this.inst.exec(args); }
+    catch (e) { if (Busy.cancelled) throw new Error("__cancel__"); throw e; }
+    finally { this.onProg = null; }
+    Busy.check();
+    if (code !== 0 && !opt.allowFail) {
+      log("ffmpeg失敗 code=" + code + "\n" + this.tail.slice(-12).join("\n"));
+      throw new Error("動画処理に失敗しました（コード" + code + "）");
+    }
+    return { code, logs: this.capture || [] };
+  },
+  write(name, u8){ return this.inst.writeFile(name, u8); },
+  read(name){ return this.inst.readFile(name); },
+  async rm(name){ try { await this.inst.deleteFile(name); } catch (_) {} }
+};
+
+/* ---------- 状態 ---------- */
+const state = {
+  sources:[],        // {id,file,ffFile,ffName,name,size,lastModified,sig,url,dur,w,h,thumb,hasAudio,vcodec,ana,ai}
+  highlights:[],     // {id,srcId,t,t0,t1,score,type,label,telop,origin,on}
+  candidates:[],
+  project:null,
+  results:[],        // {id,name,blob,url,dur,size}
+  meta:{ date:"", boat:"", fish:"", title:"" }
+};
+const srcById = id => state.sources.find(s => s.id === id);
+
+/* =====================================================================
+   素材
+   ===================================================================== */
+$("#btnAdd").onclick = () => { if (!Busy.on) $("#fileIn").click(); };
+$("#fileIn").onchange = async e => {
+  const files = [...e.target.files]; e.target.value = "";
+  if (!files.length) return;
+  await runJob("動画の読み込み", async () => {
+    let i = 0;
+    for (const f of files) {
+      i++; Busy.set((i - 1) / files.length, f.name + " を読み込み中（" + i + "/" + files.length + "）");
+      const sig = f.name + "|" + f.size + "|" + f.lastModified;
+      if (state.sources.some(s => s.sig === sig)) { toast("同じ動画は追加済みです"); continue; }
+      const s = await makeSource(f, sig);
+      if (s) state.sources.push(s);
+    }
+  });
+  if (!state.meta.date && state.sources[0]) state.meta.date = todayStr(new Date(state.sources[0].lastModified || Date.now()));
+  renderSources(); renderAnaMode(); checkRestore(); renderGenForm();
+};
+async function makeSource(f, sig){
+  const id = "s" + uid();
+  const ext = ((f.name.match(/\.(mov|mp4|m4v)$/i) || [".mp4"])[0]).toLowerCase();
+  const url = URL.createObjectURL(f);
+  const v = document.createElement("video");
+  v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = url;
+  try { await once(v, "loadedmetadata", 15000); }
+  catch (_) { toast(f.name + " は読み込めませんでした"); log("メタデータ取得失敗: " + f.name); URL.revokeObjectURL(url); return null; }
+  const s = { id, file:f, ffName:id + ext, name:f.name, size:f.size, lastModified:f.lastModified, sig, url,
+    dur:Math.floor(v.duration * 100) / 100, w:v.videoWidth, h:v.videoHeight, thumb:"", hasAudio:null, vcodec:"", ana:null, ai:null };
+  s.ffFile = new File([f], s.ffName, { type:f.type || "video/mp4" });
+  try {
+    v.currentTime = Math.min(1, s.dur / 2);
+    await once(v, "seeked", 5000);
+    const c = document.createElement("canvas"); c.width = 108; c.height = 192;
+    const cx = c.getContext("2d"); const r = Math.max(108 / s.w, 192 / s.h);
+    cx.drawImage(v, (108 - s.w * r) / 2, (192 - s.h * r) / 2, s.w * r, s.h * r);
+    s.thumb = c.toDataURL("image/jpeg", 0.7);
+  } catch (_) {}
+  v.removeAttribute("src"); v.load();
+  const cache = lsGet("frs_ana_" + sig);
+  if (cache) { Object.assign(s, { ana:cache.ana, ai:cache.ai, hasAudio:cache.hasAudio, vcodec:cache.vcodec || "" }); rebuildHighlights(s); }
+  log("素材追加: " + f.name + " / " + mb(f.size) + " / " + s.dur + "秒 / " + s.w + "x" + s.h + (cache ? "（解析キャッシュあり）" : ""));
+  if (s.dur > 185) toast(f.name + "：3分を超えています。処理が重くなる場合があります", 4000);
+  return s;
+}
+function renderSources(){
+  const box = $("#srcList"); box.innerHTML = "";
+  if (!state.sources.length) { box.append(h("div", { class:"empty" }, "動画がまだありません")); return; }
+  state.sources.forEach((s, i) => {
+    const st = s.ai ? h("span", { class:"badge ai" }, "AI解析済") : s.ana ? h("span", { class:"badge local" }, "自動解析済") : h("span", { class:"badge" }, "未解析");
+    box.append(h("div", { class:"src" },
+      s.thumb ? h("img", { src:s.thumb, alt:"" }) : h("div", { class:"ph" }),
+      h("div", { class:"meta" }, h("b", {}, (i + 1) + ". " + s.name),
+        h("div", { class:"small" }, f1(s.dur) + "秒 / " + s.w + "×" + s.h + " / " + mb(s.size)), st),
+      h("div", { style:"display:flex;flex-direction:column;gap:6px" },
+        h("button", { class:"mini", disabled:i === 0, onclick:() => { moveSource(i, -1); } }, "▲"),
+        h("button", { class:"mini", onclick:() => removeSource(s.id) }, "削除"))
+    ));
+  });
+}
+function moveSource(i, d){
+  const j = i + d; if (j < 0 || j >= state.sources.length) return;
+  const a = state.sources; [a[i], a[j]] = [a[j], a[i]]; FF.mounted = ""; renderSources();
+}
+function removeSource(id){
+  if (Busy.on) return;
+  const s = srcById(id); if (!s) return;
+  if (state.project && state.project.clips.some(c => c.srcId === id) && !confirm("編集中の動画でこの素材を使っています。削除しますか？")) return;
+  URL.revokeObjectURL(s.url);
+  state.sources = state.sources.filter(x => x.id !== id);
+  state.highlights = state.highlights.filter(x => x.srcId !== id);
+  state.candidates = state.candidates.filter(c => !c.clips.some(k => k.srcId === id));
+  if (state.project && state.project.clips.some(c => c.srcId === id)) {
+    state.project.clips = state.project.clips.filter(c => c.srcId !== id);
+    if (!state.project.clips.length) state.project = null;
+  }
+  FF.mounted = "";
+  renderSources(); renderAnaMode(); renderAna(); renderCands(); openProject(state.project, true);
+}
+
+/* =====================================================================
+   解析（ローカル：音量・動き ／ AI：Gemini）
+   ===================================================================== */
+function renderAnaMode(){
+  const n = state.sources.length, done = state.sources.filter(s => s.ana).length;
+  $("#anaMode").innerHTML = (settings.apiKey
+      ? "AI解析：<b>オン</b>（" + (settings.model || GEM_DEFAULT) + "）＋音量・動きの自動解析"
+      : "AI解析：<b>オフ</b>（設定でGeminiのAPIキーを入れるとオン）。音量・動きで自動解析します")
+    + "<br>素材 " + n + "本中 " + done + "本 解析済み";
+  $("#btnAnalyze").disabled = !n;
+}
+$("#btnAnalyze").onclick = () => analyzeAll($("#anaForce").checked);
+async function analyzeAll(force){
+  if (!state.sources.length) { toast("先に動画を追加してください"); return false; }
+  const targets = state.sources.filter(s => force || !s.ana || (settings.apiKey && !s.ai));
+  if (!targets.length) { toast("すべて解析済みです"); return true; }
+  const ok = await runJob("見どころ解析", async () => {
+    await FF.load(); await FF.mountSources();
+    let aiFail = 0;
+    for (let i = 0; i < targets.length; i++) {
+      const s = targets[i]; const base = i / targets.length, span = 1 / targets.length;
+      const tag = "（" + (i + 1) + "/" + targets.length + "）" + s.name;
+      if (force || !s.ana) { Busy.set(base, "音と動きを解析中" + tag); await localAnalyze(s); }
+      if (settings.apiKey && (force || !s.ai)) {
+        try {
+          Busy.set(base + span * 0.35, "AIに送る軽量版を作成中" + tag);
+          const px = await makeProxy(s, p => Busy.set(base + span * (0.35 + 0.25 * p)));
+          Busy.set(base + span * 0.6, "AIが見どころを解析中（数十秒）" + tag);
+          s.ai = await geminiAnalyze(s, px);
+        } catch (e) {
+          if (e.message === "__cancel__" || Busy.cancelled) throw e;
+          aiFail++; log("AI解析失敗(" + s.name + "): " + e.message); toast("AI解析に失敗：" + e.message, 4500);
+        }
+      }
+      rebuildHighlights(s); saveAnaCache(s);
+      if (s.ai && s.ai.fish && !state.meta.fish) state.meta.fish = s.ai.fish;
+    }
+    Busy.set(1, "完了");
+    return true;
+  });
+  renderSources(); renderAnaMode(); renderAna(); renderGenForm();
+  return !!ok;
+}
+async function probeSource(s){
+  const r = await FF.exec(["-hide_banner", "-i", "/in/" + s.ffName], { capture:true, allowFail:true });
+  const txt = r.logs.join("\n");
+  const vm = txt.match(/Stream #0:\d+[^\n]*Video: (\w+)/);
+  s.hasAudio = /Stream #0:\d+[^\n]*Audio:/.test(txt);
+  s.vcodec = vm ? vm[1] : "?";
+  const dm = txt.match(/Duration: (\d+):(\d+):(\d+(?:\.\d+)?)/);
+  if (dm) { const d = (+dm[1]) * 3600 + (+dm[2]) * 60 + parseFloat(dm[3]); if (d > 0 && Math.abs(d - s.dur) > 0.5) { log("長さ補正 " + s.dur + "→" + d); s.dur = Math.floor(d * 100) / 100; } }
+  log("素材解析 " + s.name + ": video=" + s.vcodec + " audio=" + s.hasAudio);
+}
+async function localAnalyze(s){
+  if (s.hasAudio == null || !s.vcodec) await probeSource(s);
+  const STEP = 0.25, SR = 8000, GW = 32, GH = 56;
+  const args = ["-hide_banner", "-skip_frame", "nokey", "-i", "/in/" + s.ffName];
+  if (s.hasAudio) args.push("-map", "0:a:0", "-ac", "1", "-ar", String(SR), "-f", "s16le", "an_a.raw");
+  args.push("-map", "0:v:0", "-vf", "scale=" + GW + ":" + GH + ":flags=area,format=gray,showinfo", "-vsync", "0", "-f", "rawvideo", "an_v.raw");
+  const r = await FF.exec(args, { capture:true });
+  const n = Math.max(1, Math.ceil(s.dur / STEP));
+  // 音量（dB）
+  let env = new Array(n).fill(-90);
+  if (s.hasAudio) {
+    const raw = await FF.read("an_a.raw"); await FF.rm("an_a.raw");
+    const len = raw.byteLength - (raw.byteLength % 2);
+    const pcm = new Int16Array(raw.buffer.slice(raw.byteOffset, raw.byteOffset + len));
+    const win = SR * STEP;
+    for (let i = 0; i < n; i++) {
+      let acc = 0, cnt = 0;
+      for (let j = i * win; j < Math.min(pcm.length, (i + 1) * win); j++) { acc += pcm[j] * pcm[j]; cnt++; }
+      env[i] = cnt ? Math.max(-90, 20 * Math.log10(Math.sqrt(acc / cnt) / 32768 + 1e-9)) : -90;
+    }
+  }
+  // 動き（キーフレーム間の差分）
+  const vr = await FF.read("an_v.raw"); await FF.rm("an_v.raw");
+  const fsz = GW * GH, nf = Math.floor(vr.byteLength / fsz);
+  let pts = r.logs.map(l => { const m = l.match(/pts_time:\s*(-?[\d.]+)/); return m ? parseFloat(m[1]) : null; }).filter(x => x != null);
+  if (pts.length !== nf) { log("フレーム時刻の数が不一致 " + pts.length + "/" + nf + "（均等割りで代用）"); pts = Array.from({ length:nf }, (_, i) => i * s.dur / Math.max(1, nf)); }
+  const mPts = [], mVal = [];
+  for (let k = 1; k < nf; k++) {
+    let d = 0; const a = (k - 1) * fsz, b = k * fsz;
+    for (let j = 0; j < fsz; j++) d += Math.abs(vr[a + j] - vr[b + j]);
+    mPts.push(pts[k]); mVal.push(d / fsz / 255);
+  }
+  const motion = new Array(n).fill(0);
+  for (let i = 0, k = 0; i < n; i++) {
+    const t = i * STEP;
+    while (k + 1 < mPts.length && mPts[k + 1] <= t) k++;
+    motion[i] = mVal.length ? mVal[k] : 0;
+  }
+  // スコア
+  const zA = robustZ(env), zM = robustZ(motion);
+  let sc = env.map((_, i) => 0.65 * Math.max(0, zA[i]) + 0.35 * Math.max(0, Math.min(zM[i], 6)));
+  sc = sc.map((_, i) => { let a = 0, c = 0; for (let j = i - 2; j <= i + 2; j++) if (j >= 0 && j < n) { a += sc[j]; c++; } return a / c; });
+  const K = clamp(Math.round(s.dur / 8), 3, 20);
+  const order = sc.map((v, i) => [v, i]).sort((a, b) => b[0] - a[0]);
+  const peaks = [];
+  for (const [v, i] of order) {
+    if (peaks.length >= K) break;
+    const t = i * STEP;
+    if (peaks.some(p => Math.abs(p.t - t) < 4)) continue;
+    if (t < 0.5 || t > s.dur - 0.5) continue;
+    peaks.push({ t:+t.toFixed(2), score:+(1 - Math.exp(-v / 2.5)).toFixed(3), label: zA[i] >= zM[i] ? "大きな音" : "大きな動き" });
+  }
+  peaks.sort((a, b) => a.t - b.t);
+  s.ana = { step:STEP, env:env.map(x => Math.round(x * 10) / 10), motion:motion.map(x => Math.round(x * 1000) / 1000),
+            score:sc.map(x => Math.round(x * 100) / 100), peaks, kfInterval: nf > 1 ? +(s.dur / nf).toFixed(2) : 99 };
+  log("自動解析 " + s.name + ": 見どころ候補" + peaks.length + "件 / キーフレーム間隔" + s.ana.kfInterval + "秒");
+}
+function saveAnaCache(s){
+  const key = "frs_ana_" + s.sig;
+  const idx = (lsGet("frs_ana_idx") || []).filter(k => k !== key); idx.push(key);
+  while (idx.length > 30) { try { localStorage.removeItem(idx.shift()); } catch (_) {} }
+  lsSet("frs_ana_idx", idx);
+  if (!lsSet(key, { ana:s.ana, ai:s.ai, hasAudio:s.hasAudio, vcodec:s.vcodec })) log("解析キャッシュ保存失敗（容量）");
+}
+async function makeProxy(s, onP){
+  const kf = s.ana && s.ana.kfInterval <= 1.6;
+  const args = ["-hide_banner"];
+  if (kf) args.push("-skip_frame", "nokey");
+  args.push("-i", "/in/" + s.ffName, "-map", "0:v:0");
+  if (s.hasAudio) args.push("-map", "0:a:0");
+  args.push("-vf", kf ? "scale=-2:360" : "fps=1,scale=-2:360");
+  if (kf) args.push("-vsync", "vfr");
+  args.push("-c:v", "libx264", "-preset", "ultrafast", "-crf", "34");
+  if (s.hasAudio) args.push("-c:a", "aac", "-b:a", "32k", "-ac", "1", "-ar", "22050");
+  args.push("-movflags", "+faststart", "px.mp4");
+  await FF.exec(args, { dur:s.dur, onProg:onP });
+  const d = await FF.read("px.mp4"); await FF.rm("px.mp4");
+  log("AI用軽量版: " + mb(d.byteLength) + (kf ? "（キーフレーム）" : "（1fps）"));
+  if (d.byteLength > 14 * 1048576) throw new Error("動画が長すぎてAIに送れません（" + mb(d.byteLength) + "）");
+  return new Blob([d], { type:"video/mp4" });
+}
+
+/* ---------- Gemini ---------- */
+function parseJSONLoose(txt){
+  let t = String(txt).trim().replace(/^```(?:json)?/i, "").replace(/```$/, "").trim();
+  const a = t.indexOf("{"), b = t.lastIndexOf("}");
+  if (a >= 0 && b > a) t = t.slice(a, b + 1);
+  return JSON.parse(t);
+}
+let gemUseLite = false;   // 無料枠上限に当たったら、このセッション中は軽量モデルを使う
+async function gemini(parts, opt){
+  opt = opt || {};
+  if (!settings.apiKey) throw new Error("APIキーが未設定です");
+  let model = opt.model || (gemUseLite ? GEM_LITE : (settings.model || GEM_DEFAULT));
+  for (let attempt = 0; attempt < 4; attempt++) {
+    Busy.check();
+    const ctl = new AbortController(); Busy.abort = ctl;
+    const to = setTimeout(() => ctl.abort(), opt.timeout || 150000);
+    let res;
+    try {
+      res = await fetch(GEM_URL + "/models/" + encodeURIComponent(model) + ":generateContent", {
+        method:"POST", signal:ctl.signal,
+        headers:{ "Content-Type":"application/json", "x-goog-api-key":settings.apiKey },
+        body:JSON.stringify({ contents:[{ role:"user", parts }], generationConfig:{ responseMimeType:"application/json" } })
+      });
+    } catch (e) {
+      clearTimeout(to);
+      if (Busy.cancelled) throw new Error("__cancel__");
+      if (e.name === "AbortError") throw new Error("AIの応答がタイムアウトしました");
+      if (attempt < 1) { await sleep(2000); continue; }
+      throw new Error("通信エラー（" + e.message + "）");
+    }
+    clearTimeout(to); Busy.abort = null;
+    if (res.ok) {
+      const j = await res.json();
+      const txt = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(p => p.text || "").join("");
+      if (!txt) throw new Error("AIの応答が空でした" + (j.promptFeedback && j.promptFeedback.blockReason ? "（" + j.promptFeedback.blockReason + "）" : ""));
+      log("Gemini OK (" + model + ")" + (j.usageMetadata ? " tokens=" + j.usageMetadata.totalTokenCount : ""));
+      return { json:parseJSONLoose(txt), model };
+    }
+    const body = await res.text(); let msg = body;
+    try { msg = JSON.parse(body).error.message || body; } catch (_) {}
+    log("Gemini " + res.status + " (" + model + "): " + String(msg).slice(0, 300));
+    if (res.status === 429 && model !== GEM_LITE) { model = GEM_LITE; gemUseLite = true; toast("無料枠の上限のため軽量モデル（" + GEM_LITE + "）に切り替えます", 4000); continue; }
+    if (res.status === 429) throw new Error("Geminiの無料枠の上限に達しました（時間をおくか翌日に再実行）");
+    if ((res.status === 500 || res.status === 503) && attempt < 3) { await sleep(3000 * (attempt + 1)); continue; }
+    if (res.status === 400 && /api key/i.test(msg)) throw new Error("APIキーが正しくありません");
+    if (res.status === 403) throw new Error("APIキーの権限エラー（" + String(msg).slice(0, 80) + "）");
+    if (res.status === 404) throw new Error("モデル「" + model + "」が見つかりません。設定の「モデル一覧を取得」で選び直してください");
+    throw new Error("Geminiエラー " + res.status + "（" + String(msg).slice(0, 120) + "）");
+  }
+  throw new Error("Geminiに接続できませんでした");
+}
+async function geminiAnalyze(s, proxyBlob){
+  const b64 = await blobToB64(proxyBlob);
+  const N = clamp(Math.round(s.dur / 10), 4, 15);
+  const prompt =
+`あなたは釣り動画のショート動画（Instagram Reels・TikTok）の編集者です。
+この動画（長さ${f1(s.dur)}秒）から、ショート動画に使える見どころを最大${N}個抽出してください。
+時間はすべて動画の先頭からの秒数（小数可）で答えてください。
+
+type は次のいずれか：
+hit（魚が掛かった瞬間・アワセ・竿が急に曲がる）, fight（やり取り・リールを巻く・竿が曲がり続ける）,
+landing（取り込み・タモ入れ・抜き上げ）, fish（魚を見せる・持つ・釣果）, scenery（景色・船・海・空）,
+talk（しゃべり・説明）, other
+start・end：その場面の範囲。peak：一番盛り上がる瞬間。
+score：ショート動画での見どころ度（1〜10の整数）
+telop：その場面に入れる短いテロップ（全角12文字以内、絵文字なし。不要なら空文字）
+description：何が映っているか（全角30文字以内）
+あわせて fish_species（魚種。分からなければ空文字）と summary（全体の要約、全角40文字以内）も答えてください。
+
+次の形のJSONだけを出力してください：
+{"fish_species":"","summary":"","highlights":[{"start":0,"peak":0,"end":0,"type":"hit","score":8,"telop":"","description":""}]}`;
+  const r = await gemini([{ inlineData:{ mimeType:"video/mp4", data:b64 } }, { text:prompt }]);
+  const j = r.json || {};
+  const types = Object.keys(TYPE_JA);
+  const hls = (Array.isArray(j.highlights) ? j.highlights : []).map(x => {
+    let a = clamp(+x.start || 0, 0, s.dur), b = clamp(+x.end || a + 3, 0, s.dur);
+    if (b < a) [a, b] = [b, a];
+    if (b - a < 0.5) b = Math.min(s.dur, a + 2);
+    let p = x.peak != null ? clamp(+x.peak, a, b) : a + (b - a) * 0.35;
+    const type = types.includes(x.type) ? x.type : "other";
+    return { t0:+a.toFixed(2), t1:+b.toFixed(2), t:+p.toFixed(2), type, score:clamp((+x.score || 5) / 10, 0.1, 1),
+             telop:String(x.telop || "").slice(0, 24), label:String(x.description || "").slice(0, 40) };
+  }).filter(x => isFinite(x.t));
+  log("AI解析 " + s.name + ": " + hls.length + "件 / 魚種=" + (j.fish_species || "-") + " / " + (j.summary || ""));
+  return { model:r.model, fish:String(j.fish_species || "").slice(0, 20), summary:String(j.summary || "").slice(0, 60), highlights:hls };
+}
+function rebuildHighlights(s){
+  const keepManual = state.highlights.filter(x => x.srcId === s.id && x.origin === "manual");
+  const prevOff = new Set(state.highlights.filter(x => x.srcId === s.id && !x.on).map(x => x.origin + "@" + x.t));
+  state.highlights = state.highlights.filter(x => x.srcId !== s.id);
+  const list = [];
+  const peaks = (s.ana && s.ana.peaks) || [];
+  if (s.ai && s.ai.highlights.length) {
+    for (const a of s.ai.highlights) {
+      const x = Object.assign({ id:uid(), srcId:s.id, origin:"ai", on:true }, a);
+      if ((x.type === "hit" || x.type === "landing") && peaks.length) {
+        const near = peaks.filter(p => Math.abs(p.t - x.t) <= 1.5).sort((p, q2) => Math.abs(p.t - x.t) - Math.abs(q2.t - x.t))[0];
+        if (near) x.t = clamp(near.t, x.t0, x.t1);
+      }
+      list.push(x);
+    }
+    for (const p of peaks) {
+      if (list.some(x => p.t >= x.t0 - 1.5 && p.t <= x.t1 + 1.5)) continue;
+      list.push({ id:uid(), srcId:s.id, origin:"local", on:true, t:p.t, t0:Math.max(0, p.t - 2), t1:Math.min(s.dur, p.t + 2), score:+(p.score * 0.6).toFixed(3), type:"peak", label:p.label, telop:"" });
+    }
+  } else {
+    for (const p of peaks) list.push({ id:uid(), srcId:s.id, origin:"local", on:true, t:p.t, t0:Math.max(0, p.t - 2), t1:Math.min(s.dur, p.t + 2), score:+(p.score * 0.75).toFixed(3), type:"peak", label:p.label, telop:"" });
+  }
+  list.forEach(x => { if (prevOff.has(x.origin + "@" + x.t)) x.on = false; });
+  state.highlights.push(...list, ...keepManual);
+}
+
+/* ---------- 解析画面 ---------- */
+let anaSel = null;
+function renderAna(){
+  const has = state.sources.some(s => s.ana);
+  $("#anaView").hidden = !has;
+  if (!has) return;
+  const sel = $("#anaSrcSel"); sel.innerHTML = "";
+  state.sources.forEach((s, i) => sel.append(h("option", { value:s.id }, (i + 1) + ". " + s.name + (s.ana ? "" : "（未解析）"))));
+  if (!anaSel || !srcById(anaSel)) anaSel = (state.sources.find(s => s.ana) || state.sources[0]).id;
+  sel.value = anaSel;
+  const s = srcById(anaSel);
+  const v = $("#anaVideo");
+  if (v.dataset.src !== s.id) { v.src = s.url; v.dataset.src = s.id; }
+  drawAnaCanvas(); renderHlList();
+}
+$("#anaSrcSel").onchange = e => { anaSel = e.target.value; renderAna(); };
+$("#anaVideo").ontimeupdate = () => drawAnaCanvas();
+function drawAnaCanvas(){
+  const s = srcById(anaSel); const cv = $("#anaCanvas"); if (!s) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = cv.clientWidth * dpr, H = cv.clientHeight * dpr; if (!W) return;
+  cv.width = W; cv.height = H;
+  const c = cv.getContext("2d"); c.clearRect(0, 0, W, H);
+  if (s.ana) {
+    const env = s.ana.env, mo = s.ana.motion, n = env.length;
+    const lo = Math.min(...env.filter(x => x > -89), -60), hi = Math.max(...env, lo + 1);
+    const mhi = Math.max(...mo, 0.01);
+    const path = (arr, f, col) => { c.beginPath(); arr.forEach((v, i) => { const x = i / (n - 1 || 1) * W, y = H - 4 - f(v) * (H - 8); i ? c.lineTo(x, y) : c.moveTo(x, y); }); c.strokeStyle = col; c.lineWidth = 1.5 * dpr; c.stroke(); };
+    path(mo, v => v / mhi, "rgba(243,234,216,.55)");
+    path(env, v => clamp((v - lo) / (hi - lo), 0, 1), "#d98a0b");
+  }
+  for (const x of state.highlights.filter(x => x.srcId === s.id)) {
+    const X = x.t / s.dur * W;
+    c.fillStyle = x.origin === "ai" ? "#ff8a65" : x.origin === "manual" ? "#7ccf7a" : "#d98a0b";
+    c.globalAlpha = x.on ? 1 : 0.3; c.fillRect(X - 1.5 * dpr, 0, 3 * dpr, H); c.globalAlpha = 1;
+  }
+  const v = $("#anaVideo"); const cx = (v.currentTime || 0) / s.dur * W;
+  c.fillStyle = "#fff"; c.fillRect(cx - dpr, 0, 2 * dpr, H);
+}
+$("#anaCanvas").onclick = e => {
+  const s = srcById(anaSel); if (!s) return;
+  const r = e.currentTarget.getBoundingClientRect();
+  try { $("#anaVideo").currentTime = clamp((e.clientX - r.left) / r.width, 0, 1) * s.dur; } catch (_) {}
+};
+function renderHlList(){
+  const box = $("#hlList"); box.innerHTML = "";
+  const list = state.highlights.filter(x => x.srcId === anaSel).sort((a, b) => a.t - b.t);
+  if (!list.length) { box.append(h("div", { class:"empty" }, "見どころがありません")); return; }
+  const s = srcById(anaSel);
+  if (s && s.ai && s.ai.summary) box.append(h("div", { class:"t" }, "AI要約：" + s.ai.summary + (s.ai.fish ? "（魚種：" + s.ai.fish + "）" : "")));
+  for (const x of list) {
+    const cls = { ai:"ai", local:"local", manual:"man" }[x.origin];
+    const on = h("input", { type:"checkbox", checked:x.on, onchange:e => { x.on = e.target.checked; row.classList.toggle("off", !x.on); drawAnaCanvas(); } });
+    const tel = h("input", { type:"text", value:x.telop || "", placeholder:"テロップ（任意）", oninput:e => { x.telop = e.target.value; } });
+    const row = h("div", { class:"hl" + (x.on ? "" : " off") },
+      on,
+      h("div", { class:"tm" }, mmss(x.t)),
+      h("div", { class:"bd" },
+        h("span", { class:"badge " + cls }, { ai:"AI", local:"自動", manual:"手動" }[x.origin]),
+        h("b", {}, TYPE_JA[x.type] || x.type), " ", h("span", { class:"small" }, "見どころ度 " + Math.round(x.score * 10) + "/10"),
+        x.label ? h("div", { class:"small" }, x.label) : null, tel),
+      h("div", { style:"display:flex;flex-direction:column;gap:6px" },
+        h("button", { class:"mini", onclick:() => { try { const v = $("#anaVideo"); v.currentTime = Math.max(0, x.t - 1.5); v.play().catch(() => {}); } catch (_) {} } }, "▶"),
+        h("button", { class:"mini", onclick:() => { state.highlights = state.highlights.filter(y => y !== x); renderHlList(); drawAnaCanvas(); } }, "✕"))
+    );
+    box.append(row);
+  }
+}
+(() => { const sel = $("#manType"); for (const k of ["hit", "fight", "landing", "fish", "scenery", "talk", "other"]) sel.append(h("option", { value:k }, TYPE_JA[k])); })();
+$("#btnAddHl").onclick = () => {
+  const s = srcById(anaSel); if (!s) return;
+  const t = +($("#anaVideo").currentTime || 0).toFixed(2);
+  state.highlights.push({ id:uid(), srcId:s.id, origin:"manual", on:true, t, t0:Math.max(0, t - 2), t1:Math.min(s.dur, t + 2), score:0.95, type:$("#manType").value, label:"手動で追加", telop:"" });
+  renderHlList(); drawAnaCanvas(); toast(mmss(t) + " を見どころに追加しました");
+};
+
+/* =====================================================================
+   スタイル・テロップ描画
+   ===================================================================== */
+const STYLES = {
+  fellows:  { name:"fellows", desc:"白い半透明ボックス＋明朝。落ち着いた釣行記録", cut:{ min:2.0, ideal:3.6, max:6.5 }, hookLen:2.2,
+              telop:{ title:"fellows-box", info:"fellows-band", hl:"fellows-box", end:"fellows-band" },
+              pos:{ title:0.42, info:0.085, hl:0.70, end:0.80 }, size:{ title:1, info:1, hl:0.8, end:1 }, infoAll:false,
+              se:{ hit:"don", cut:null, land:null, title:null },
+              text:{ hit:"ヒット", fight:"やり取り", landing:"ランディング", fish:f => f || "釣果", peak:"", scenery:"", talk:"", other:"", manual:"" },
+              end:f => f },
+  tiktok:   { name:"TikTok系", desc:"短いカット・大きな縁取り文字・効果音多め", cut:{ min:1.0, ideal:1.9, max:3.2 }, hookLen:1.6,
+              telop:{ title:"tiktok", info:"plain", hl:"tiktok", end:"tiktok-yellow" },
+              pos:{ title:0.40, info:0.075, hl:0.62, end:0.70 }, size:{ title:1.05, info:0.7, hl:1, end:1.05 }, infoAll:false,
+              se:{ hit:"don", cut:"whoosh", land:"pikon", title:"pop" },
+              text:{ hit:"きたーー！！", fight:"重すぎる…！", landing:"獲ったどー！", fish:f => (f ? f + "！" : "デカい！"), peak:"", scenery:"", talk:"", other:"", manual:"" },
+              end:f => f + " GET！" },
+  youtuber: { name:"釣りYouTuber系", desc:"黄色の縁取りテロップ・情報帯・説明多め", cut:{ min:2.5, ideal:4.6, max:8.5 }, hookLen:2.6,
+              telop:{ title:"yt-red", info:"yt-info", hl:"yt-yellow", end:"yt-yellow" },
+              pos:{ title:0.17, info:0.06, hl:0.74, end:0.74 }, size:{ title:1, info:1, hl:1, end:1.05 }, infoAll:true,
+              se:{ hit:"don", cut:null, land:"jan", title:"pikon" },
+              text:{ hit:"ヒット！！", fight:"強烈な引き！", landing:"無事ランディング！", fish:f => (f ? f + " GET！" : "GET！"), peak:"", scenery:"", talk:"", other:"", manual:"" },
+              end:f => f + " GET！" }
+};
+const PRESETS = {
+  "fellows-box":  { label:"fellows ボックス", font:"mincho", fs:66, lh:1.38, color:"#111", box:"rgba(255,255,255,0.80)", border:"rgba(0,0,0,0.35)", inset:12, padX:58, padY:44 },
+  "fellows-band": { label:"fellows 帯", font:"gothic", fs:44, lh:1.3, color:"#fff", box:"rgba(46,36,30,0.90)", padX:48, padY:22, minW:0.86 },
+  "tiktok":       { label:"TikTok 白", font:"heavy", fs:92, lh:1.25, color:"#fff", strokes:[["#000", 18]], shadow:true },
+  "tiktok-yellow":{ label:"TikTok 黄", font:"heavy", fs:92, lh:1.25, color:"#ffe14d", strokes:[["#000", 18]], shadow:true },
+  "yt-yellow":    { label:"YouTuber 黄", font:"heavy", fs:84, lh:1.25, color:"#ffe600", strokes:[["#fff", 30], ["#000", 16]] },
+  "yt-red":       { label:"YouTuber 赤", font:"heavy", fs:84, lh:1.25, color:"#fff", strokes:[["#000", 30], ["#e60012", 16]] },
+  "yt-info":      { label:"情報（小）", font:"gothic", fs:40, lh:1.3, color:"#fff", box:"rgba(0,0,0,0.62)", padX:28, padY:14, radius:10 },
+  "plain":        { label:"シンプル", font:"gothic", fs:60, lh:1.3, color:"#fff", strokes:[["rgba(0,0,0,0.85)", 10]] },
+  "caption":      { label:"字幕（黒帯）", font:"gothic", fs:50, lh:1.35, color:"#fff", box:"rgba(0,0,0,0.6)", padX:32, padY:18, radius:12 }
+};
+const FONT_STACK = {
+  mincho:'"Shippori Mincho B1","Hiragino Mincho ProN","Hiragino Mincho Pro","Yu Mincho","Noto Serif CJK JP",serif',
+  gothic:'"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans CJK JP","Yu Gothic",sans-serif'
+};
+const fontOK = { dela:false };
+function fontStr(kind, px){
+  if (kind === "heavy") return fontOK.dela ? '400 ' + px + 'px "Dela Gothic One"' : "900 " + px + "px " + FONT_STACK.gothic;
+  if (kind === "mincho") return "800 " + px + "px " + FONT_STACK.mincho;
+  return "700 " + px + "px " + FONT_STACK.gothic;
+}
+async function ensureFonts(texts){
+  if (!document.fonts || !document.fonts.load) return;
+  const sample = (texts || []).join("") || "あ";
+  try {
+    await Promise.race([
+      Promise.all([document.fonts.load('400 40px "Dela Gothic One"', sample), document.fonts.load('800 40px "Shippori Mincho B1"', sample)]),
+      sleep(4000)
+    ]);
+  } catch (_) {}
+  fontOK.dela = [...document.fonts].some(f => f.family.replace(/["']/g, "") === "Dela Gothic One" && f.status === "loaded");
+}
+function wrapLines(ctx, text, maxW){
+  const out = [];
+  for (const para of String(text).split("\n")) {
+    let line = "";
+    for (const ch of [...para]) {
+      if (line && ctx.measureText(line + ch).width > maxW) { out.push(line); line = ch; }
+      else line += ch;
+    }
+    out.push(line);
+  }
+  return out;
+}
+function roundRect(c, x, y, w, hh, r){
+  c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + hh, r); c.arcTo(x + w, y + hh, x, y + hh, r);
+  c.arcTo(x, y + hh, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath();
+}
+/* テロップを描いて、描画範囲 {x,y,w,h} を返す（プレビュー・書き出し共通） */
+function drawTelop(c, t, W, H){
+  const P = PRESETS[t.preset] || PRESETS.plain;
+  const k = W / 1080 * (t.size || 1), K = W / 1080;
+  const px = Math.max(8, Math.round(P.fs * k));
+  c.save();
+  c.font = fontStr(P.font, px); c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round"; c.miterLimit = 2;
+  const padX = (P.padX || 0) * k, padY = (P.padY || 0) * k;
+  const maxW = W * 0.84 - padX * 2;
+  const lines = wrapLines(c, t.text, maxW).filter((l, i, a) => l.length || a.length === 1);
+  const lh = px * P.lh;
+  const tw = Math.max(...lines.map(l => c.measureText(l).width), 1);
+  const th = lines.length * lh;
+  const cx = W / 2, cy = clamp(t.y, 0.03, 0.97) * H;
+  let bx = cx - tw / 2, by = cy - th / 2, bw = tw, bh = th;
+  if (P.box) {
+    bw = Math.max(tw + padX * 2, (P.minW || 0) * W); bh = th + padY * 2; bx = cx - bw / 2; by = cy - bh / 2;
+    c.fillStyle = P.box;
+    if (P.radius) { roundRect(c, bx, by, bw, bh, P.radius * K); c.fill(); } else c.fillRect(bx, by, bw, bh);
+    if (P.border) { const ins = (P.inset || 10) * K; c.strokeStyle = P.border; c.lineWidth = Math.max(1, 2 * K); c.strokeRect(bx + ins, by + ins, bw - ins * 2, bh - ins * 2); }
+  }
+  const maxStroke = Math.max(0, ...(P.strokes || []).map(s => s[1] * k));
+  lines.forEach((l, i) => {
+    const y = cy - th / 2 + lh * (i + 0.5);
+    if (P.shadow) { c.save(); c.shadowColor = "rgba(0,0,0,0.55)"; c.shadowBlur = 14 * k; c.shadowOffsetY = 6 * k; c.fillStyle = "#000"; c.fillText(l, cx, y); c.restore(); }
+    for (const [col, w] of (P.strokes || [])) { c.strokeStyle = col; c.lineWidth = w * k; c.strokeText(l, cx, y); }
+    c.fillStyle = P.color; c.fillText(l, cx, y);
+  });
+  c.restore();
+  const m = maxStroke / 2 + (P.shadow ? 24 * k : 0) + 4;
+  const x0 = Math.floor(clamp(bx - m, 0, W)), y0 = Math.floor(clamp(by - m, 0, H));
+  const x1 = Math.ceil(clamp(bx + bw + m, 0, W)), y1 = Math.ceil(clamp(by + bh + m + (P.shadow ? 6 * k : 0), 0, H));
+  return { x:x0, y:y0, w:Math.max(2, x1 - x0), h:Math.max(2, y1 - y0) };
+}
+function logoRect(W, H){
+  if (!logoImg) return null;
+  const L = settings.logo; const w = Math.round(W * L.size), hh = Math.round(w * logoImg.naturalHeight / Math.max(1, logoImg.naturalWidth));
+  const mx = Math.round(W * 0.045);
+  const x = L.pos[1] === "r" ? W - w - mx : mx;
+  const y = L.pos[0] === "t" ? Math.round(H * 0.055) : Math.round(H * 0.80 - hh);
+  return { x, y, w, h:hh };
+}
+function drawLogo(c, W, H){
+  const r = logoRect(W, H); if (!r) return;
+  c.save(); c.globalAlpha = settings.logo.opacity; c.drawImage(logoImg, r.x, r.y, r.w, r.h); c.restore();
+}
+
+/* =====================================================================
+   効果音（内蔵はその場で合成）
+   ===================================================================== */
+const SE = { wavCache:{}, bufCache:{} };
+async function synthSE(kind){
+  if (SE.bufCache["b:" + kind]) return SE.bufCache["b:" + kind];
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const sr = 48000, len = { don:0.75, whoosh:0.5, pikon:0.4, jan:1.5, pop:0.18 }[kind] || 0.5;
+  const ctx = new OAC(2, Math.ceil(sr * len), sr);
+  const noise = (sec) => { const b = ctx.createBuffer(1, Math.ceil(sr * sec), sr); const d = b.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; const s = ctx.createBufferSource(); s.buffer = b; return s; };
+  const env = (g, pts) => { g.gain.setValueAtTime(pts[0][1], 0); for (const [t, v] of pts.slice(1)) g.gain.exponentialRampToValueAtTime(Math.max(v, 0.0001), t); };
+  if (kind === "don") {
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(150, 0); o.frequency.exponentialRampToValueAtTime(40, 0.5);
+    const g = ctx.createGain(); env(g, [[0, 1], [0.6, 0.0001]]); o.connect(g).connect(ctx.destination); o.start(0); o.stop(len);
+    const n = noise(0.12); const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 1200;
+    const g2 = ctx.createGain(); env(g2, [[0, 0.7], [0.1, 0.0001]]); n.connect(lp).connect(g2).connect(ctx.destination); n.start(0);
+  } else if (kind === "whoosh") {
+    const n = noise(len); const bp = ctx.createBiquadFilter(); bp.type = "bandpass"; bp.Q.value = 1.4;
+    bp.frequency.setValueAtTime(300, 0); bp.frequency.exponentialRampToValueAtTime(3800, 0.38);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, 0); g.gain.exponentialRampToValueAtTime(1, 0.14); g.gain.exponentialRampToValueAtTime(0.0001, 0.46);
+    n.connect(bp).connect(g).connect(ctx.destination); n.start(0);
+  } else if (kind === "pikon") {
+    [[1318.5, 0, 0.09], [1760, 0.09, 0.38]].forEach(([f, a, b]) => {
+      const o = ctx.createOscillator(); o.type = "sine"; o.frequency.value = f;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, 0); g.gain.setValueAtTime(0.8, a); g.gain.exponentialRampToValueAtTime(0.0001, b);
+      o.connect(g).connect(ctx.destination); o.start(a); o.stop(b + 0.01);
+    });
+  } else if (kind === "jan") {
+    [523.25, 659.25, 783.99, 1046.5].forEach((f, i) => {
+      const o = ctx.createOscillator(); o.type = i === 3 ? "sine" : "triangle"; o.frequency.value = f;
+      const g = ctx.createGain(); g.gain.setValueAtTime(0.0001, 0); g.gain.exponentialRampToValueAtTime(0.32, 0.015); g.gain.exponentialRampToValueAtTime(0.0001, 1.4);
+      o.connect(g).connect(ctx.destination); o.start(0); o.stop(1.45);
+    });
+  } else {
+    const o = ctx.createOscillator(); o.type = "sine"; o.frequency.setValueAtTime(600, 0); o.frequency.exponentialRampToValueAtTime(1400, 0.06);
+    const g = ctx.createGain(); env(g, [[0, 0.9], [0.15, 0.0001]]); o.connect(g).connect(ctx.destination); o.start(0); o.stop(len);
+  }
+  const buf = await new Promise((res, rej) => { const p = ctx.startRendering(); if (p && p.then) p.then(res, rej); else ctx.oncomplete = e => res(e.renderedBuffer); });
+  let peak = 0; for (let ch = 0; ch < buf.numberOfChannels; ch++) for (const v of buf.getChannelData(ch)) peak = Math.max(peak, Math.abs(v));
+  const g = peak > 0 ? 0.9 / peak : 1;
+  for (let ch = 0; ch < buf.numberOfChannels; ch++) { const d = buf.getChannelData(ch); for (let i = 0; i < d.length; i++) d[i] *= g; }
+  SE.bufCache["b:" + kind] = buf;
+  return buf;
+}
+function wavBytes(buf){
+  const ch = 2, sr = buf.sampleRate, n = buf.length, out = new DataView(new ArrayBuffer(44 + n * ch * 2));
+  const ws = (o, s) => { for (let i = 0; i < s.length; i++) out.setUint8(o + i, s.charCodeAt(i)); };
+  ws(0, "RIFF"); out.setUint32(4, 36 + n * ch * 2, true); ws(8, "WAVE"); ws(12, "fmt "); out.setUint32(16, 16, true);
+  out.setUint16(20, 1, true); out.setUint16(22, ch, true); out.setUint32(24, sr, true); out.setUint32(28, sr * ch * 2, true);
+  out.setUint16(32, ch * 2, true); out.setUint16(34, 16, true); ws(36, "data"); out.setUint32(40, n * ch * 2, true);
+  const L = buf.getChannelData(0), R = buf.numberOfChannels > 1 ? buf.getChannelData(1) : L;
+  for (let i = 0, o = 44; i < n; i++, o += 4) { out.setInt16(o, clamp(L[i], -1, 1) * 32767, true); out.setInt16(o + 2, clamp(R[i], -1, 1) * 32767, true); }
+  return new Uint8Array(out.buffer);
+}
+function seName(kind){
+  if (kind.startsWith("b:")) return SE_BUILTIN[kind.slice(2)] || kind;
+  const r = lib.se.find(x => x.key === kind); return r ? r.name : "（削除済みの効果音）";
+}
+function seOptions(sel, val){
+  sel.innerHTML = "";
+  for (const [k, v] of Object.entries(SE_BUILTIN)) sel.append(h("option", { value:"b:" + k }, v));
+  for (const r of lib.se) sel.append(h("option", { value:r.key }, "自作：" + r.name));
+  if (val) sel.value = val;
+}
+function bgmOptions(sel, val){
+  sel.innerHTML = ""; sel.append(h("option", { value:"" }, "なし"));
+  for (const r of lib.bgm) sel.append(h("option", { value:r.key }, r.name));
+  sel.value = lib.bgm.some(r => r.key === val) ? val : "";
+}
+
+/* =====================================================================
+   候補生成
+   ===================================================================== */
+const TYPE_LEN = { hit:1.3, fight:1.15, landing:1.2, fish:1.0, scenery:0.8, talk:1.1, peak:1.0, manual:1.2, other:0.9 };
+const TYPE_PRE = { hit:0.35, fight:0.4, landing:0.4, fish:0.3, scenery:0.5, talk:0.3, peak:0.4, manual:0.4, other:0.4 };
+function meanScore(s, a, b){
+  if (!s.ana) return 0; const st = s.ana.step; const i0 = Math.floor(a / st), i1 = Math.ceil(b / st);
+  let acc = 0, n = 0; for (let i = i0; i < i1 && i < s.ana.score.length; i++) { acc += s.ana.score[i]; n++; } return n ? acc / n : 0;
+}
+function planCandidate(styleKey, target, pattern, meta, autoSE, bgmKey){
+  const st = STYLES[styleKey];
+  let cutMin = st.cut.min, cutMax = st.cut.max, ideal = st.cut.ideal;
+  if (pattern === "tempo") { ideal *= 0.62; cutMin = Math.max(0.8, cutMin * 0.7); cutMax = Math.max(cutMin + 0.6, cutMax * 0.6); }
+  const order = Object.fromEntries(state.sources.map((s, i) => [s.id, i]));
+  const hls = state.highlights.filter(x => x.on && srcById(x.srcId)).sort((a, b) => b.score - a.score);
+  const clips = []; let total = 0;
+  const overlaps = (sid, a, b) => clips.some(c => c.srcId === sid && Math.min(b, c.out) - Math.max(a, c.in) > 0.15);
+  const teaserLen = pattern === "hook" ? st.hookLen : 0;
+  const goal = target - teaserLen;
+  for (const x of hls) {
+    if (total >= goal) break;
+    const s = srcById(x.srcId);
+    let L = clamp(ideal * (TYPE_LEN[x.type] || 1) * (0.85 + 0.3 * x.score), cutMin, cutMax);
+    L = Math.min(L, s.dur - 0.1); if (L < 0.5) continue;
+    let a = x.t - L * (TYPE_PRE[x.type] || 0.4);
+    if (x.origin === "ai" && x.t1 - x.t0 >= L) a = clamp(a, x.t0, x.t1 - L);
+    a = clamp(a, 0, s.dur - 0.05 - L);
+    if (overlaps(x.srcId, a, a + L)) {
+      // 重なる場合は空いている側にずらして再挑戦
+      const others = clips.filter(c => c.srcId === x.srcId);
+      let placed = false;
+      for (const c of others) {
+        for (const na of [c.out + 0.05, c.in - 0.05 - L]) {
+          if (na >= 0 && na + L <= s.dur - 0.05 && !overlaps(x.srcId, na, na + L) && x.t >= na - 0.5 && x.t <= na + L + 0.5) { a = na; placed = true; break; }
+        }
+        if (placed) break;
+      }
+      if (!placed) continue;
+    }
+    clips.push({ srcId:x.srcId, in:a, out:a + L, hl:x }); total += L;
+  }
+  // 足りない分は動きのある区間で埋める
+  let guard = 0;
+  while (total < goal - 0.3 && guard++ < 80) {
+    const L = ideal; let best = null;
+    for (const s of state.sources) {
+      if (s.dur < L + 0.2) continue;
+      const used = clips.filter(c => c.srcId === s.id).map(c => [c.in - 0.3, c.out + 0.3]).sort((p, r) => p[0] - r[0]);
+      const wins = []; let cur = 0;
+      for (const [p, r] of used) { if (p - cur >= L) wins.push([cur, p]); cur = Math.max(cur, r); }
+      if (s.dur - 0.05 - cur >= L) wins.push([cur, s.dur - 0.05]);
+      for (const [p, r] of wins) for (let x = p; x + L <= r; x += Math.max(1, L / 2)) {
+        const sc = meanScore(s, x, x + L) - (order[s.id] * 0.001);
+        if (!best || sc > best.sc) best = { s, x, sc };
+      }
+    }
+    if (!best) break;
+    clips.push({ srcId:best.s.id, in:best.x, out:best.x + L, hl:null, fill:true }); total += L;
+  }
+  if (!clips.length) return null;
+  clips.sort((a, b) => order[a.srcId] - order[b.srcId] || a.in - b.in);
+  fitClips(clips, goal, cutMin, cutMax);
+  if (pattern === "hook") {
+    const best = clips.reduce((m, c) => ((c.hl ? c.hl.score : 0) > (m.hl ? m.hl.score : 0) ? c : m), clips[0]);
+    const s = srcById(best.srcId); const L = Math.min(st.hookLen, s.dur - 0.1);
+    const p = best.hl ? best.hl.t : (best.in + best.out) / 2;
+    const a = clamp(p - L * 0.45, 0, s.dur - 0.05 - L);
+    clips.unshift({ srcId:best.srcId, in:a, out:a + L, hl:best.hl, teaser:true });
+  }
+  // フレーム単位に揃える
+  for (const c of clips) { c.in = Math.max(0, Math.round(c.in * 1000) / 1000); const d = Math.max(1 / FPS, q(c.out - c.in)); c.out = +(c.in + d).toFixed(4); }
+  const proj = {
+    id:uid(), style:styleKey, target, pattern, name:st.name + "・" + target + "秒・" + PATTERNS[pattern],
+    clips:clips.map(c => ({ id:uid(), srcId:c.srcId, in:c.in, out:c.out, hlId:c.hl ? c.hl.id : null, hlType:c.hl ? c.hl.type : (c.fill ? "fill" : ""), hlScore:c.hl ? c.hl.score : 0, hlT:c.hl ? c.hl.t : null, desc:c.hl ? (c.hl.label || TYPE_JA[c.hl.type]) : "つなぎ", teaser:!!c.teaser })),
+    telops:[], se:[],
+    audio:{ orig:true, origVol:1, bgm:bgmKey || "", bgmVol:0.25, fade:true }
+  };
+  buildTelops(proj, st, meta);
+  if (autoSE) buildSE(proj, st, meta);
+  proj.heur = heuristicScore(proj, st);
+  return proj;
+}
+function fitClips(clips, T, cutMin, cutMax){
+  const sum = () => clips.reduce((a, c) => a + (c.out - c.in), 0);
+  const peakOf = c => (c.hl ? clamp(c.hl.t, c.in, c.out) : (c.in + c.out) / 2);
+  for (let iter = 0; iter < 8; iter++) {
+    const S = sum(); const diff = S - T;
+    if (Math.abs(diff) < 0.04) break;
+    if (diff > 0) {
+      const room = clips.map(c => Math.max(0, (c.out - c.in) - cutMin)); const R = room.reduce((a, b) => a + b, 0);
+      if (R > 0.01) {
+        const f = Math.min(1, diff / R);
+        clips.forEach((c, i) => { const cut = room[i] * f; const p = peakOf(c); const l = p - c.in, r = c.out - p; const tot = l + r || 1; c.in += cut * l / tot; c.out -= cut * r / tot; });
+      }
+      if (sum() - T > 0.04 && clips.length > 1) {
+        let mi = -1, ms = 9;
+        clips.forEach((c, i) => { const sc = c.hl ? c.hl.score : 0; if (sc < ms) { ms = sc; mi = i; } });
+        clips.splice(mi, 1);
+      } else if (sum() - T > 0.04) {
+        const c = clips[0]; const p = peakOf(c); const need = sum() - T; const l = p - c.in, r = c.out - p, tot = l + r || 1;
+        c.in += need * l / tot; c.out -= need * r / tot;
+      }
+    } else {
+      const need = -diff;
+      const caps = clips.map(c => {
+        const s = srcById(c.srcId); const same = clips.filter(o => o !== c && o.srcId === c.srcId);
+        const left = Math.max(0, ...same.filter(o => o.out <= c.in + 0.01).map(o => o.out));
+        const right = Math.min(s.dur - 0.05, ...same.filter(o => o.in >= c.out - 0.01).map(o => o.in));
+        const maxLen = cutMax * 1.6;
+        const grow = Math.max(0, Math.min(maxLen - (c.out - c.in), (c.in - left) + (right - c.out)));
+        return { grow, left, right };
+      });
+      const G = caps.reduce((a, b) => a + b.grow, 0);
+      if (G < 0.05) break;
+      const f = Math.min(1, need / G);
+      clips.forEach((c, i) => {
+        let g = caps[i].grow * f;
+        const addL = Math.min(g / 2, c.in - caps[i].left); c.in -= addL; g -= addL;
+        const addR = Math.min(g, caps[i].right - c.out); c.out += addR; g -= addR;
+        if (g > 0) c.in -= Math.min(g, c.in - caps[i].left);
+      });
+      if (f < 1) break;
+    }
+  }
+}
+function starts(p){ const a = []; let t = 0; for (const c of p.clips) { a.push(t); t += c.out - c.in; } return a; }
+function totalOf(p){ return p.clips.reduce((a, c) => a + (c.out - c.in), 0); }
+function buildTelops(p, st, meta){
+  const S = starts(p), T = totalOf(p), n = p.clips.length;
+  const tel = [];
+  const add = (text, a, b, kind) => { if (!text || b - a < 0.4) return; tel.push({ id:uid(), text, start:+a.toFixed(2), end:+b.toFixed(2), preset:st.telop[kind], y:st.pos[kind], size:st.size[kind] }); };
+  const titleEnd = meta.title ? Math.min(2.6, T) : 0;
+  if (meta.title) add(meta.title, 0, titleEnd, "title");
+  const info = [meta.date, meta.boat ? "@" + meta.boat : ""].filter(Boolean).join(" ");
+  if (info && st.telop.info) add(info, 0, st.infoAll ? T : Math.min(4, T), "info");
+  const endOn = !!(meta.fish && st.telop.end);
+  // 締めのテロップは最後の「取り込み・魚」カットに乗せる（なければ最後のカット）
+  let endIdx = n - 1;
+  for (let i = n - 1; i >= 0; i--) if (p.clips[i].hlType === "fish" || p.clips[i].hlType === "landing") { endIdx = i; break; }
+  const endText = endOn ? st.end(meta.fish) : "";
+  p.clips.forEach((c, i) => {
+    const hl = c.hlId ? state.highlights.find(x => x.id === c.hlId) : null;
+    if (!hl) return;
+    if (endOn && i === endIdx) return;
+    const tx = st.text[hl.type];
+    let text = hl.telop || (typeof tx === "function" ? tx(meta.fish) : tx);
+    if (!text || (endOn && text === endText)) return;
+    let a = S[i] + 0.15; const b = S[i] + (c.out - c.in) - 0.1;
+    if (a < titleEnd) a = titleEnd;
+    add(text, a, b, "hl");
+  });
+  if (endOn) { const i = endIdx, e = S[i] + (p.clips[i].out - p.clips[i].in); add(endText, Math.max(S[i] + 0.2, e - 3.5, titleEnd), i === n - 1 ? T : e - 0.05, "end"); }
+  p.telops = tel;
+}
+function buildSE(p, st, meta){
+  const S = starts(p); const se = [];
+  p.clips.forEach((c, i) => {
+    if (i > 0 && st.se.cut) se.push({ id:uid(), kind:"b:" + st.se.cut, t:+Math.max(0, S[i] - 0.15).toFixed(2), vol:0.7 });
+    if (st.se.hit && (c.hlType === "hit" || (c.hlType === "peak" && c.hlScore >= 0.45)) && c.hlT != null) se.push({ id:uid(), kind:"b:" + st.se.hit, t:+(S[i] + clamp(c.hlT - c.in, 0, c.out - c.in)).toFixed(2), vol:1 });
+    if (st.se.land && (c.hlType === "landing" || c.hlType === "fish")) se.push({ id:uid(), kind:"b:" + st.se.land, t:+(S[i] + 0.1).toFixed(2), vol:0.8 });
+  });
+  if (meta.title && st.se.title) se.push({ id:uid(), kind:"b:" + st.se.title, t:0.05, vol:0.8 });
+  se.sort((a, b) => a.t - b.t);
+  p.se = se.filter((x, i, a) => !a.slice(0, i).some(y => Math.abs(y.t - x.t) < 0.3));
+}
+function heuristicScore(p, st){
+  const S = starts(p), T = totalOf(p) || 1;
+  const first = p.clips[0];
+  const hook = first ? (first.hlScore || 0) * (S[0] < 0.1 ? 1 : 0.6) : 0;
+  const content = p.clips.reduce((a, c) => a + (c.hlScore || 0.15) * (c.out - c.in), 0) / T;
+  const avg = T / Math.max(1, p.clips.length);
+  const pacing = 1 - Math.min(1, Math.abs(avg - st.cut.ideal * (p.pattern === "tempo" ? 0.62 : 1)) / st.cut.ideal);
+  const types = new Set(p.clips.map(c => c.hlType).filter(t => t && t !== "fill"));
+  const variety = Math.min(1, types.size / 4) * 0.7 + Math.min(1, new Set(p.clips.map(c => c.srcId)).size / Math.max(1, state.sources.length)) * 0.3;
+  const fit = Math.min(1, T / p.target);
+  const total = 100 * (0.30 * hook + 0.35 * content + 0.15 * pacing + 0.10 * variety + 0.10 * fit);
+  return { total:Math.round(total), hook:Math.round(hook * 10), content:Math.round(content * 10), pacing:Math.round(pacing * 10), variety:Math.round(variety * 10) };
+}
+
+/* ---------- 生成画面 ---------- */
+function renderGenForm(){
+  $("#mDate").value = state.meta.date || ""; $("#mBoat").value = state.meta.boat || "";
+  $("#mFish").value = state.meta.fish || ""; $("#mTitle").value = state.meta.title || "";
+  const dl = $("#boatList"); dl.innerHTML = ""; for (const b of settings.boats) dl.append(h("option", { value:b }));
+  const so = $("#styleOpts"); so.innerHTML = "";
+  for (const [k, st] of Object.entries(STYLES)) {
+    const on = settings.styles.includes(k);
+    const cb = h("input", { type:"checkbox", checked:on, onchange:e => { lab.classList.toggle("on", e.target.checked); } });
+    cb.dataset.k = k;
+    const lab = h("label", { class:"opt" + (on ? " on" : "") }, cb, h("span", {}, st.name, h("small", {}, st.desc)));
+    so.append(lab);
+  }
+  const chip = (box, list, vals, fmt) => { box.innerHTML = ""; for (const v of list) { const on = vals.includes(v); const cb = h("input", { type:"checkbox", checked:on, onchange:e => l.classList.toggle("on", e.target.checked) }); cb.dataset.v = v; const l = h("label", { class:"chip" + (on ? " on" : "") }, cb, fmt(v)); box.append(l); } };
+  chip($("#durOpts"), [15, 30, 60], settings.durs, v => v + "秒");
+  chip($("#patOpts"), Object.keys(PATTERNS), settings.pats, v => PATTERNS[v]);
+  $("#gAutoSE").checked = settings.autoSE;
+  bgmOptions($("#gBgm"), settings.defaultBgm);
+}
+["mDate", "mBoat", "mFish", "mTitle"].forEach(id => $("#" + id).addEventListener("input", e => { state.meta[{ mDate:"date", mBoat:"boat", mFish:"fish", mTitle:"title" }[id]] = e.target.value.trim() ? e.target.value : ""; }));
+$("#btnGen").onclick = async () => {
+  if (!state.sources.length) { toast("先に動画を追加してください"); showTab("src"); return; }
+  const styles = $$("#styleOpts input:checked").map(x => x.dataset.k);
+  const durs = $$("#durOpts input:checked").map(x => +x.dataset.v);
+  const pats = $$("#patOpts input:checked").map(x => x.dataset.v);
+  if (!styles.length || !durs.length || !pats.length) { toast("スタイル・尺・パターンを1つ以上選んでください"); return; }
+  Object.assign(settings, { styles, durs, pats, autoSE:$("#gAutoSE").checked, defaultBgm:$("#gBgm").value });
+  const boat = state.meta.boat.trim();
+  if (boat && !settings.boats.includes(boat)) { settings.boats.unshift(boat); settings.boats = settings.boats.slice(0, 20); }
+  saveSettings();
+  if (state.sources.some(s => !s.ana)) { const ok = await analyzeAll(false); if (!ok) return; }
+  const meta = { date:state.meta.date.trim(), boat, fish:state.meta.fish.trim(), title:state.meta.title.trim() };
+  const cands = [];
+  for (const s of styles) for (const d of durs) for (const p of pats) { const c = planCandidate(s, d, p, meta, settings.autoSE, settings.defaultBgm); if (c) cands.push(c); }
+  if (!cands.length) { toast("候補を作れませんでした（見どころを確認してください）"); return; }
+  state.candidates = cands;
+  if (settings.apiKey) await runJob("AIで候補を評価", () => aiRank(cands));
+  sortCands(); renderCands();
+  $("#candCard").scrollIntoView({ behavior:"smooth", block:"start" });
+};
+function finalScore(c){ return c.ai ? Math.round(c.ai.score * 0.7 + c.heur.total * 0.3) : c.heur.total; }
+function sortCands(){ state.candidates.sort((a, b) => finalScore(b) - finalScore(a)); }
+async function aiRank(cands){
+  Busy.set(0.2, "AIが " + cands.length + " 本の候補を見比べています");
+  const S = cands.map(c => {
+    const st = starts(c);
+    return "候補ID " + c.id + "：" + c.name + "（合計" + f1(totalOf(c)) + "秒）\n" + c.clips.map((k, i) =>
+      "  " + f1(st[i]) + "〜" + f1(st[i] + k.out - k.in) + "秒 [" + (TYPE_JA[k.hlType] || "つなぎ") + (k.hlScore ? " 見どころ度" + Math.round(k.hlScore * 10) : "") + "] " + (k.desc || "")).join("\n")
+      + "\n  テロップ：" + (c.telops.map(t => "「" + t.text.replace(/\n/g, " ") + "」" + f1(t.start) + "秒").join("、") || "なし");
+  }).join("\n\n");
+  const prompt =
+`あなたは釣り動画のショート動画（Instagram Reels・TikTok）の編集責任者です。
+次の編集候補を、冒頭の掴み（最初の2秒）・見どころの濃さ・テンポ・最後まで見たくなる構成の観点で採点してください。
+score は0〜100の整数、comment は改善点か良い点を全角40文字以内で。
+
+${S}
+
+次の形のJSONだけを出力してください：
+{"rankings":[{"id":"候補ID","score":80,"comment":""}]}`;
+  try {
+    const r = await gemini([{ text:prompt }], { timeout:90000 });
+    const list = (r.json && r.json.rankings) || [];
+    for (const x of list) { const c = cands.find(k => k.id === String(x.id).trim()); if (c) c.ai = { score:clamp(Math.round(+x.score || 0), 0, 100), comment:String(x.comment || "").slice(0, 60) }; }
+    log("AI評価: " + list.length + "件");
+  } catch (e) {
+    if (e.message === "__cancel__" || Busy.cancelled) throw e;
+    log("AI評価失敗: " + e.message); toast("AI評価に失敗したため自動評価で並べます：" + e.message, 4500);
+  }
+}
+function renderCands(){
+  const box = $("#candList"); box.innerHTML = "";
+  $("#candCard").hidden = !state.candidates.length;
+  $("#candTitle").textContent = "ランキング（" + state.candidates.length + "本）" + (state.candidates.some(c => c.ai) ? "・AI評価あり" : "・自動評価");
+  state.candidates.forEach((c, i) => {
+    const b = c.heur;
+    const cb = h("input", { type:"checkbox", checked:!!c.batch, onchange:e => { c.batch = e.target.checked; } });
+    box.append(h("div", { class:"cand" },
+      h("div", { class:"rk" }, i + 1),
+      h("div", { class:"bd" },
+        h("b", {}, c.name),
+        h("div", {}, h("span", { class:"sc" }, finalScore(c)), h("span", { class:"small" }, " 点　" + (c.ai ? "AI " + c.ai.score + "／" : "") + "自動 " + b.total)),
+        h("div", { class:"small" }, "掴み" + b.hook + "・内容" + b.content + "・テンポ" + b.pacing + "・多様さ" + b.variety + "　" + c.clips.length + "カット・" + f1(totalOf(c)) + "秒"),
+        c.ai && c.ai.comment ? h("div", { class:"cm" }, "AI：" + c.ai.comment) : null),
+      h("div", { class:"side" },
+        h("button", { class:"mini", onclick:() => { openProject(deep(c)); showTab("edit"); } }, "開く"),
+        h("label", { class:"small", style:"display:flex;gap:4px;align-items:center" }, cb, "一括"))
+    ));
+  });
+}
+$("#btnBatch").onclick = () => {
+  const list = state.candidates.filter(c => c.batch);
+  if (!list.length) { toast("一括書き出しする候補にチェックを入れてください"); return; }
+  if (list.length > 6 && !confirm(list.length + "本を書き出します。時間がかかり、端末のメモリが足りなくなる場合があります。続けますか？")) return;
+  exportMany(list.map(c => deep(c)));
+};
+
+/* =====================================================================
+   編集・プレビュー
+   ===================================================================== */
+let selClip = -1;
+function openProject(p, keep){
+  state.project = p || null;
+  $("#editEmpty").hidden = !!p; $("#editor").hidden = !p;
+  PV.pause();
+  if (!p) return;
+  if (!keep) selClip = -1;
+  $("#edName").innerHTML = "<b>" + p.name + "</b>";
+  renderClips(); renderTels(); renderAudio(); renderLogo();
+  PV.setProject(p);
+  autosave();
+}
+function projChanged(structural){
+  const p = state.project; if (!p) return;
+  for (const c of p.clips) {
+    const s = srcById(c.srcId); if (!s) continue;
+    c.in = clamp(c.in, 0, Math.max(0, s.dur - 0.2)); c.out = clamp(c.out, c.in + 1 / FPS, s.dur - 0.02);
+    c.out = +(c.in + Math.max(1 / FPS, q(c.out - c.in))).toFixed(4);   // フレーム単位に揃える
+  }
+  if (structural) { renderClips(); renderTels(); renderAudio(); }
+  else { $("#clipSum").textContent = "（" + p.clips.length + "カット・" + f1(totalOf(p)) + "秒）"; }
+  PV.recompute(); PV.redraw();
+  autosave();
+}
+let asTimer = null;
+function autosave(){
+  clearTimeout(asTimer);
+  asTimer = setTimeout(() => {
+    const p = state.project; if (!p) return;
+    const sigOf = id => (srcById(id) || {}).sig;
+    const data = { saved:Date.now(), project:deep(p), sigs:[...new Set(p.clips.map(c => sigOf(c.srcId)))] };
+    data.project.clips.forEach(c => { c.srcSig = sigOf(c.srcId); });
+    lsSet("frs_project", data);
+  }, 600);
+}
+function checkRestore(){
+  const d = lsGet("frs_project");
+  if (!d || !d.project) { $("#restoreCard").hidden = true; return; }
+  const have = new Set(state.sources.map(s => s.sig));
+  const ok = d.sigs.every(s => have.has(s));
+  $("#restoreCard").hidden = false;
+  $("#restoreText").innerHTML = "前回の編集「<b>" + d.project.name + "</b>」が残っています。" + (ok ? "" : "<br>使っていた動画（" + d.sigs.length + "本）をすべて追加すると復元できます。");
+  $("#btnRestore").disabled = !ok;
+}
+$("#btnRestore").onclick = () => {
+  const d = lsGet("frs_project"); if (!d) return;
+  const p = d.project;
+  for (const c of p.clips) { const s = state.sources.find(x => x.sig === c.srcSig); if (!s) { toast("動画が足りません"); return; } c.srcId = s.id; delete c.srcSig; }
+  openProject(p); showTab("edit"); toast("復元しました");
+};
+$("#btnRestoreDel").onclick = () => { try { localStorage.removeItem("frs_project"); } catch (_) {} $("#restoreCard").hidden = true; };
+
+function numCtl(val, step, onSet, fmt){
+  const inp = h("input", { type:"number", step:String(step), value:fmt ? fmt(val) : val, onchange:e => onSet(+e.target.value) });
+  return h("div", { class:"num" },
+    h("button", { onclick:() => onSet(+inp.value - step) }, "−"), inp,
+    h("button", { onclick:() => onSet(+inp.value + step) }, "＋"));
+}
+function renderClips(){
+  const p = state.project; const box = $("#clipList"); box.innerHTML = "";
+  const S = starts(p);
+  $("#clipSum").textContent = "（" + p.clips.length + "カット・" + f1(totalOf(p)) + "秒）";
+  p.clips.forEach((c, i) => {
+    const s = srcById(c.srcId);
+    const setIn = v => { c.in = clamp(v, 0, c.out - 0.2); projChanged(true); PV.seek(starts(p)[i]); };
+    const setOut = v => { c.out = clamp(v, c.in + 0.2, s.dur - 0.02); projChanged(true); PV.seek(Math.max(0, starts(p)[i] + (c.out - c.in) - 0.3)); };
+    box.append(h("div", { class:"item" + (i === selClip ? " sel" : "") },
+      h("div", { class:"hd" },
+        h("div", {}, h("b", {}, "#" + (i + 1) + " "), (c.teaser ? "【冒頭】" : "") + (TYPE_JA[c.hlType] || "つなぎ"), h("div", { class:"small" }, (s ? s.name : "?") + "　" + f1(c.in) + "→" + f1(c.out) + "（" + f1(c.out - c.in) + "秒）")),
+        h("div", { class:"row nw", style:"margin:0" },
+          h("button", { class:"mini", onclick:() => { selClip = i; PV.seek(S[i]); renderClips(); } }, "▶"),
+          h("button", { class:"mini", disabled:i === 0, onclick:() => { [p.clips[i - 1], p.clips[i]] = [p.clips[i], p.clips[i - 1]]; projChanged(true); } }, "▲"),
+          h("button", { class:"mini", disabled:i === p.clips.length - 1, onclick:() => { [p.clips[i + 1], p.clips[i]] = [p.clips[i], p.clips[i + 1]]; projChanged(true); } }, "▼"),
+          h("button", { class:"mini", disabled:p.clips.length <= 1, onclick:() => { p.clips.splice(i, 1); projChanged(true); } }, "✕"))),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "開始"), numCtl(c.in, 0.1, setIn, f1)),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "終了"), numCtl(c.out, 0.1, setOut, f1))
+    ));
+  });
+  const sel = $("#addSrc"); const prev = sel.value; sel.innerHTML = "";
+  state.sources.forEach((s, i) => sel.append(h("option", { value:s.id }, (i + 1) + ". " + s.name + "（" + f1(s.dur) + "秒）")));
+  if (prev && srcById(prev)) sel.value = prev;
+}
+$("#btnAddClip").onclick = () => {
+  const p = state.project; const s = srcById($("#addSrc").value); if (!p || !s) return;
+  const a = clamp(+$("#addIn").value || 0, 0, s.dur - 0.3), L = clamp(+$("#addLen").value || 3, 0.3, s.dur - a);
+  const i = selClip >= 0 ? selClip + 1 : p.clips.length;
+  p.clips.splice(i, 0, { id:uid(), srcId:s.id, in:a, out:a + q(L), hlType:"", hlScore:0, hlT:null, desc:"手動追加" });
+  selClip = i; projChanged(true); PV.seek(starts(p)[i]); toast("#" + (i + 1) + " に追加しました");
+};
+$("#pvSplit").onclick = () => {
+  const p = state.project; if (!p) return;
+  const t = PV.t; const S = starts(p); const i = PV.clipAt(t); const c = p.clips[i];
+  const at = c.in + (t - S[i]);
+  if (at - c.in < 0.2 || c.out - at < 0.2) { toast("つなぎ目に近すぎます"); return; }
+  const c2 = Object.assign(deep(c), { id:uid(), in:at, teaser:false }); c.out = at;
+  p.clips.splice(i + 1, 0, c2); selClip = i + 1; projChanged(true); toast("分割しました");
+};
+function renderTels(){
+  const p = state.project; const box = $("#telList"); box.innerHTML = "";
+  $("#telSum").textContent = "（" + p.telops.length + "）";
+  const T = totalOf(p);
+  p.telops.sort((a, b) => a.start - b.start).forEach(t => {
+    const pre = h("select", { onchange:e => { t.preset = e.target.value; projChanged(); } });
+    for (const [k, v] of Object.entries(PRESETS)) pre.append(h("option", { value:k }, v.label));
+    pre.value = t.preset;
+    const setS = v => { t.start = clamp(+v.toFixed(2), 0, t.end - 0.2); projChanged(true); PV.seek(t.start); };
+    const setE = v => { t.end = clamp(+v.toFixed(2), t.start + 0.2, T); projChanged(true); PV.seek(Math.max(t.start, t.end - 0.2)); };
+    box.append(h("div", { class:"item" },
+      h("textarea", { rows:2, value:t.text, oninput:e => { t.text = e.target.value; projChanged(); }, onfocus:() => { if (PV.t < t.start || PV.t >= t.end) PV.seek(t.start + 0.01); } }),
+      h("div", { class:"row nw" }, pre, h("button", { class:"mini", style:"flex:none", onclick:() => { p.telops = p.telops.filter(x => x !== t); projChanged(true); } }, "削除")),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "位置"), h("input", { type:"range", min:0.04, max:0.96, step:0.01, value:t.y, oninput:e => { t.y = +e.target.value; if (PV.t < t.start || PV.t >= t.end) PV.seek(t.start + 0.01); projChanged(); } })),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "大きさ"), h("input", { type:"range", min:0.4, max:1.8, step:0.05, value:t.size || 1, oninput:e => { t.size = +e.target.value; projChanged(); } })),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "開始"), numCtl(t.start, 0.1, setS, f1), h("button", { class:"mini", onclick:() => setS(PV.t) }, "今")),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "終了"), numCtl(t.end, 0.1, setE, f1), h("button", { class:"mini", onclick:() => setE(PV.t) }, "今"))
+    ));
+  });
+}
+$("#btnAddTel").onclick = () => {
+  const p = state.project; if (!p) return;
+  const st = STYLES[p.style] || STYLES.fellows; const T = totalOf(p);
+  const a = clamp(PV.t, 0, Math.max(0, T - 0.5)), e = Math.min(T, a + 2);
+  // 同じ時間帯のテロップと重ならない高さを選ぶ
+  const busyY = p.telops.filter(x => x.start < e && x.end > a).map(x => x.y);
+  const y = [st.pos.hl, 0.55, 0.30, 0.85, 0.20].find(c => busyY.every(b => Math.abs(b - c) > 0.09)) || 0.5;
+  p.telops.push({ id:uid(), text:"テロップ", start:+a.toFixed(2), end:+e.toFixed(2), preset:st.telop.hl, y, size:st.size.hl });
+  projChanged(true); $("#secTel").open = true; PV.seek(a + 0.01);
+};
+function renderAudio(){
+  const p = state.project; const A = p.audio;
+  $("#aOrig").checked = A.orig; $("#aOrigVol").value = A.origVol; $("#aOrigV").textContent = Math.round(A.origVol * 100) + "%";
+  bgmOptions($("#aBgm"), A.bgm); if ($("#aBgm").value !== A.bgm) A.bgm = $("#aBgm").value;
+  $("#aBgm").append(h("option", { value:"__add" }, "＋ ファイルから追加…"));
+  $("#aBgmVol").value = A.bgmVol; $("#aBgmV").textContent = Math.round(A.bgmVol * 100) + "%"; $("#aBgmFade").checked = A.fade;
+  seOptions($("#seAddKind"), $("#seAddKind").value || "b:don");
+  const box = $("#seList"); box.innerHTML = "";
+  if (!p.se.length) box.append(h("div", { class:"small" }, "効果音はありません"));
+  const T = totalOf(p);
+  p.se.sort((a, b) => a.t - b.t).forEach(x => {
+    const sel = h("select", { onchange:e => { x.kind = e.target.value; PV.loadAudio(); autosave(); } }); seOptions(sel, x.kind);
+    const setT = v => { x.t = clamp(+v.toFixed(2), 0, Math.max(0, T - 0.05)); projChanged(true); PV.seek(Math.max(0, x.t - 0.5)); };
+    box.append(h("div", { class:"item" },
+      h("div", { class:"row nw", style:"margin-top:0" }, sel, h("button", { class:"mini", style:"flex:none", onclick:() => { p.se = p.se.filter(y => y !== x); projChanged(true); } }, "削除")),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "位置"), numCtl(x.t, 0.1, setT, f1), h("button", { class:"mini", onclick:() => setT(PV.t) }, "今")),
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "音量"), h("input", { type:"range", min:0, max:1.5, step:0.05, value:x.vol, onchange:e => { x.vol = +e.target.value; autosave(); } }))
+    ));
+  });
+}
+$("#aOrig").onchange = e => { state.project.audio.orig = e.target.checked; PV.applyGain(); autosave(); };
+$("#aOrigVol").oninput = e => { state.project.audio.origVol = +e.target.value; $("#aOrigV").textContent = Math.round(e.target.value * 100) + "%"; PV.applyGain(); autosave(); };
+$("#aBgm").onchange = e => {
+  if (e.target.value === "__add") { e.target.value = state.project.audio.bgm; $("#bgmIn2").click(); return; }
+  state.project.audio.bgm = e.target.value; PV.loadAudio(); autosave();
+};
+$("#aBgmVol").oninput = e => { state.project.audio.bgmVol = +e.target.value; $("#aBgmV").textContent = Math.round(e.target.value * 100) + "%"; PV.applyGain(); autosave(); };
+$("#aBgmFade").onchange = e => { state.project.audio.fade = e.target.checked; autosave(); };
+$("#btnAddSE").onclick = () => { const p = state.project; if (!p) return; p.se.push({ id:uid(), kind:$("#seAddKind").value, t:+PV.t.toFixed(2), vol:1 }); projChanged(true); PV.loadAudio(); toast("効果音を追加しました"); };
+$("#bgmIn2").onchange = async e => { const added = await addAudioFiles([...e.target.files], "bgm"); e.target.value = ""; if (added[0] && state.project) { state.project.audio.bgm = added[0]; renderAudio(); PV.loadAudio(); autosave(); } };
+function renderLogo(){
+  const L = settings.logo;
+  $("#lgOn").checked = L.enabled; $("#lgPos").value = L.pos; $("#lgSize").value = L.size; $("#lgOp").value = L.opacity;
+  const im = $("#lgPrev"); if (logoImg) { im.src = logoImg.src; im.hidden = false; } else im.hidden = true;
+}
+$("#lgOn").onchange = e => { if (e.target.checked && !logoImg) { e.target.checked = false; toast("先にロゴ画像を選んでください"); return; } settings.logo.enabled = e.target.checked; saveSettings(); PV.redraw(); };
+$("#lgPos").onchange = e => { settings.logo.pos = e.target.value; saveSettings(); PV.redraw(); };
+$("#lgSize").oninput = e => { settings.logo.size = +e.target.value; saveSettings(); PV.redraw(); };
+$("#lgOp").oninput = e => { settings.logo.opacity = +e.target.value; saveSettings(); PV.redraw(); };
+$("#btnLogo").onclick = () => $("#logoIn").click();
+$("#logoIn").onchange = async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { await DB.put({ key:"logo", name:f.name, type:f.type, blob:f, created:Date.now() }); } catch (err) { toast("ロゴを保存できませんでした"); log("ロゴ保存失敗: " + err.message); return; }
+  await loadLib(); await loadLogoImg(); settings.logo.enabled = !!logoImg; saveSettings(); renderLogo(); PV.redraw();
+  toast("ロゴを設定しました");
+};
+
+/* ---------- プレビューエンジン ---------- */
+const PV = {
+  v:null, cv:null, p:null, S:[], T:0, t:0, i:0, playing:false, raf:0, cur:null, token:0,
+  actx:null, vGain:null, master:null, bgmBuf:null, bgmNode:null, bgmGain:null, nodes:[], seBufs:{},
+  init(){
+    this.v = $("#pvVideo"); this.cv = $("#pvCanvas");
+    $("#pvPlay").onclick = () => (this.playing ? this.pause() : this.play());
+    let pend = null, busy = false;
+    $("#pvSeek").oninput = e => {
+      pend = +e.target.value; if (this.playing) this.pause();
+      if (busy) return;
+      const go = async () => { busy = true; while (pend != null) { const x = pend; pend = null; await this.seek(x); } busy = false; };
+      go();
+    };
+    window.addEventListener("resize", () => this.redraw());
+  },
+  setProject(p){ this.p = p; this.recompute(); this.loadAudio(); this.seek(0); },
+  recompute(){ if (!this.p) return; this.S = starts(this.p); this.T = totalOf(this.p); $("#pvSeek").max = Math.max(0.01, this.T).toFixed(2); this.t = Math.min(this.t, this.T); },
+  clipAt(t){ const S = this.S; for (let i = S.length - 1; i >= 0; i--) if (t >= S[i] - 1e-6) return i; return 0; },
+  async loadSrc(s){
+    if (this.cur === s.id) return;
+    this.cur = s.id; this.v.src = s.url;
+    try { await once(this.v, "loadedmetadata", 8000); } catch (_) { log("プレビュー読込失敗"); }
+  },
+  async seekVideo(time){
+    if (Math.abs(this.v.currentTime - time) < 0.02 && this.v.readyState >= 2) return;
+    try { this.v.currentTime = time; await once(this.v, "seeked", 3000); } catch (_) {}
+  },
+  async seek(t){
+    if (!this.p || !this.p.clips.length) return;
+    t = clamp(t, 0, Math.max(0, this.T - 0.001));
+    const i = this.clipAt(t), c = this.p.clips[i], s = srcById(c.srcId); if (!s) return;
+    this.t = t; this.i = i; this.ui();
+    await this.loadSrc(s);
+    await this.seekVideo(c.in + (t - this.S[i]));
+    this.redraw();
+  },
+  ensureAudio(){
+    if (!this.actx) {
+      try {
+        const AC = window.AudioContext || window.webkitAudioContext; this.actx = new AC();
+        this.master = this.actx.createGain(); this.master.connect(this.actx.destination);
+        try { const ms = this.actx.createMediaElementSource(this.v); this.vGain = this.actx.createGain(); ms.connect(this.vGain).connect(this.master); } catch (e) { log("映像音声のWebAudio接続不可: " + e.message); }
+        this.loadAudio();
+      } catch (e) { log("AudioContext作成失敗: " + e.message); }
+    }
+    if (this.actx && this.actx.state !== "running") this.actx.resume().catch(() => {});
+    this.applyGain();
+  },
+  applyGain(){
+    const A = this.p && this.p.audio; if (!A) return;
+    if (this.vGain) this.vGain.gain.value = A.orig ? A.origVol : 0;
+    this.v.muted = !A.orig;
+    if (this.bgmGain) this.bgmGain.gain.value = A.bgmVol;
+  },
+  async decodeBlob(blob){ const ab = await blob.arrayBuffer(); return await new Promise((res, rej) => { const p = this.actx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); },
+  async loadAudio(){
+    if (!this.actx || !this.p) return;
+    const A = this.p.audio;
+    this.bgmBuf = null;
+    if (A.bgm) { const r = lib.bgm.find(x => x.key === A.bgm); if (r) { try { this.bgmBuf = await this.decodeBlob(r.blob); } catch (e) { log("BGMデコード失敗: " + e.message); toast("このBGMは再生できない形式です"); } } }
+    for (const x of this.p.se) {
+      if (this.seBufs[x.kind]) continue;
+      try {
+        if (x.kind.startsWith("b:")) this.seBufs[x.kind] = await synthSE(x.kind.slice(2));
+        else { const r = lib.se.find(y => y.key === x.kind); if (r) this.seBufs[x.kind] = await this.decodeBlob(r.blob); }
+      } catch (e) { log("効果音読込失敗: " + e.message); }
+    }
+  },
+  startAudio(){
+    if (!this.actx) return;
+    this.stopAudio();
+    const now = this.actx.currentTime + 0.02, t = this.t, A = this.p.audio, T = this.T;
+    if (this.bgmBuf && A.bgm) {
+      const n = this.actx.createBufferSource(); n.buffer = this.bgmBuf; n.loop = true;
+      const g = this.actx.createGain(); g.gain.value = A.bgmVol;
+      if (A.fade) { const fs = Math.max(0, T - 2 - t); g.gain.setValueAtTime(A.bgmVol, now + fs); g.gain.linearRampToValueAtTime(0.0001, now + Math.max(fs, T - t)); }
+      n.connect(g).connect(this.master); n.start(now, t % this.bgmBuf.duration); n.stop(now + Math.max(0.05, T - t));
+      this.bgmNode = n; this.bgmGain = g; this.nodes.push(n);
+    }
+    for (const x of this.p.se) {
+      if (x.t < t - 0.01 || !this.seBufs[x.kind]) continue;
+      const n = this.actx.createBufferSource(); n.buffer = this.seBufs[x.kind];
+      const g = this.actx.createGain(); g.gain.value = x.vol;
+      n.connect(g).connect(this.master); n.start(now + (x.t - t)); this.nodes.push(n);
+    }
+  },
+  stopAudio(){ for (const n of this.nodes) { try { n.stop(); } catch (_) {} } this.nodes = []; this.bgmNode = null; this.bgmGain = null; },
+  async play(){
+    if (!this.p || !this.p.clips.length) return;
+    this.ensureAudio();
+    if (this.t >= this.T - 0.05) this.t = 0;
+    const tok = ++this.token; this.playing = true; this.ui();
+    await this.seek(this.t);
+    if (tok !== this.token) return;
+    try { await this.v.play(); } catch (e) { log("再生失敗: " + e.message); this.playing = false; this.ui(); return; }
+    this.startAudio();
+    cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame(() => this.step());
+  },
+  pause(){ this.playing = false; this.token++; try { this.v.pause(); } catch (_) {} this.stopAudio(); cancelAnimationFrame(this.raf); this.ui(); },
+  async step(){
+    if (!this.playing) return;
+    const c = this.p.clips[this.i];
+    const vt = this.v.currentTime;
+    this.t = clamp(this.S[this.i] + (vt - c.in), 0, this.T);
+    if (vt >= c.out - 0.03 || this.v.ended) {
+      if (this.i + 1 >= this.p.clips.length) { this.pause(); this.t = this.T; this.ui(); this.redraw(); return; }
+      const tok = this.token, j = this.i + 1, n = this.p.clips[j];
+      this.v.pause(); this.stopAudio();
+      this.i = j; this.t = this.S[j];
+      await this.loadSrc(srcById(n.srcId)); await this.seekVideo(n.in);
+      if (tok !== this.token || !this.playing) return;
+      try { await this.v.play(); } catch (_) {}
+      this.startAudio();
+    }
+    this.redraw(); this.ui();
+    this.raf = requestAnimationFrame(() => this.step());
+  },
+  redraw(){
+    const cv = this.cv; if (!cv || !this.p) return;
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    const W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (!W || !H) return;
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
+    const c = cv.getContext("2d"); c.clearRect(0, 0, W, H);
+    for (const t of this.p.telops) if (this.t >= t.start && this.t < t.end && t.text.trim()) drawTelop(c, t, W, H);
+    if (settings.logo.enabled) drawLogo(c, W, H);
+  },
+  ui(){ $("#pvPlay").textContent = this.playing ? "❚❚" : "▶"; $("#pvTime").textContent = f1(this.t) + " / " + f1(this.T); $("#pvSeek").value = this.t.toFixed(2); }
+};
+
+/* =====================================================================
+   書き出し
+   ===================================================================== */
+function renderQOpts(){
+  const box = $("#qOpts"); box.innerHTML = "";
+  for (const [k, v] of Object.entries(QUALITY)) {
+    const r = h("input", { type:"radio", name:"q", checked:settings.quality === k, onchange:() => { settings.quality = k; saveSettings(); $$("#qOpts .opt").forEach(x => x.classList.toggle("on", x.contains(r))); } });
+    box.append(h("label", { class:"opt" + (settings.quality === k ? " on" : "") }, r, h("span", {}, v.label, h("small", {}, v.sub))));
+  }
+}
+async function canvasPNG(cv){
+  const b = await new Promise(res => cv.toBlob(res, "image/png"));
+  return new Uint8Array(await b.arrayBuffer());
+}
+async function renderProject(p, qKey, prog){
+  const Q = QUALITY[qKey] || QUALITY.std; const W = Q.w, H = Q.h;
+  if (!p.clips.length) throw new Error("カットがありません");
+  await FF.load(); await FF.mountSources();
+  for (const c of p.clips) { const s = srcById(c.srcId); if (!s) throw new Error("素材が見つかりません（削除された可能性）"); if (s.hasAudio == null) await probeSource(s); }
+  const telops = p.telops.filter(t => t.text.trim() && t.end > t.start);
+  await ensureFonts(telops.map(t => t.text));
+  const qd = p.clips.map(c => Math.max(1 / FPS, q(c.out - c.in)));
+  const S = []; let T = 0; for (const d of qd) { S.push(T); T += d; }
+  const temp = [];
+  // テロップ・ロゴを画像化
+  const ov = [];
+  for (let i = 0; i < telops.length; i++) {
+    const t = telops[i];
+    const full = document.createElement("canvas"); full.width = W; full.height = H;
+    const r = drawTelop(full.getContext("2d"), t, W, H);
+    const crop = document.createElement("canvas"); crop.width = r.w; crop.height = r.h;
+    crop.getContext("2d").drawImage(full, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
+    const name = "tp" + i + ".png"; await FF.write(name, await canvasPNG(crop)); temp.push(name);
+    ov.push({ name, x:r.x, y:r.y, start:t.start, end:t.end });
+  }
+  let logo = null;
+  if (settings.logo.enabled && logoImg) {
+    const r = logoRect(W, H);
+    const cv = document.createElement("canvas"); cv.width = r.w; cv.height = r.h;
+    const c = cv.getContext("2d"); c.globalAlpha = settings.logo.opacity; c.drawImage(logoImg, 0, 0, r.w, r.h);
+    await FF.write("lg.png", await canvasPNG(cv)); temp.push("lg.png");
+    logo = { name:"lg.png", x:r.x, y:r.y };
+  }
+  // カットごとに 映像(H.264) と 音声(WAV) を作る
+  const vList = [], aList = [];
+  let done = 0;
+  for (let i = 0; i < p.clips.length; i++) {
+    const c = p.clips[i], s = srcById(c.srcId), d = qd[i], T0 = S[i];
+    const nF = Math.max(1, Math.round(d * FPS));
+    const args = ["-hide_banner"];
+    if (Q.fastDecode) args.push("-skip_loop_filter", "all");
+    args.push("-ss", c.in.toFixed(3), "-t", (d + 0.1).toFixed(3), "-i", "/in/" + s.ffName);
+    let nIn = 1;
+    const useA = p.audio.orig && s.hasAudio;
+    let aSrc = "0:a:0";
+    if (!useA) { args.push("-f", "lavfi", "-t", (d + 0.1).toFixed(3), "-i", "anullsrc=r=48000:cl=stereo"); aSrc = nIn + ":a"; nIn++; }
+    const ins = [];
+    for (const o of ov) if (o.end > T0 + 0.001 && o.start < T0 + d - 0.001) { args.push("-i", o.name); ins.push({ idx:nIn++, o }); }
+    if (logo) { args.push("-i", logo.name); ins.push({ idx:nIn++, o:logo, always:true }); }
+    let f = "[0:v:0]scale=" + W + ":" + H + ":force_original_aspect_ratio=increase,crop=" + W + ":" + H + ",setsar=1,fps=" + FPS + ",tpad=stop_mode=clone:stop_duration=1[v0]";
+    let last = "v0";
+    ins.forEach((x, j) => {
+      const en = x.always ? "" : ":enable='between(t," + Math.max(0, x.o.start - T0).toFixed(3) + "," + Math.min(d + 1, x.o.end - T0).toFixed(3) + ")'";
+      f += ";[" + last + "][" + x.idx + ":v]overlay=x=" + x.o.x + ":y=" + x.o.y + en + ":format=auto[v" + (j + 1) + "]"; last = "v" + (j + 1);
+    });
+    f += ";[" + last + "]format=yuv420p[vo]";
+    f += ";[" + aSrc + "]aresample=48000,aformat=sample_fmts=s16:channel_layouts=stereo" + (useA ? ",volume=" + p.audio.origVol : "") + ",apad,atrim=0:" + d.toFixed(4) + ",asetpts=PTS-STARTPTS[ao]";
+    const vn = "sg" + i + ".h264", an = "sg" + i + ".wav";   // 映像は生H.264で出し、最後にコマ時刻を振り直して結合（つなぎ目のコマ落ち防止）
+    args.push("-filter_complex", f,
+      "-map", "[vo]", "-c:v", "libx264", "-preset", Q.preset, "-crf", String(Q.crf), "-maxrate", "16M", "-bufsize", "32M",
+      "-pix_fmt", "yuv420p", "-g", "60", "-r", String(FPS), "-frames:v", String(nF), "-an", "-f", "h264", vn,
+      "-map", "[ao]", "-c:a", "pcm_s16le", "-t", (nF / FPS).toFixed(4), an);
+    await FF.exec(args, { dur:d, onProg:r => prog((done + r * d) / T * 0.92, "カット " + (i + 1) + "/" + p.clips.length + " を処理中") });
+    temp.push(vn, an); vList.push(vn); aList.push(an); done += d;
+  }
+  // 結合＋音のミックス
+  prog(0.93, "つなぎ合わせて音を仕上げています");
+  const enc = new TextEncoder();
+  await FF.write("al.txt", enc.encode(aList.map(x => "file '" + x + "'").join("\n") + "\n"));
+  temp.push("al.txt");
+  const args = ["-hide_banner", "-f", "h264", "-framerate", String(FPS), "-i", "concat:" + vList.join("|"), "-f", "concat", "-safe", "0", "-i", "al.txt"];
+  let idx = 2; const mix = ["[base]"];
+  let f = "[1:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[base]";
+  const A = p.audio;
+  if (A.bgm) {
+    const r = lib.bgm.find(x => x.key === A.bgm);
+    if (r) {
+      const ext = ((r.name.match(/\.(mp3|m4a|aac|wav|caf|aiff?)$/i) || [".m4a"])[0]).toLowerCase();
+      const nm = "bgm" + ext; await FF.write(nm, new Uint8Array(await r.blob.arrayBuffer())); temp.push(nm);
+      args.push("-stream_loop", "-1", "-i", nm);
+      f += ";[" + idx + ":a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=" + A.bgmVol + ",atrim=0:" + T.toFixed(3) + ",asetpts=PTS-STARTPTS" + (A.fade && T > 2.5 ? ",afade=t=out:st=" + (T - 2).toFixed(3) + ":d=2" : "") + "[bgm]";
+      mix.push("[bgm]"); idx++;
+    } else log("BGMが見つからないため省略");
+  }
+  const seFiles = {};
+  for (let j = 0; j < p.se.length; j++) {
+    const x = p.se[j]; if (x.t >= T) continue;
+    if (!seFiles[x.kind]) {
+      let nm;
+      if (x.kind.startsWith("b:")) { nm = "se_" + x.kind.slice(2) + ".wav"; await FF.write(nm, wavBytes(await synthSE(x.kind.slice(2)))); }
+      else {
+        const r = lib.se.find(y => y.key === x.kind); if (!r) { log("効果音が見つからないため省略"); continue; }
+        const ext = ((r.name.match(/\.(mp3|m4a|aac|wav|caf|aiff?)$/i) || [".m4a"])[0]).toLowerCase();
+        nm = "se_" + j + ext; await FF.write(nm, new Uint8Array(await r.blob.arrayBuffer()));
+      }
+      seFiles[x.kind] = nm; temp.push(nm);
+    }
+    args.push("-i", seFiles[x.kind]);
+    const ms = Math.round(x.t * 1000);
+    f += ";[" + idx + ":a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=" + x.vol + ",adelay=" + ms + ":all=1[s" + j + "]";
+    mix.push("[s" + j + "]"); idx++;
+  }
+  if (mix.length > 1) f += ";" + mix.join("") + "amix=inputs=" + mix.length + ":duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.95[aout]";
+  else f += ";[base]anull[aout]";
+  args.push("-filter_complex", f, "-map", "0:v", "-map", "[aout]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", T.toFixed(4), "-movflags", "+faststart", "out.mp4");
+  await FF.exec(args, { dur:T, onProg:r => prog(0.93 + r * 0.06) });
+  const data = await FF.read("out.mp4");
+  for (const nm of temp.concat(["out.mp4"])) await FF.rm(nm);
+  if (!data || !data.byteLength) throw new Error("出力が空でした");
+  prog(1, "完了");
+  return new Blob([data], { type:"video/mp4" });
+}
+async function exportMany(list){
+  const qk = settings.quality;
+  const okCount = await runJob("書き出し", async () => {
+    let ok = 0;
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i]; const t0 = Date.now();
+      const tag = list.length > 1 ? "（" + (i + 1) + "/" + list.length + "本目）" : "";
+      Busy.set(i / list.length, p.name + tag);
+      const blob = await renderProject(p, qk, (r, msg) => Busy.set((i + r) / list.length, msg != null ? p.name + tag + "：" + msg : null));
+      const sec = Math.round((Date.now() - t0) / 1000);
+      addResult(p.name, blob, totalOf(p));
+      log("書き出し完了: " + p.name + " / " + mb(blob.size) + " / " + sec + "秒 / " + QUALITY[qk].label);
+      ok++;
+    }
+    return ok;
+  });
+  if (okCount) { showTab("exp"); toast(okCount + "本書き出しました"); }
+}
+$("#btnExport").onclick = () => {
+  if (!state.project) { toast("先に「生成」タブで候補を開いてください"); showTab("gen"); return; }
+  PV.pause(); exportMany([deep(state.project)]);
+};
+function stamp(){ const n = new Date(), z = x => String(x).padStart(2, "0"); return n.getFullYear() + z(n.getMonth() + 1) + z(n.getDate()) + "_" + z(n.getHours()) + z(n.getMinutes()) + z(n.getSeconds()); }
+function addResult(name, blob, dur){
+  const fn = "reel_" + stamp() + "_" + (state.results.length + 1) + ".mp4";
+  state.results.push({ id:uid(), name, file:fn, blob, url:URL.createObjectURL(blob), dur });
+  renderResults();
+}
+function renderResults(){
+  const box = $("#resList"); box.innerHTML = "";
+  $("#btnSaveAll").hidden = state.results.length < 2;
+  if (!state.results.length) { box.append(h("div", { class:"empty" }, "まだありません")); return; }
+  for (const r of [...state.results].reverse()) {
+    box.append(h("div", { class:"res" },
+      h("b", {}, r.name), h("div", { class:"small" }, f1(r.dur) + "秒 / " + mb(r.blob.size)),
+      h("video", { src:r.url, controls:true, playsInline:true, preload:"metadata", style:"margin-top:6px" }),
+      h("div", { class:"row" },
+        h("button", { class:"primary", style:"flex:2", onclick:() => shareFiles([r]) }, "保存"),
+        h("button", { onclick:() => { URL.revokeObjectURL(r.url); state.results = state.results.filter(x => x !== r); renderResults(); } }, "削除"))
+    ));
+  }
+}
+async function shareFiles(rs){
+  const files = rs.map(r => new File([r.blob], r.file, { type:"video/mp4" }));
+  try {
+    if (navigator.canShare && navigator.canShare({ files })) { await navigator.share({ files }); log("共有シート: 完了 " + files.length + "本"); return; }
+  } catch (e) { if (e && e.name === "AbortError") { log("共有シート: キャンセル"); return; } log("共有エラー: " + e.message); }
+  for (const r of rs) { const a = h("a", { href:r.url, download:r.file }); document.body.append(a); a.click(); a.remove(); await sleep(400); }
+  log("ダウンロード方式で保存");
+}
+$("#btnSaveAll").onclick = () => shareFiles(state.results);
+
+/* =====================================================================
+   設定画面
+   ===================================================================== */
+function openSettings(){
+  $("#sheetSettings").hidden = false;
+  $("#sKey").value = settings.apiKey;
+  modelOptions(); renderLibLists();
+  $("#log").textContent = logLines.join("\n");
+}
+function modelOptions(list){
+  const sel = $("#sModel"); sel.innerHTML = "";
+  const names = list || [...new Set([settings.model, GEM_DEFAULT, GEM_LITE].filter(Boolean))];
+  for (const n of names) sel.append(h("option", { value:n }, n));
+  sel.value = names.includes(settings.model) ? settings.model : names[0];
+}
+$("#btnSettings").onclick = openSettings;
+$("#btnCloseSettings").onclick = () => { $("#sheetSettings").hidden = true; renderAnaMode(); };
+$("#sheetSettings").onclick = e => { if (e.target.id === "sheetSettings") { $("#sheetSettings").hidden = true; renderAnaMode(); } };
+$("#sKey").onchange = e => { settings.apiKey = e.target.value.trim(); saveSettings(); renderAnaMode(); };
+$("#btnKeyShow").onclick = () => { const k = $("#sKey"); k.type = k.type === "password" ? "text" : "password"; $("#btnKeyShow").textContent = k.type === "password" ? "表示" : "隠す"; };
+$("#sModel").onchange = e => { settings.model = e.target.value; saveSettings(); };
+$("#btnModels").onclick = async () => {
+  settings.apiKey = $("#sKey").value.trim(); saveSettings();
+  if (!settings.apiKey) { $("#sGemMsg").textContent = "APIキーを入れてください"; return; }
+  $("#sGemMsg").textContent = "取得中…";
+  try {
+    const res = await fetch(GEM_URL + "/models?pageSize=200", { headers:{ "x-goog-api-key":settings.apiKey } });
+    const j = await res.json();
+    if (!res.ok) throw new Error((j.error && j.error.message) || res.status);
+    const names = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
+      .map(m => m.name.replace(/^models\//, "")).filter(n => /gemini/.test(n) && !/(embed|tts|image|live|audio|robotics|computer)/i.test(n));
+    if (!names.length) throw new Error("使えるモデルが見つかりません");
+    names.sort((a, b) => (/flash/.test(b) - /flash/.test(a)) || b.localeCompare(a));
+    modelOptions(names); settings.model = $("#sModel").value; saveSettings();
+    $("#sGemMsg").innerHTML = '<span class="ok">' + names.length + "件取得しました</span>";
+  } catch (e) { $("#sGemMsg").innerHTML = '<span class="err">失敗：' + e.message + "</span>"; log("モデル一覧失敗: " + e.message); }
+};
+$("#btnTest").onclick = async () => {
+  settings.apiKey = $("#sKey").value.trim(); saveSettings();
+  if (!settings.apiKey) { $("#sGemMsg").textContent = "APIキーを入れてください"; return; }
+  $("#sGemMsg").textContent = "テスト中…";
+  try { const r = await gemini([{ text:'{"ok":true} とだけJSONで返してください' }], { timeout:30000 }); $("#sGemMsg").innerHTML = '<span class="ok">接続OK（' + r.model + "）</span>"; }
+  catch (e) { $("#sGemMsg").innerHTML = '<span class="err">失敗：' + e.message + "</span>"; }
+};
+async function addAudioFiles(files, kind){
+  const keys = [];
+  for (const f of files) {
+    const key = kind + ":" + uid();
+    try { await DB.put({ key, name:f.name, type:f.type, blob:f, created:Date.now() }); keys.push(key); }
+    catch (e) { toast(f.name + " を保存できませんでした"); log("音源保存失敗: " + e.message); }
+  }
+  await loadLib(); renderLibLists(); renderGenForm();
+  if (keys.length) toast(keys.length + "件追加しました");
+  return keys;
+}
+function renderLibLists(){
+  for (const [kind, box] of [["bgm", $("#bgmLib")], ["se", $("#seLib")]]) {
+    box.innerHTML = "";
+    const list = lib[kind];
+    if (!list.length) { box.append(h("div", { class:"small" }, "まだありません")); continue; }
+    for (const r of list) box.append(h("div", { class:"row nw" }, h("div", { style:"flex:1;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" }, r.name + "（" + mb(r.blob.size) + "）"),
+      h("button", { class:"mini", style:"flex:none", onclick:async () => { await DB.del(r.key); await loadLib(); renderLibLists(); renderGenForm(); if (state.project) renderAudio(); } }, "削除")));
+  }
+}
+$("#btnBgmAdd").onclick = () => $("#bgmIn").click();
+$("#bgmIn").onchange = async e => { await addAudioFiles([...e.target.files], "bgm"); e.target.value = ""; if (state.project) renderAudio(); };
+$("#btnSeAdd").onclick = () => $("#seIn").click();
+$("#seIn").onchange = async e => { await addAudioFiles([...e.target.files], "se"); e.target.value = ""; if (state.project) renderAudio(); };
+$("#btnClearBoats").onclick = () => { settings.boats = []; saveSettings(); renderGenForm(); toast("消しました"); };
+$("#btnClearCache").onclick = () => { (lsGet("frs_ana_idx") || []).forEach(k => { try { localStorage.removeItem(k); } catch (_) {} }); lsSet("frs_ana_idx", []); toast("解析キャッシュを消しました"); };
+$("#btnCopyLog").onclick = async () => {
+  try { await navigator.clipboard.writeText(logLines.join("\n")); $("#btnCopyLog").textContent = "コピーしました"; }
+  catch (_) { $("#btnCopyLog").textContent = "コピー失敗：スクショで送ってください"; }
+  setTimeout(() => { $("#btnCopyLog").textContent = "ログをコピー"; }, 2000);
+};
+
+/* =====================================================================
+   タブ・起動
+   ===================================================================== */
+function showTab(name){
+  $$(".tab").forEach(x => x.classList.toggle("on", x.id === "tab-" + name));
+  $$("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.tab === name));
+  if (name !== "edit") PV.pause();
+  if (name === "ana") { renderAnaMode(); renderAna(); }
+  if (name === "gen") renderGenForm();
+  if (name === "edit" && state.project) { setTimeout(() => PV.redraw(), 50); }
+  if (name === "exp") { renderQOpts(); $("#expHint").textContent = state.project ? "編集中：" + state.project.name + "（" + f1(totalOf(state.project)) + "秒）" : "編集中の動画はありません"; }
+  window.scrollTo(0, 0);
+}
+$$("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
+$("#goAna").onclick = () => showTab("ana");
+$("#goGen").onclick = () => showTab("gen");
+$("#goExp").onclick = () => showTab("exp");
+document.addEventListener("visibilitychange", () => { if (document.hidden) PV.pause(); });
+
+(async function boot(){
+  $("#buildLbl").textContent = "build " + BUILD;
+  log("build " + BUILD);
+  log("UA: " + navigator.userAgent);
+  log("FFmpegWASM: " + (typeof FFmpegWASM !== "undefined") + " / share: " + !!navigator.canShare + " / wakeLock: " + ("wakeLock" in navigator));
+  PV.init();
+  renderSources(); renderAnaMode(); renderGenForm(); renderQOpts(); renderResults();
+  try { await loadLib(); await loadLogoImg(); } catch (e) { log("ライブラリ読込失敗: " + e.message); }
+  if (!logoImg && settings.logo.enabled) { settings.logo.enabled = false; saveSettings(); }
+  renderGenForm(); checkRestore();
+})();
+</script>
+</body>
+</html>
