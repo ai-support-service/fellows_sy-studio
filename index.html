@@ -40,7 +40,9 @@ button:disabled{opacity:.4}
 .row{display:flex;gap:8px;margin-top:8px;align-items:center;flex-wrap:wrap}
 .row>button{flex:1}
 .row.nw{flex-wrap:nowrap}
-input[type=text],input[type=password],input[type=number],select,textarea{font:inherit;font-size:16px;background:var(--bg);color:var(--text);
+label.row{flex-wrap:nowrap;align-items:flex-start}
+label.row input{flex:none;margin-top:1px}
+input[type=text],input[type=password],input[type=number],input[type=date],input[type=datetime-local],select,textarea{font:inherit;font-size:16px;background:var(--bg);color:var(--text);
   border:1px solid var(--line);border-radius:9px;padding:9px 10px;width:100%}
 textarea{resize:vertical;min-height:44px}
 input[type=number]{width:84px;text-align:center;padding:8px 4px}
@@ -120,6 +122,27 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
 #toast.on{opacity:1}
 .empty{color:var(--dim);font-size:13px;text-align:center;padding:16px 0}
 .foot{font-size:11px;color:#6f6352;text-align:center;margin-top:10px}
+.prompter{font-size:22px;line-height:1.6;background:#0e0b08;border-radius:12px;padding:16px;min-height:120px;margin:8px 0;white-space:pre-wrap}
+.rec{background:#c0392b!important;color:#fff!important}
+.ng{display:flex;gap:8px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.ng .lv{flex:none;font-size:11px;border-radius:6px;padding:1px 6px}
+.ng .lv.err{background:var(--err);color:#16110d}.ng .lv.warn{background:var(--warn);color:#16110d}
+.trend li{margin:3px 0}
+.trend ul{margin:4px 0 0;padding-left:18px;font-size:13px;color:var(--sub)}
+.hooks label{display:flex;gap:8px;align-items:center;margin-top:6px}
+.hooks input[type=text]{flex:1}
+.cap{min-height:120px}
+.pol{white-space:pre-wrap;font-size:12px;line-height:1.55;color:var(--sub);background:var(--bg);border:1px solid var(--line);border-radius:9px;padding:9px 10px;max-height:34vh;overflow:auto;margin-top:6px}
+.diag{white-space:pre-wrap;font-size:13px;line-height:1.55;background:var(--bg);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;margin-top:8px}
+.muse{border:1px solid var(--accent)}
+.thumbs{display:flex;gap:6px;overflow-x:auto;margin-top:8px}
+.thumbs img{height:120px;border-radius:6px;flex:none;background:#000}
+.plat{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px;margin-top:10px}
+.plat h3{margin:0 0 6px}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:6px 8px}
+.mgrid label{font-size:12px;color:var(--sub);display:block}
+.mgrid input{width:100%!important;text-align:left!important;padding:8px!important}
+.mgrid .opt2 label{color:var(--dim)}
 [hidden]{display:none!important}
 @media (max-width:768px){
   main{padding:10px 12px calc(84px + env(safe-area-inset-bottom))}
@@ -136,17 +159,74 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
 
 <main>
 <!-- ============ 1. 素材 ============ -->
-<section class="tab on" id="tab-src">
-  <div class="card">
-    <h2>素材</h2>
-    <input type="file" id="fileIn" accept="video/*,.mov,.mp4,.m4v" multiple hidden>
-    <button class="primary" id="btnAdd">動画を追加（複数選択できます）</button>
-    <div class="t">写真またはファイルApp（iCloud Drive）から選べます。1本3分以内がおすすめです。</div>
-    <div id="srcList"></div>
-  </div>
+<!-- ============ ★ 作成 ============ -->
+<section class="tab on" id="tab-make">
   <div class="card" id="restoreCard" hidden>
     <div class="t" id="restoreText"></div>
     <div class="row"><button id="btnRestore">前回の編集を復元</button><button id="btnRestoreDel">破棄</button></div>
+  </div>
+  <div class="card trend" id="trendCard" hidden>
+    <h2>今週のトレンド <span class="small" id="trendDate"></span></h2>
+    <div id="trendBody"></div>
+  </div>
+  <div class="small" id="policyLine" style="margin:-4px 4px 10px"></div>
+  <div class="card">
+    <h2>素材（動画・画像）</h2>
+    <button class="primary" id="btnAdd2">素材を追加（まとめて選べます）</button>
+    <div class="small" style="margin-top:6px">撮影日順に並ぶので、その日の動画を指でなぞってまとめて選んでください。チャッピーで作った画像も追加できます。</div>
+    <div id="makeSrcList"></div>
+  </div>
+  <div class="card">
+    <h2>どんなリールを作る？</h2>
+    <label class="fld">テーマ</label><input type="text" id="mkTheme" placeholder="例：サワラ×ポテジグ">
+    <label class="fld">目的</label><div class="chips" id="mkPurpose"></div>
+    <label class="fld">宣伝する商品（任意）</label><select id="mkProduct"></select>
+    <input type="text" id="mkProductFree" placeholder="一覧にない商品は正式名称を入力" style="margin-top:6px" hidden>
+    <label class="fld">投稿予定日</label><input type="date" id="mkDate">
+    <div class="row nw">
+      <div style="flex:1"><label class="fld">尺</label><select id="mkDur"><option value="15">15秒</option><option value="30">30秒</option><option value="60">60秒</option></select></div>
+      <div style="flex:1.4"><label class="fld">スタイル</label><select id="mkStyle"></select></div>
+    </div>
+  </div>
+  <button class="primary" id="btnMake">作成（AIが台本を書いて自動編集）</button>
+  <div class="small" style="margin:6px 2px 12px" id="makeHint"></div>
+  <div class="card" id="makeCandCard" hidden>
+    <h2 id="makeCandTitle">候補</h2>
+    <div id="makeCandList"></div>
+    <div class="row"><button id="btnMakeBatch">チェックした候補を一括書き出し</button></div>
+    <details class="sec" id="secMat" style="background:var(--bg);margin:10px 0 0"><summary>素材メモ（AIが動画を見て書いたもの）</summary><div class="pol" id="matText"></div></details>
+  </div>
+  <div class="card muse" id="museCard" hidden>
+    <h2>Museに送る（必ず通す）</h2>
+    <div class="t">3案と画像（カットごとの検証シート・素材のコンタクトシート）をMuseに送ると、Museが1本を選んで直した台本を、診断メモつきで返します。</div>
+    <button class="primary" id="btnMusePrep">① Museに送る準備（依頼文と画像を作る）</button>
+    <div id="musePkg" hidden>
+      <div class="small" id="musePkgInfo" style="margin-top:8px"></div>
+      <div class="thumbs" id="museThumbs"></div>
+      <div class="row"><button class="primary" id="btnMuseShare">② 画像と依頼文を共有（Museへ）</button></div>
+      <div class="row"><button id="btnMuseCopy">依頼文だけコピー</button></div>
+      <div class="small" style="margin-top:6px">共有シートにMeta AIが出ないときは「依頼文だけコピー」→ 画像の下の「保存」で1枚ずつ写真に保存 → Museで画像を添付して依頼文を貼ってください。</div>
+    </div>
+    <h3>③ Museの台本を貼る</h3>
+    <textarea id="museReply" rows="8" placeholder="Museから返ってきた台本をそのまま貼り付け"></textarea>
+    <div class="row"><button class="primary" id="btnMuseApply">この台本で作る</button></div>
+    <div id="museErr"></div>
+    <div class="diag" id="museDiag" hidden></div>
+  </div>
+  <details class="sec" id="secPaste"><summary>台本を貼り付けて作る（Muse・Claudeの台本）</summary>
+    <textarea id="pasteText" rows="10" placeholder="タイトル：〜&#10;目的：保存狙い&#10;尺：30｜スタイル：fellows&#10;音源（方向・BPM目安）：〜&#10;フック：〜／〜／〜&#10;1｜0:00-0:02｜素材1 0:12-0:14｜ナレ：「〜」｜テロップ：〜｜効果音：ドン｜ズーム：あり 0.8秒&#10;ラスト｜問いかけ：〜&#10;IGキャプション：〜&#10;IGハッシュタグ（3〜5個）：#〜&#10;TikTokキャプション：〜&#10;TikTokハッシュタグ（7個）：#〜&#10;YouTubeタイトル：〜&#10;診断メモ：〜"></textarea>
+    <div class="row"><button id="btnPaste">この台本で作る</button></div>
+    <div id="pasteErr"></div>
+  </details>
+</section>
+
+<section class="tab" id="tab-src">
+  <div class="card">
+    <h2>素材</h2>
+    <input type="file" id="fileIn" accept="video/*,image/*,.mov,.mp4,.m4v,.jpg,.jpeg,.png,.heic" multiple hidden>
+    <button class="primary" id="btnAdd">動画を追加（複数選択できます）</button>
+    <div class="t">写真またはファイルApp（iCloud Drive）から選べます。1本3分以内がおすすめです。</div>
+    <div id="srcList"></div>
   </div>
   <button class="primary" id="goAna">次へ：見どころ解析</button>
 </section>
@@ -209,6 +289,7 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
   <div id="editor" hidden>
     <div class="card">
       <div class="t" id="edName" style="margin-top:0"></div>
+      <div class="diag" id="edDiag" style="margin:0 0 8px" hidden></div>
       <div class="stage"><video id="pvVideo" playsinline preload="auto"></video><canvas id="pvCanvas"></canvas></div>
       <input type="range" id="pvSeek" min="0" max="1" step="0.01" value="0" style="margin-top:10px">
       <div class="ctl">
@@ -218,6 +299,16 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
       </div>
       <div class="small" style="margin-top:6px">プレビューは簡易再生です（つなぎ目で一瞬止まることがあります）。音量のバランスは書き出し後に確認してください。</div>
     </div>
+    <details class="sec" id="secFinish" open><summary>フック・字幕・問いかけ</summary>
+      <label class="row small"><input type="checkbox" id="fHookOn"> 冒頭にフックタイトルを出す（<span id="fHookDurV"></span>秒）</label>
+      <div class="hooks" id="fHooks"></div>
+      <div class="small" style="margin-top:4px">選んだ案が本編（A）。書き出し時に「冒頭違い」を選ぶと、次の案でB版も作ります。</div>
+      <label class="row small" style="margin-top:10px"><input type="checkbox" id="fSubs"> ナレーションを字幕で出す（キーワードは黄色）</label>
+      <label class="fld">ラストの問いかけ（最後の2.5秒）</label><input type="text" id="fQuestion" placeholder="例：ジグ派？テンヤ派？">
+      <label class="row small" style="margin-top:10px"><input type="checkbox" id="fEndTel"> 最後の1秒に「道具はプロフィールから」</label>
+      <div class="row"><button id="btnRec">🎙 ナレーションを録音する</button></div>
+      <div class="small" id="narrSum"></div>
+    </details>
     <details class="sec" id="secClips" open><summary>カット <span class="small" id="clipSum"></span></summary>
       <div id="clipList"></div>
       <div class="item">
@@ -256,8 +347,57 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
   <div class="card">
     <h2>書き出し</h2>
     <div id="qOpts"></div>
+    <label class="row small" style="margin-top:10px"><input type="checkbox" id="expVarB"> 冒頭違い（フックB）も書き出す（IGトライアルリール用）</label>
     <div class="row"><button class="primary" id="btnExport">編集中の動画を書き出す</button></div>
     <div class="t" id="expHint"></div>
+  </div>
+  <div class="card" id="ngCard">
+    <h2>NGワードチェック</h2>
+    <div id="ngList"><div class="small">編集中の動画がありません</div></div>
+    <div class="row"><button id="btnNg">もう一度チェック</button></div>
+  </div>
+  <div class="card" id="capCard">
+    <h2>投稿用の文（媒体ごと）</h2>
+    <div class="diag" id="expDiag" hidden></div>
+    <div class="plat"><h3>Instagram</h3>
+      <textarea id="capText" class="cap" placeholder="IGキャプション"></textarea>
+      <input type="text" id="tagText" placeholder="#サワラ #ブレードジギング #沼島 #船釣り #azzurro" style="margin-top:8px">
+      <div class="small" id="tagCount" style="margin-top:4px"></div>
+      <div class="row"><button id="btnCopyCap">キャプション＋タグをコピー</button><button id="btnCopyTag">タグだけ</button></div>
+    </div>
+    <div class="plat"><h3>TikTok</h3>
+      <textarea id="ttCap" class="cap" placeholder="TikTokキャプション"></textarea>
+      <input type="text" id="ttTag" placeholder="ハッシュタグ7個" style="margin-top:8px">
+      <div class="small" id="ttCount" style="margin-top:4px"></div>
+      <div class="row"><button id="btnCopyTt">キャプション＋タグをコピー</button></div>
+    </div>
+    <div class="plat"><h3>YouTubeショート</h3>
+      <input type="text" id="ytTitle" placeholder="タイトル">
+      <div class="small" id="ytCount" style="margin-top:4px"></div>
+      <div class="row"><button id="btnCopyYt">タイトルをコピー</button></div>
+    </div>
+    <div class="plat"><h3>音源メモ（BGMは投稿するときに各アプリで付ける）</h3>
+      <input type="text" id="audNote" placeholder="例：明るいアコギ・BPM100前後">
+    </div>
+  </div>
+  <div class="card" id="ledgerCard">
+    <h2>投稿したら台帳に記録</h2>
+    <label class="fld">投稿日時</label><input type="datetime-local" id="ldPosted">
+    <label class="fld">BGM名（各アプリで付けた曲）</label><input type="text" id="ldBgm" placeholder="曲名">
+    <label class="fld">投稿した版</label><select id="ldAB"><option value="A">A版（通常）</option><option value="B">B版（冒頭違い）</option><option value="A+B">A版とB版の両方</option></select>
+    <label class="row small" style="margin-top:10px"><input type="checkbox" id="ldTrial"> トライアル版（IGトライアルリール）として投稿した</label>
+    <div class="row"><button class="primary" id="btnLedger">投稿した → 台帳に記録</button></div>
+    <div class="t" id="ldMsg"></div>
+  </div>
+  <div class="card" id="metCard">
+    <h2>48時間後の数字</h2>
+    <div class="t">投稿から48時間たったら、各アプリのインサイトの数字を入れてください。入れた媒体だけ保存します（*は必須）。</div>
+    <label class="fld">投稿</label><select id="mtPost"></select>
+    <div class="row"><button class="mini" id="btnMtReload" style="flex:none">台帳から読み込み</button></div>
+    <div id="mtForms"></div>
+    <div class="row"><button class="primary" id="btnMetrics">数字を台帳に保存 → 振り返りの依頼文を作る</button></div>
+    <div class="t" id="mtMsg"></div>
+    <div id="mtOut" hidden><div class="pol" id="mtText"></div><div class="row"><button id="btnMtCopy">振り返りの依頼文をコピー（Museへ）</button></div></div>
   </div>
   <div class="card">
     <h2>書き出した動画</h2>
@@ -270,9 +410,10 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
 </main>
 
 <nav id="tabs">
-  <button data-tab="src" class="on"><span class="n">1</span>素材</button>
-  <button data-tab="ana"><span class="n">2</span>解析</button>
-  <button data-tab="gen"><span class="n">3</span>生成</button>
+  <button data-tab="make" class="on"><span class="n">★</span>作成</button>
+  <button data-tab="src"><span class="n">素材</span>自動</button>
+  <button data-tab="ana"><span class="n">解析</span>自動</button>
+  <button data-tab="gen"><span class="n">生成</span>自動</button>
   <button data-tab="edit"><span class="n">4</span>編集</button>
   <button data-tab="exp"><span class="n">5</span>書き出し</button>
 </nav>
@@ -282,13 +423,40 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
   <div class="sheet">
     <div class="hd"><h2 style="margin:0">設定</h2><button class="icon" id="btnCloseSettings">閉じる</button></div>
     <div class="card">
-      <h2>Gemini（AI解析・AI評価）</h2>
-      <div class="t">Google AI StudioのAPIキーを入れるとAIで解析・評価します。空欄でも自動解析で動きます。キーはこの端末にだけ保存されます。</div>
-      <label class="fld">APIキー</label>
-      <div class="row nw" style="margin-top:0"><input type="password" id="sKey" autocomplete="off" placeholder="AIza..."><button class="mini" id="btnKeyShow" style="flex:none">表示</button></div>
-      <label class="fld">モデル</label><select id="sModel"></select>
-      <div class="row"><button id="btnModels">モデル一覧を取得</button><button id="btnTest">接続テスト</button></div>
-      <div class="t" id="sGemMsg"></div>
+      <h2>サーバー（GAS）</h2>
+      <div class="t">fellows-studio（GAS）のウェブアプリURLとトークンを入れると、AI（Gemini）・台帳・週次方針・トレンド・商品リストがつながります。GeminiのAPIキーはGASの中だけに置きます。</div>
+      <label class="fld">GASのURL</label><input type="text" id="sGasUrl" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+      <label class="fld">トークン</label><input type="password" id="sGasTok" autocomplete="off">
+      <div class="row"><button id="btnGasTest">接続テスト</button><button id="btnTrend">トレンドを読み込む</button></div>
+      <div class="t" id="sGasMsg"></div>
+      <div class="t" id="sTrendMsg"></div>
+      <div class="row"><button id="btnSheetOpen" hidden>台帳（スプレッドシート）を開く</button></div>
+      <details class="sec" id="secAdv" style="background:var(--bg);margin:10px 0 0"><summary>詳細（AIのモデル・GASを使わない直接接続）</summary>
+        <label class="fld">モデル</label><select id="sModel"></select>
+        <label class="fld">GeminiのAPIキー（GASが未設定のときだけ使います・この端末に保存）</label>
+        <div class="row nw" style="margin-top:0"><input type="password" id="sKey" autocomplete="off" placeholder="AIza..."><button class="mini" id="btnKeyShow" style="flex:none">表示</button></div>
+        <div class="row"><button id="btnModels">モデル一覧を取得</button><button id="btnTest">AIの接続テスト</button></div>
+        <div class="t" id="sGemMsg"></div>
+      </details>
+    </div>
+    <div class="card">
+      <h2>週次方針（Muse）</h2>
+      <div class="t">毎週「週次方針を依頼」の文をMuse（Meta AI）に送ると、Museが台帳を読んで「週次方針」タブを書き換えます。作成のたびに最新の方針を読み込みます。</div>
+      <div class="pol" id="sPolicyView"></div>
+      <div class="small" id="sPolicyDate"></div>
+      <div class="row"><button id="btnMuse1">週次方針を依頼（コピー）</button><button id="btnPolicyReload">再読み込み</button></div>
+      <details class="sec" style="background:var(--bg);margin:10px 0 0"><summary>Museがシートに書けなかったとき（貼り付け）</summary>
+        <textarea id="sPolicy" rows="8" placeholder="【オーディエンス】…"></textarea>
+        <div class="row"><button id="btnPolicySave">貼った方針を保存</button></div>
+      </details>
+      <h3>そのほかの依頼文</h3>
+      <div class="row"><button id="btnMuse2">編集中の台本のレビュー依頼をコピー</button></div>
+    </div>
+    <div class="card">
+      <h2>商品リスト</h2>
+      <div class="t" id="sProdInfo"></div>
+      <div class="small">この端末だけで追加したい商品は1行に1つ、正式名称で：</div>
+      <textarea id="sProducts" rows="3" placeholder="例：Tailwalk タイゲームTZ"></textarea>
     </div>
     <div class="card">
       <h2>BGMライブラリ</h2>
@@ -318,6 +486,19 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
 <input type="file" id="logoIn" accept="image/*" hidden>
 <input type="file" id="bgmIn2" accept="audio/*,.mp3,.m4a,.wav,.aac" hidden>
 
+<!-- ナレーション録音 -->
+<div class="overlay" id="recSheet" hidden>
+  <div class="sheet">
+    <div class="hd"><h2 style="margin:0" id="recTitle">ナレーション</h2><button class="icon" id="recClose">閉じる</button></div>
+    <div class="small" id="recSub"></div>
+    <div class="prompter" id="recText"></div>
+    <div class="t" id="recInfo"></div>
+    <div class="row nw"><button id="recPrev">◀ 前</button><button class="primary" id="recBtn" style="flex:2">● 録音</button><button id="recNext">次 ▶</button></div>
+    <div class="row"><button id="recPlay">試聴</button><button id="recFit">シーンをナレに合わせる</button><button id="recDel">削除</button></div>
+    <div class="small" style="margin-top:8px">イヤホンなしで、静かな場所で録るときれいに入ります。録音中は元の音が自動で小さくなります。</div>
+  </div>
+</div>
+
 <!-- 処理中 -->
 <div class="overlay" id="busy" hidden>
   <div class="box">
@@ -341,7 +522,7 @@ nav#tabs button .n{display:block;font-size:11px;opacity:.7}
         / スタイル・テロップ描画 / 効果音 / 候補生成 / ランキング / 編集・プレビュー
         / 書き出し / 画面制御
    ===================================================================== */
-const BUILD = "2026-10-25a";
+const BUILD = "2026-10-27a";
 const FF_BASE   = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
 const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm"; // classWorkerURL指定時はモジュールWorker→ESM版が必須
 const GEM_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -420,11 +601,37 @@ window.addEventListener("unhandledrejection", ev => log("未処理エラー: " +
 const DEF_SETTINGS = {
   apiKey:"", model:GEM_DEFAULT, quality:"std", boats:[], autoSE:true, defaultBgm:"",
   styles:["fellows"], durs:[30], pats:["story","hook"],
-  logo:{ enabled:false, pos:"tr", size:0.2, opacity:0.9 }
+  logo:{ enabled:false, pos:"tr", size:0.2, opacity:0.9 },
+  gasUrl:"", gasToken:"", policy:"", policyDate:"", extraProducts:"",
+  make:{ theme:"", purpose:"save", product:"", productFree:"", date:"", dur:30, style:"fellows" }
 };
 let settings = (() => { try { return Object.assign(deep(DEF_SETTINGS), JSON.parse(localStorage.getItem("frs_settings") || "{}")); } catch (_) { return deep(DEF_SETTINGS); } })();
 settings.logo = Object.assign(deep(DEF_SETTINGS.logo), settings.logo || {});
+settings.make = Object.assign(deep(DEF_SETTINGS.make), settings.make || {});
 function saveSettings(){ try { localStorage.setItem("frs_settings", JSON.stringify(settings)); } catch (_) {} }
+/* ---------- GAS（Gemini中継・台帳）---------- */
+const gasReady = () => !!(settings.gasUrl && settings.gasToken);
+const aiReady = () => gasReady() || !!settings.apiKey;
+async function gas(action, body, opt){
+  opt = opt || {};
+  if (!gasReady()) throw new Error("GASのURLとトークンが未設定です（設定）");
+  const ctl = opt.signal ? null : new AbortController();
+  const to = ctl ? setTimeout(() => ctl.abort(), opt.timeout || 25000) : null;
+  let res, txt;
+  try {
+    res = await fetch(settings.gasUrl, { method:"POST", signal:opt.signal || ctl.signal, headers:{ "Content-Type":"text/plain;charset=utf-8" },
+      body:JSON.stringify(Object.assign({ action, token:settings.gasToken }, body || {})) });
+    txt = await res.text();
+  } catch (e) {
+    if (to) clearTimeout(to);
+    if (e.name === "AbortError") { const er = new Error(opt.signal ? "AbortError" : "GASの応答がタイムアウトしました"); er.name = opt.signal ? "AbortError" : "GasError"; throw er; }
+    const er = new Error("GASに接続できません（" + e.message + "）"); er.name = "GasError"; throw er;
+  }
+  if (to) clearTimeout(to);
+  let j; try { j = JSON.parse(txt); } catch (_) { const er = new Error("GASの応答を読めません（デプロイの「アクセスできるユーザー：全員」を確認）"); er.name = "GasError"; log("GAS応答: " + String(txt).slice(0, 200)); throw er; }
+  if (!j.ok) { const er = new Error("GAS：" + (j.error || "失敗")); er.name = "GasError"; throw er; }
+  return j;
+}
 function lsGet(k){ try { return JSON.parse(localStorage.getItem(k) || "null"); } catch (_) { return null; } }
 function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (_) { return false; } }
 
@@ -573,7 +780,9 @@ const state = {
   candidates:[],
   project:null,
   results:[],        // {id,name,blob,url,dur,size}
-  meta:{ date:"", boat:"", fish:"", title:"" }
+  meta:{ date:"", boat:"", fish:"", title:"" },
+  make:null, makeCands:[], trend:null,
+  policy:null, policyLoaded:false, sheetProducts:null, materials:[], musePkg:null
 };
 const srcById = id => state.sources.find(s => s.id === id);
 
@@ -581,22 +790,46 @@ const srcById = id => state.sources.find(s => s.id === id);
    素材
    ===================================================================== */
 $("#btnAdd").onclick = () => { if (!Busy.on) $("#fileIn").click(); };
+$("#btnAdd2").onclick = () => { if (!Busy.on) $("#fileIn").click(); };
+const isImg = s => !!s && s.kind === "image";
+const videoSources = () => state.sources.filter(s => !isImg(s));
 $("#fileIn").onchange = async e => {
   const files = [...e.target.files]; e.target.value = "";
   if (!files.length) return;
-  await runJob("動画の読み込み", async () => {
+  await runJob("素材の読み込み", async () => {
     let i = 0;
     for (const f of files) {
       i++; Busy.set((i - 1) / files.length, f.name + " を読み込み中（" + i + "/" + files.length + "）");
       const sig = f.name + "|" + f.size + "|" + f.lastModified;
       if (state.sources.some(s => s.sig === sig)) { toast("同じ動画は追加済みです"); continue; }
-      const s = await makeSource(f, sig);
+      const isImage = /^image\//.test(f.type) || /\.(jpe?g|png|heic|heif|webp)$/i.test(f.name);
+      const s = isImage ? await makeImageSource(f, sig) : await makeSource(f, sig);
       if (s) state.sources.push(s);
     }
   });
   if (!state.meta.date && state.sources[0]) state.meta.date = todayStr(new Date(state.sources[0].lastModified || Date.now()));
   renderSources(); renderAnaMode(); checkRestore(); renderGenForm();
 };
+/* 画像素材：ブラウザでJPEGに変換（HEIC対策・最大2160px） */
+async function makeImageSource(f, sig){
+  const id = "s" + uid();
+  const src = URL.createObjectURL(f); const im = new Image(); im.src = src;
+  try { await once(im, "load", 15000); } catch (_) { toast(f.name + " は読み込めませんでした"); URL.revokeObjectURL(src); return null; }
+  const r = Math.min(1, 2160 / Math.max(im.naturalWidth, im.naturalHeight));
+  const w = Math.max(2, Math.round(im.naturalWidth * r / 2) * 2), hh = Math.max(2, Math.round(im.naturalHeight * r / 2) * 2);
+  const cv = document.createElement("canvas"); cv.width = w; cv.height = hh; cv.getContext("2d").drawImage(im, 0, 0, w, hh);
+  URL.revokeObjectURL(src);
+  const jb = await new Promise(res => cv.toBlob(res, "image/jpeg", 0.92));
+  const url = URL.createObjectURL(jb); const img = new Image(); img.src = url;
+  try { await once(img, "load", 10000); } catch (_) {}
+  const t = document.createElement("canvas"); t.width = 108; t.height = 192; const tc = t.getContext("2d"); const rr = Math.max(108 / w, 192 / hh);
+  tc.drawImage(cv, (108 - w * rr) / 2, (192 - hh * rr) / 2, w * rr, hh * rr);
+  const s = { id, kind:"image", file:f, ffName:id + ".jpg", name:f.name, size:jb.size, lastModified:f.lastModified, sig, url, img,
+    dur:600, w, h:hh, thumb:t.toDataURL("image/jpeg", 0.7), hasAudio:false, vcodec:"image", ana:null, ai:null };
+  s.ffFile = new File([jb], s.ffName, { type:"image/jpeg" });
+  log("画像追加: " + f.name + " / " + w + "x" + hh);
+  return s;
+}
 async function makeSource(f, sig){
   const id = "s" + uid();
   const ext = ((f.name.match(/\.(mov|mp4|m4v)$/i) || [".mp4"])[0]).toLowerCase();
@@ -624,14 +857,15 @@ async function makeSource(f, sig){
   return s;
 }
 function renderSources(){
+  renderMakeSources();
   const box = $("#srcList"); box.innerHTML = "";
   if (!state.sources.length) { box.append(h("div", { class:"empty" }, "動画がまだありません")); return; }
   state.sources.forEach((s, i) => {
-    const st = s.ai ? h("span", { class:"badge ai" }, "AI解析済") : s.ana ? h("span", { class:"badge local" }, "自動解析済") : h("span", { class:"badge" }, "未解析");
+    const st = isImg(s) ? h("span", { class:"badge" }, "画像") : s.ai ? h("span", { class:"badge ai" }, "AI解析済") : s.ana ? h("span", { class:"badge local" }, "自動解析済") : h("span", { class:"badge" }, "未解析");
     box.append(h("div", { class:"src" },
       s.thumb ? h("img", { src:s.thumb, alt:"" }) : h("div", { class:"ph" }),
       h("div", { class:"meta" }, h("b", {}, (i + 1) + ". " + s.name),
-        h("div", { class:"small" }, f1(s.dur) + "秒 / " + s.w + "×" + s.h + " / " + mb(s.size)), st),
+        h("div", { class:"small" }, (isImg(s) ? "画像" : f1(s.dur) + "秒") + " / " + s.w + "×" + s.h + " / " + mb(s.size)), st),
       h("div", { style:"display:flex;flex-direction:column;gap:6px" },
         h("button", { class:"mini", disabled:i === 0, onclick:() => { moveSource(i, -1); } }, "▲"),
         h("button", { class:"mini", onclick:() => removeSource(s.id) }, "削除"))
@@ -662,17 +896,17 @@ function removeSource(id){
    解析（ローカル：音量・動き ／ AI：Gemini）
    ===================================================================== */
 function renderAnaMode(){
-  const n = state.sources.length, done = state.sources.filter(s => s.ana).length;
-  $("#anaMode").innerHTML = (settings.apiKey
-      ? "AI解析：<b>オン</b>（" + (settings.model || GEM_DEFAULT) + "）＋音量・動きの自動解析"
-      : "AI解析：<b>オフ</b>（設定でGeminiのAPIキーを入れるとオン）。音量・動きで自動解析します")
+  const n = videoSources().length, done = videoSources().filter(s => s.ana).length;
+  $("#anaMode").innerHTML = (aiReady()
+      ? "AI解析：<b>オン</b>（" + (settings.model || GEM_DEFAULT) + (gasReady() ? "・GAS経由" : "") + "）＋音量・動きの自動解析"
+      : "AI解析：<b>オフ</b>（設定でGASのURLとトークンを入れるとオン）。音量・動きで自動解析します")
     + "<br>素材 " + n + "本中 " + done + "本 解析済み";
   $("#btnAnalyze").disabled = !n;
 }
 $("#btnAnalyze").onclick = () => analyzeAll($("#anaForce").checked);
 async function analyzeAll(force){
-  if (!state.sources.length) { toast("先に動画を追加してください"); return false; }
-  const targets = state.sources.filter(s => force || !s.ana || (settings.apiKey && !s.ai));
+  if (!videoSources().length) { toast("先に動画を追加してください"); return false; }
+  const targets = videoSources().filter(s => force || !s.ana || (aiReady() && !s.ai));
   if (!targets.length) { toast("すべて解析済みです"); return true; }
   const ok = await runJob("見どころ解析", async () => {
     await FF.load(); await FF.mountSources();
@@ -681,7 +915,7 @@ async function analyzeAll(force){
       const s = targets[i]; const base = i / targets.length, span = 1 / targets.length;
       const tag = "（" + (i + 1) + "/" + targets.length + "）" + s.name;
       if (force || !s.ana) { Busy.set(base, "音と動きを解析中" + tag); await localAnalyze(s); }
-      if (settings.apiKey && (force || !s.ai)) {
+      if (aiReady() && (force || !s.ai)) {
         try {
           Busy.set(base + span * 0.35, "AIに送る軽量版を作成中" + tag);
           const px = await makeProxy(s, p => Busy.set(base + span * (0.35 + 0.25 * p)));
@@ -803,37 +1037,47 @@ function parseJSONLoose(txt){
 let gemUseLite = false;   // 無料枠上限に当たったら、このセッション中は軽量モデルを使う
 async function gemini(parts, opt){
   opt = opt || {};
-  if (!settings.apiKey) throw new Error("APIキーが未設定です");
+  if (!aiReady()) throw new Error("Geminiが未設定です（設定でGASのURLとトークンを入れてください）");
+  const via = gasReady() ? "GAS" : "直接";
   let model = opt.model || (gemUseLite ? GEM_LITE : (settings.model || GEM_DEFAULT));
   for (let attempt = 0; attempt < 4; attempt++) {
     Busy.check();
     const ctl = new AbortController(); Busy.abort = ctl;
     const to = setTimeout(() => ctl.abort(), opt.timeout || 150000);
-    let res;
+    let status, body;
+    const reqBody = { contents:[{ role:"user", parts }], generationConfig:{ responseMimeType:"application/json" } };
     try {
-      res = await fetch(GEM_URL + "/models/" + encodeURIComponent(model) + ":generateContent", {
-        method:"POST", signal:ctl.signal,
-        headers:{ "Content-Type":"application/json", "x-goog-api-key":settings.apiKey },
-        body:JSON.stringify({ contents:[{ role:"user", parts }], generationConfig:{ responseMimeType:"application/json" } })
-      });
+      if (via === "GAS") {
+        const j = await gas("gemini", { model, request:reqBody }, { signal:ctl.signal });
+        status = j.status; body = String(j.body || "");
+      } else {
+        const res = await fetch(GEM_URL + "/models/" + encodeURIComponent(model) + ":generateContent", {
+          method:"POST", signal:ctl.signal,
+          headers:{ "Content-Type":"application/json", "x-goog-api-key":settings.apiKey },
+          body:JSON.stringify(reqBody)
+        });
+        status = res.status; body = await res.text();
+      }
     } catch (e) {
       clearTimeout(to);
       if (Busy.cancelled) throw new Error("__cancel__");
       if (e.name === "AbortError") throw new Error("AIの応答がタイムアウトしました");
+      if (e.name === "GasError") throw e;
       if (attempt < 1) { await sleep(2000); continue; }
       throw new Error("通信エラー（" + e.message + "）");
     }
     clearTimeout(to); Busy.abort = null;
-    if (res.ok) {
-      const j = await res.json();
+    if (status === 200) {
+      let j; try { j = JSON.parse(body); } catch (_) { throw new Error("AIの応答を読めませんでした"); }
       const txt = ((j.candidates && j.candidates[0] && j.candidates[0].content && j.candidates[0].content.parts) || []).map(p => p.text || "").join("");
       if (!txt) throw new Error("AIの応答が空でした" + (j.promptFeedback && j.promptFeedback.blockReason ? "（" + j.promptFeedback.blockReason + "）" : ""));
-      log("Gemini OK (" + model + ")" + (j.usageMetadata ? " tokens=" + j.usageMetadata.totalTokenCount : ""));
+      log("Gemini OK (" + model + "・" + via + ")" + (j.usageMetadata ? " tokens=" + j.usageMetadata.totalTokenCount : ""));
       return { json:parseJSONLoose(txt), model };
     }
-    const body = await res.text(); let msg = body;
+    let msg = body;
     try { msg = JSON.parse(body).error.message || body; } catch (_) {}
-    log("Gemini " + res.status + " (" + model + "): " + String(msg).slice(0, 300));
+    const res = { status };
+    log("Gemini " + status + " (" + model + "・" + via + "): " + String(msg).slice(0, 300));
     if (res.status === 429 && model !== GEM_LITE) { model = GEM_LITE; gemUseLite = true; toast("無料枠の上限のため軽量モデル（" + GEM_LITE + "）に切り替えます", 4000); continue; }
     if (res.status === 429) throw new Error("Geminiの無料枠の上限に達しました（時間をおくか翌日に再実行）");
     if ((res.status === 500 || res.status === 503) && attempt < 3) { await sleep(3000 * (attempt + 1)); continue; }
@@ -860,10 +1104,11 @@ start・end：その場面の範囲。peak：一番盛り上がる瞬間。
 score：ショート動画での見どころ度（1〜10の整数）
 telop：その場面に入れる短いテロップ（全角12文字以内、絵文字なし。不要なら空文字）
 description：何が映っているか（全角30文字以内）
-あわせて fish_species（魚種。分からなければ空文字）と summary（全体の要約、全角40文字以内）も答えてください。
+あわせて fish_species（魚種。分からなければ空文字）と summary（全体の要約、全角40文字以内）、
+transcript（音声で話している言葉の書き起こし。秒数を［12.4］の形で前に付ける。話していなければ空文字）も答えてください。
 
 次の形のJSONだけを出力してください：
-{"fish_species":"","summary":"","highlights":[{"start":0,"peak":0,"end":0,"type":"hit","score":8,"telop":"","description":""}]}`;
+{"fish_species":"","summary":"","transcript":"","highlights":[{"start":0,"peak":0,"end":0,"type":"hit","score":8,"telop":"","description":""}]}`;
   const r = await gemini([{ inlineData:{ mimeType:"video/mp4", data:b64 } }, { text:prompt }]);
   const j = r.json || {};
   const types = Object.keys(TYPE_JA);
@@ -877,7 +1122,7 @@ description：何が映っているか（全角30文字以内）
              telop:String(x.telop || "").slice(0, 24), label:String(x.description || "").slice(0, 40) };
   }).filter(x => isFinite(x.t));
   log("AI解析 " + s.name + ": " + hls.length + "件 / 魚種=" + (j.fish_species || "-") + " / " + (j.summary || ""));
-  return { model:r.model, fish:String(j.fish_species || "").slice(0, 20), summary:String(j.summary || "").slice(0, 60), highlights:hls };
+  return { model:r.model, fish:String(j.fish_species || "").slice(0, 20), summary:String(j.summary || "").slice(0, 60), transcript:String(j.transcript || "").slice(0, 1500), highlights:hls };
 }
 function rebuildHighlights(s){
   const keepManual = state.highlights.filter(x => x.srcId === s.id && x.origin === "manual");
@@ -912,8 +1157,8 @@ function renderAna(){
   $("#anaView").hidden = !has;
   if (!has) return;
   const sel = $("#anaSrcSel"); sel.innerHTML = "";
-  state.sources.forEach((s, i) => sel.append(h("option", { value:s.id }, (i + 1) + ". " + s.name + (s.ana ? "" : "（未解析）"))));
-  if (!anaSel || !srcById(anaSel)) anaSel = (state.sources.find(s => s.ana) || state.sources[0]).id;
+  state.sources.forEach((s, i) => { if (!isImg(s)) sel.append(h("option", { value:s.id }, (i + 1) + ". " + s.name + (s.ana ? "" : "（未解析）"))); });
+  if (!anaSel || !srcById(anaSel) || isImg(srcById(anaSel))) anaSel = (videoSources().find(s => s.ana) || videoSources()[0]).id;
   sel.value = anaSel;
   const s = srcById(anaSel);
   const v = $("#anaVideo");
@@ -1013,7 +1258,10 @@ const PRESETS = {
   "yt-red":       { label:"YouTuber 赤", font:"heavy", fs:84, lh:1.25, color:"#fff", strokes:[["#000", 30], ["#e60012", 16]] },
   "yt-info":      { label:"情報（小）", font:"gothic", fs:40, lh:1.3, color:"#fff", box:"rgba(0,0,0,0.62)", padX:28, padY:14, radius:10 },
   "plain":        { label:"シンプル", font:"gothic", fs:60, lh:1.3, color:"#fff", strokes:[["rgba(0,0,0,0.85)", 10]] },
-  "caption":      { label:"字幕（黒帯）", font:"gothic", fs:50, lh:1.35, color:"#fff", box:"rgba(0,0,0,0.6)", padX:32, padY:18, radius:12 }
+  "caption":      { label:"字幕（黒帯）", font:"gothic", fs:50, lh:1.35, color:"#fff", box:"rgba(0,0,0,0.6)", padX:32, padY:18, radius:12 },
+  "hook":         { label:"フック（特大）", font:"heavy", fs:104, lh:1.18, color:"#ffe14d", strokes:[["#000", 24]], shadow:true },
+  "question":     { label:"問いかけ", font:"heavy", fs:78, lh:1.25, color:"#fff", box:"rgba(20,14,10,0.86)", padX:50, padY:34, radius:22 },
+  "endtel":       { label:"エンド（小）", font:"gothic", fs:44, lh:1.3, color:"#fff", box:"rgba(0,0,0,0.62)", padX:30, padY:14, radius:12 }
 };
 const FONT_STACK = {
   mincho:'"Shippori Mincho B1","Hiragino Mincho ProN","Hiragino Mincho Pro","Yu Mincho","Noto Serif CJK JP",serif',
@@ -1098,6 +1346,128 @@ function drawLogo(c, W, H){
   const r = logoRect(W, H); if (!r) return;
   c.save(); c.globalAlpha = settings.logo.opacity; c.drawImage(logoImg, r.x, r.y, r.w, r.h); c.restore();
 }
+
+
+/* ---------- 自動オーバーレイ（フック・字幕・問いかけ・エンドテロップ） ---------- */
+const DUCK = 0.3;            // ナレーション中の元の音の音量
+const HOOK_Y = 0.36, SUB_Y = 0.745, Q_Y = 0.42, END_Y = 0.60, SCENE_TEL_Y = 0.24;
+function zoomAt(c, rel){
+  if (!c.zoom || !c.zoom.on) return 1;
+  const a = +c.zoom.at || 0; if (rel < a) return 1;
+  return Math.min(1.25, 1 + (rel - a) * 2.5);
+}
+function drawKenBurns(c, img, W, H, r){
+  if (!img || !img.naturalWidth) { c.fillStyle = "#000"; c.fillRect(0, 0, W, H); return; }
+  const z = 1 + 0.10 * clamp(r, 0, 1);
+  const k = Math.max(W / img.naturalWidth, H / img.naturalHeight) * z;
+  const w = img.naturalWidth * k, hh = img.naturalHeight * k;
+  c.drawImage(img, (W - w) / 2, (H - hh) / 2, w, hh);
+}
+function keywordsOf(p){
+  const m = p.meta || {};
+  const words = new Set();
+  String(m.theme || "").split(/[×xX＊*・、,，\s／/]+/).forEach(w => { if (w.length >= 2) words.add(w); });
+  const prod = m.product || "";
+  for (const pr of allProducts()) if (prod && pr.name === prod) { pr.keys.forEach(k => words.add(k)); }
+  for (const t of (p.hashtags || [])) { const w = t.replace(/^[#＃]/, ""); if (w.length >= 2 && !/^[A-Za-z]+$/.test(w)) words.add(w); }
+  FISH_WORDS.forEach(w => words.add(w));
+  return [...words].sort((a, b) => b.length - a.length);
+}
+function drawSub(c, text, W, H, kws){
+  const K = W / 1080;
+  let px = Math.round(56 * K);
+  const maxW = W * 0.74, cx = W * 0.46, cy = H * SUB_Y;
+  const chars = [...String(text).replace(/\s*\n\s*/g, " ")];
+  const hl = new Array(chars.length).fill(false);
+  for (const w of kws) {
+    const wc = [...w]; if (!wc.length) continue;
+    for (let i = 0; i + wc.length <= chars.length; i++) {
+      let ok = true; for (let j = 0; j < wc.length; j++) if (chars[i + j] !== wc[j]) { ok = false; break; }
+      if (ok) { for (let j = 0; j < wc.length; j++) hl[i + j] = true; i += wc.length - 1; }
+    }
+  }
+  c.save(); c.textBaseline = "middle"; c.textAlign = "left"; c.lineJoin = "round"; c.miterLimit = 2;
+  let lines;
+  for (let tries = 0; tries < 3; tries++) {
+    c.font = fontStr("gothic", px);
+    lines = []; let cur = [], wsum = 0;
+    chars.forEach((ch, i) => { const w = c.measureText(ch).width; if (cur.length && wsum + w > maxW) { lines.push({ cs:cur, w:wsum }); cur = []; wsum = 0; } cur.push({ ch, i, w }); wsum += w; });
+    if (cur.length) lines.push({ cs:cur, w:wsum });
+    if (lines.length <= 2) break;
+    px = Math.round(px * 0.86);
+  }
+  const lh = px * 1.32, top = cy - lines.length * lh / 2;
+  let minx = W, maxx = 0;
+  const sw = 12 * K * (px / (56 * K));
+  for (const pass of [0, 1]) {
+    lines.forEach((ln, li) => {
+      let x = cx - ln.w / 2; const y = top + lh * (li + 0.5);
+      minx = Math.min(minx, x); maxx = Math.max(maxx, x + ln.w);
+      for (const o of ln.cs) {
+        if (pass === 0) { c.strokeStyle = "#000"; c.lineWidth = sw; c.strokeText(o.ch, x, y); }
+        else { c.fillStyle = hl[o.i] ? "#ffe14d" : "#fff"; c.fillText(o.ch, x, y); }
+        x += o.w;
+      }
+    });
+  }
+  c.restore();
+  const m = sw / 2 + 4;
+  const x0 = Math.floor(clamp(minx - m, 0, W)), y0 = Math.floor(clamp(top - m, 0, H)), x1 = Math.ceil(clamp(maxx + m, 0, W)), y1 = Math.ceil(clamp(top + lines.length * lh + m, 0, H));
+  return { x:x0, y:y0, w:Math.max(2, x1 - x0), h:Math.max(2, y1 - y0) };
+}
+/* 画面に載せるもの一覧（プレビューと書き出しで共通） hookSel=-1 でフックなし */
+function overlaysFor(p, hookSel){
+  const S = starts(p), T = totalOf(p), L = [], F = p.finish || {};
+  for (const t of p.telops) if (t.text && t.text.trim() && t.end > t.start) L.push({ key:"t:" + t.id + ":" + t.text + ":" + t.preset + ":" + t.y + ":" + t.size, start:t.start, end:t.end, draw:(c, W, H) => drawTelop(c, t, W, H) });
+  if (F.subs !== false) {
+    const kws = keywordsOf(p);
+    p.clips.forEach((c, i) => {
+      const tx = String((c.narr && c.narr.text) || "").trim(); if (!tx) return;
+      const d = c.out - c.in, nr = NARR.get(c.id);
+      const e = S[i] + (nr ? Math.min(d, nr.dur + 0.25) : d);
+      L.push({ key:"s:" + c.id + ":" + tx, start:S[i] + 0.03, end:Math.max(S[i] + 0.4, e - 0.02), draw:(cx, W, H) => drawSub(cx, tx, W, H, kws) });
+    });
+  }
+  if (hookSel >= 0 && F.hooks && F.hooks[hookSel]) {
+    const tx = F.hooks[hookSel];
+    L.push({ key:"h:" + tx, start:0, end:Math.min(F.hookDur || 1.8, T), draw:(c, W, H) => drawTelop(c, { text:tx, preset:"hook", y:HOOK_Y, size:1 }, W, H) });
+  }
+  if (F.question && F.question.trim()) L.push({ key:"q:" + F.question, start:Math.max(0, T - 2.5), end:T + 0.01, draw:(c, W, H) => drawTelop(c, { text:F.question, preset:"question", y:Q_Y, size:1 }, W, H) });
+  if (F.endTel !== false) L.push({ key:"e:end", start:Math.max(0, T - 1.0), end:T + 0.01, draw:(c, W, H) => drawTelop(c, { text:"道具はプロフィールから", preset:"endtel", y:END_Y, size:1 }, W, H) });
+  return L;
+}
+
+/* ---------- ナレーション ---------- */
+const NARR = new Map();   // clipId -> { blob, ext, dur, buf }
+function narrIntervals(p, S){
+  S = S || starts(p); const out = [];
+  p.clips.forEach((c, i) => { const nr = NARR.get(c.id); if (!nr) return; const d = c.out - c.in; out.push({ clipId:c.id, a:S[i], b:S[i] + Math.min(nr.dur, d + 0.3) }); });
+  return out;
+}
+async function decodeAny(blob){
+  const OAC = window.OfflineAudioContext || window.webkitOfflineAudioContext;
+  const ctx = new OAC(1, 1, 48000);
+  const ab = await blob.arrayBuffer();
+  return await new Promise((res, rej) => { const p = ctx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); });
+}
+async function setNarration(clipId, blob, persist){
+  let buf = null, dur = 0;
+  try { buf = await decodeAny(blob); dur = buf.duration; } catch (e) { log("ナレーションのデコード失敗: " + e.message); throw new Error("録音データを読めませんでした"); }
+  const ext = /mp4|m4a|aac/.test(blob.type) ? ".m4a" : /webm/.test(blob.type) ? ".webm" : /ogg/.test(blob.type) ? ".ogg" : /wav/.test(blob.type) ? ".wav" : ".m4a";
+  NARR.set(clipId, { blob, ext, dur, buf });
+  if (persist !== false) { try { await DB.put({ key:"narr:" + clipId, name:"narr" + ext, type:blob.type, blob, created:Date.now() }); } catch (e) { log("ナレ保存失敗: " + e.message); } }
+  log("ナレーション設定: " + clipId + " " + dur.toFixed(2) + "秒 " + blob.type);
+  if (PV.actx && buf) { /* AudioBufferはそのまま使える */ }
+  return dur;
+}
+async function deleteNarration(clipId){ NARR.delete(clipId); try { await DB.del("narr:" + clipId); } catch (_) {} }
+async function loadNarrations(p){
+  for (const c of p.clips) {
+    if (NARR.has(c.id)) continue;
+    try { const r = await DB.get("narr:" + c.id); if (r && r.blob) await setNarration(c.id, r.blob, false); } catch (_) {}
+  }
+}
+window.FRS_setNarration = (clipId, blob) => setNarration(clipId, blob).then(d => { if (state.project) { renderClips(); renderNarrSum(); PV.redraw(); } return d; });
 
 /* =====================================================================
    効果音（内蔵はその場で合成）
@@ -1214,7 +1584,7 @@ function planCandidate(styleKey, target, pattern, meta, autoSE, bgmKey){
   let guard = 0;
   while (total < goal - 0.3 && guard++ < 80) {
     const L = ideal; let best = null;
-    for (const s of state.sources) {
+    for (const s of videoSources()) {
       if (s.dur < L + 0.2) continue;
       const used = clips.filter(c => c.srcId === s.id).map(c => [c.in - 0.3, c.out + 0.3]).sort((p, r) => p[0] - r[0]);
       const wins = []; let cur = 0;
@@ -1238,8 +1608,32 @@ function planCandidate(styleKey, target, pattern, meta, autoSE, bgmKey){
     const a = clamp(p - L * 0.45, 0, s.dur - 0.05 - L);
     clips.unshift({ srcId:best.srcId, in:a, out:a + L, hl:best.hl, teaser:true });
   }
-  // フレーム単位に揃える
-  for (const c of clips) { c.in = Math.max(0, Math.round(c.in * 1000) / 1000); const d = Math.max(1 / FPS, q(c.out - c.in)); c.out = +(c.in + d).toFixed(4); }
+  // フレーム単位に揃える（開始・長さともにコマ境界）＋同じ素材のカットが重ならないよう調整
+  for (const c of clips) { c.in = Math.max(0, q(c.in)); const d = Math.max(1 / FPS, q(c.out - c.in)); c.out = q(c.in + d); }
+  const teaserC = clips.find(c => c.teaser);
+  const want = q(goal + (teaserC ? teaserC.out - teaserC.in : 0));
+  const body = clips.filter(c => !c.teaser);
+  for (const sid of new Set(body.map(c => c.srcId))) {
+    const arr = body.filter(c => c.srcId === sid).sort((a, b) => a.in - b.in);
+    for (let i = 1; i < arr.length; i++) {
+      if (arr[i - 1].out > arr[i].in + 1e-3) arr[i - 1].out = q(Math.max(arr[i - 1].in + 1 / FPS, arr[i].in));
+    }
+  }
+  let lack = q(want - clips.reduce((a, c) => a + (c.out - c.in), 0));
+  for (const c of [...body].reverse()) {
+    if (lack < 1 / FPS / 2) break;
+    const s = srcById(c.srcId);
+    const nextIn = Math.min(s.dur - 0.05, ...body.filter(o => o !== c && o.srcId === c.srcId && o.in >= c.out - 1e-3).map(o => o.in));
+    const room = q(Math.max(0, nextIn - c.out));
+    const add = Math.min(room, lack); if (add > 0) { c.out = q(c.out + add); lack = q(lack - add); }
+  }
+  // 長すぎる場合は長いカットから1コマずつ削る
+  let over = q(clips.reduce((a, c) => a + (c.out - c.in), 0) - want), guard2 = 0;
+  while (over >= 1 / FPS / 2 && guard2++ < 2000) {
+    const c = body.reduce((m, k) => ((k.out - k.in) > (m.out - m.in) ? k : m), body[0]);
+    if (!c || c.out - c.in <= 2 / FPS) break;
+    c.out = q(c.out - 1 / FPS); over = q(over - 1 / FPS);
+  }
   const proj = {
     id:uid(), style:styleKey, target, pattern, name:st.name + "・" + target + "秒・" + PATTERNS[pattern],
     clips:clips.map(c => ({ id:uid(), srcId:c.srcId, in:c.in, out:c.out, hlId:c.hl ? c.hl.id : null, hlType:c.hl ? c.hl.type : (c.fill ? "fill" : ""), hlScore:c.hl ? c.hl.score : 0, hlT:c.hl ? c.hl.t : null, desc:c.hl ? (c.hl.label || TYPE_JA[c.hl.type]) : "つなぎ", teaser:!!c.teaser })),
@@ -1272,25 +1666,23 @@ function fitClips(clips, T, cutMin, cutMax){
         c.in += need * l / tot; c.out -= need * r / tot;
       }
     } else {
-      const need = -diff;
-      const caps = clips.map(c => {
-        const s = srcById(c.srcId); const same = clips.filter(o => o !== c && o.srcId === c.srcId);
+      // 足りない分は1カットずつ順番に伸ばす（隣のカットと同じ隙間を取り合って重ならないように毎回境界を計算し直す）
+      let need = -diff, grew = 0;
+      const order = clips.map((c, i) => i).sort((x, y) => (clips[y].hl ? clips[y].hl.score : 0) - (clips[x].hl ? clips[x].hl.score : 0));
+      order.forEach((i, k) => {
+        if (need <= 0.001) return;
+        const c = clips[i], s = srcById(c.srcId), same = clips.filter(o => o !== c && o.srcId === c.srcId);
         const left = Math.max(0, ...same.filter(o => o.out <= c.in + 0.01).map(o => o.out));
         const right = Math.min(s.dur - 0.05, ...same.filter(o => o.in >= c.out - 0.01).map(o => o.in));
-        const maxLen = cutMax * 1.6;
-        const grow = Math.max(0, Math.min(maxLen - (c.out - c.in), (c.in - left) + (right - c.out)));
-        return { grow, left, right };
+        const room = Math.max(0, Math.min(cutMax * 1.6 - (c.out - c.in), (c.in - left) + (right - c.out)));
+        let g = Math.min(room, need / (order.length - k)); if (g <= 0) return;
+        const addL = Math.min(g / 2, c.in - left); c.in -= addL;
+        const addR = Math.min(g - addL, right - c.out); c.out += addR;
+        const rest = g - addL - addR; if (rest > 0) c.in -= Math.min(rest, c.in - left);
+        const done = g - Math.max(0, rest - Math.max(0, c.in - left));
+        need -= done; grew += done;
       });
-      const G = caps.reduce((a, b) => a + b.grow, 0);
-      if (G < 0.05) break;
-      const f = Math.min(1, need / G);
-      clips.forEach((c, i) => {
-        let g = caps[i].grow * f;
-        const addL = Math.min(g / 2, c.in - caps[i].left); c.in -= addL; g -= addL;
-        const addR = Math.min(g, caps[i].right - c.out); c.out += addR; g -= addR;
-        if (g > 0) c.in -= Math.min(g, c.in - caps[i].left);
-      });
-      if (f < 1) break;
+      if (grew < 0.01) break;
     }
   }
 }
@@ -1384,7 +1776,7 @@ $("#btnGen").onclick = async () => {
   for (const s of styles) for (const d of durs) for (const p of pats) { const c = planCandidate(s, d, p, meta, settings.autoSE, settings.defaultBgm); if (c) cands.push(c); }
   if (!cands.length) { toast("候補を作れませんでした（見どころを確認してください）"); return; }
   state.candidates = cands;
-  if (settings.apiKey) await runJob("AIで候補を評価", () => aiRank(cands));
+  if (aiReady()) await runJob("AIで候補を評価", () => aiRank(cands));
   sortCands(); renderCands();
   $("#candCard").scrollIntoView({ behavior:"smooth", block:"start" });
 };
@@ -1448,27 +1840,49 @@ $("#btnBatch").onclick = () => {
    編集・プレビュー
    ===================================================================== */
 let selClip = -1;
+function normClip(c){ if (!c.narr) c.narr = { text:"" }; if (!c.zoom) c.zoom = { on:false, at:Math.max(0, (c.out - c.in) * 0.35) }; if (c.imgPrompt == null) c.imgPrompt = ""; return c; }
+function normProject(p){
+  for (const c of p.clips) {
+    if (!c.id) c.id = uid();
+    if (!c.narr) c.narr = { text:"" };
+    if (!c.zoom) c.zoom = { on:false, at:Math.max(0, (c.out - c.in) * 0.35) };
+    if (c.imgPrompt == null) c.imgPrompt = "";
+  }
+  if (!p.finish) p.finish = { hookOn:false, hooks:[], hookSel:0, hookDur:1.8, subs:true, question:"", endTel:true };
+  if (p.caption == null) p.caption = "";
+  if (!p.hashtags) p.hashtags = [];
+  if (!p.tt) p.tt = { caption:"", hashtags:[] };
+  if (!p.tt.hashtags) p.tt.hashtags = [];
+  if (!p.yt) p.yt = { title:"" };
+  if (p.audioNote == null) p.audioNote = "";
+  if (p.diag == null) p.diag = "";
+  if (!p.meta) p.meta = {};
+  return p;
+}
 function openProject(p, keep){
-  state.project = p || null;
+  state.project = p ? normProject(p) : null;
   $("#editEmpty").hidden = !!p; $("#editor").hidden = !p;
   PV.pause();
   if (!p) return;
   if (!keep) selClip = -1;
   $("#edName").innerHTML = "<b>" + p.name + "</b>";
-  renderClips(); renderTels(); renderAudio(); renderLogo();
+  $("#edDiag").hidden = !p.diag; $("#edDiag").textContent = p.diag ? "Museの診断メモ\n" + p.diag : "";
+  renderFinish(); renderClips(); renderTels(); renderAudio(); renderLogo();
   PV.setProject(p);
+  loadNarrations(p).then(() => { renderClips(); renderNarrSum(); PV.loadAudio(); PV.redraw(); });
   autosave();
 }
 function projChanged(structural){
   const p = state.project; if (!p) return;
   for (const c of p.clips) {
-    const s = srcById(c.srcId); if (!s) continue;
-    c.in = clamp(c.in, 0, Math.max(0, s.dur - 0.2)); c.out = clamp(c.out, c.in + 1 / FPS, s.dur - 0.02);
-    c.out = +(c.in + Math.max(1 / FPS, q(c.out - c.in))).toFixed(4);   // フレーム単位に揃える
+    const s = srcById(c.srcId);
+    if (!s) { c.in = 0; c.out = q(Math.max(0.5, c.out)); continue; }
+    c.in = q(clamp(c.in, 0, Math.max(0, s.dur - 0.2))); c.out = clamp(c.out, c.in + 1 / FPS, s.dur - 0.02);
+    c.out = q(c.in + Math.max(1 / FPS, q(c.out - c.in)));   // フレーム単位に揃える
   }
-  if (structural) { renderClips(); renderTels(); renderAudio(); }
+  if (structural) { renderClips(); renderTels(); renderAudio(); renderFinish(); }
   else { $("#clipSum").textContent = "（" + p.clips.length + "カット・" + f1(totalOf(p)) + "秒）"; }
-  PV.recompute(); PV.redraw();
+  PV.recompute(); PV.redraw(); renderNarrSum();
   autosave();
 }
 let asTimer = null;
@@ -1477,8 +1891,8 @@ function autosave(){
   asTimer = setTimeout(() => {
     const p = state.project; if (!p) return;
     const sigOf = id => (srcById(id) || {}).sig;
-    const data = { saved:Date.now(), project:deep(p), sigs:[...new Set(p.clips.map(c => sigOf(c.srcId)))] };
-    data.project.clips.forEach(c => { c.srcSig = sigOf(c.srcId); });
+    const data = { saved:Date.now(), project:deep(p), sigs:[...new Set(p.clips.map(c => sigOf(c.srcId)).filter(Boolean))] };
+    data.project.clips.forEach(c => { c.srcSig = sigOf(c.srcId) || null; });
     lsSet("frs_project", data);
   }, 600);
 }
@@ -1488,13 +1902,17 @@ function checkRestore(){
   const have = new Set(state.sources.map(s => s.sig));
   const ok = d.sigs.every(s => have.has(s));
   $("#restoreCard").hidden = false;
-  $("#restoreText").innerHTML = "前回の編集「<b>" + d.project.name + "</b>」が残っています。" + (ok ? "" : "<br>使っていた動画（" + d.sigs.length + "本）をすべて追加すると復元できます。");
+  $("#restoreText").innerHTML = "前回の編集「<b>" + d.project.name + "</b>」が残っています。" + (ok ? "" : "<br>使っていた素材（" + d.sigs.length + "本）をすべて追加すると復元できます。");
   $("#btnRestore").disabled = !ok;
 }
 $("#btnRestore").onclick = () => {
   const d = lsGet("frs_project"); if (!d) return;
   const p = d.project;
-  for (const c of p.clips) { const s = state.sources.find(x => x.sig === c.srcSig); if (!s) { toast("動画が足りません"); return; } c.srcId = s.id; delete c.srcSig; }
+  for (const c of p.clips) {
+    if (!c.srcSig) { c.srcId = null; delete c.srcSig; continue; }
+    const s = state.sources.find(x => x.sig === c.srcSig); if (!s) { toast("素材が足りません"); return; }
+    c.srcId = s.id; delete c.srcSig;
+  }
   openProject(p); showTab("edit"); toast("復元しました");
 };
 $("#btnRestoreDel").onclick = () => { try { localStorage.removeItem("frs_project"); } catch (_) {} $("#restoreCard").hidden = true; };
@@ -1505,35 +1923,65 @@ function numCtl(val, step, onSet, fmt){
     h("button", { onclick:() => onSet(+inp.value - step) }, "−"), inp,
     h("button", { onclick:() => onSet(+inp.value + step) }, "＋"));
 }
+async function copyText(t, okMsg){
+  try { await navigator.clipboard.writeText(t); toast(okMsg || "コピーしました"); }
+  catch (_) { const ta = h("textarea", { value:t, style:"position:fixed;top:0;left:0;opacity:0" }); document.body.append(ta); ta.select(); try { document.execCommand("copy"); toast(okMsg || "コピーしました"); } catch (__) { toast("コピーできませんでした"); } ta.remove(); }
+}
 function renderClips(){
   const p = state.project; const box = $("#clipList"); box.innerHTML = "";
   const S = starts(p);
   $("#clipSum").textContent = "（" + p.clips.length + "カット・" + f1(totalOf(p)) + "秒）";
   p.clips.forEach((c, i) => {
     const s = srcById(c.srcId);
-    const setIn = v => { c.in = clamp(v, 0, c.out - 0.2); projChanged(true); PV.seek(starts(p)[i]); };
-    const setOut = v => { c.out = clamp(v, c.in + 0.2, s.dur - 0.02); projChanged(true); PV.seek(Math.max(0, starts(p)[i] + (c.out - c.in) - 0.3)); };
+    const d = c.out - c.in;
+    const setIn = v => { if (!s || isImg(s)) return; c.in = clamp(v, 0, c.out - 0.2); projChanged(true); PV.seek(starts(p)[i]); };
+    const setOut = v => {
+      if (!s || isImg(s)) c.out = q(clamp(v, c.in + 0.3, c.in + 30));
+      else c.out = clamp(v, c.in + 0.2, s.dur - 0.02);
+      projChanged(true); PV.seek(Math.max(0, starts(p)[i] + (c.out - c.in) - 0.3));
+    };
+    const srcSel = h("select", { onchange:e => {
+      const ns = srcById(e.target.value); c.srcId = ns ? ns.id : null;
+      if (ns && isImg(ns)) { const dd = c.out - c.in; c.in = 0; c.out = q(dd); }
+      else if (ns) { const dd = Math.min(c.out - c.in, ns.dur - 0.1); c.in = clamp(c.in, 0, ns.dur - dd - 0.05); c.out = c.in + dd; }
+      projChanged(true); PV.seek(starts(p)[i]); } });
+    srcSel.append(h("option", { value:"" }, "（素材未設定）"));
+    state.sources.forEach((x, k) => srcSel.append(h("option", { value:x.id }, "素材" + (k + 1) + "：" + x.name + (isImg(x) ? "（画像）" : ""))));
+    srcSel.value = s ? s.id : "";
+    const nr = NARR.get(c.id);
+    const narrInfo = nr ? "録音済み " + f1(nr.dur) + "秒" + (nr.dur > d + 0.05 ? "（シーンより" + f1(nr.dur - d) + "秒長い）" : "") : "未録音";
+    const zoomCb = h("input", { type:"checkbox", checked:!!(c.zoom && c.zoom.on), onchange:e => { c.zoom.on = e.target.checked; autosave(); PV.redraw(); } });
     box.append(h("div", { class:"item" + (i === selClip ? " sel" : "") },
       h("div", { class:"hd" },
-        h("div", {}, h("b", {}, "#" + (i + 1) + " "), (c.teaser ? "【冒頭】" : "") + (TYPE_JA[c.hlType] || "つなぎ"), h("div", { class:"small" }, (s ? s.name : "?") + "　" + f1(c.in) + "→" + f1(c.out) + "（" + f1(c.out - c.in) + "秒）")),
+        h("div", {}, h("b", {}, "#" + (i + 1) + " "), (c.teaser ? "【冒頭】" : "") + (s ? (isImg(s) ? "画像" : (TYPE_JA[c.hlType] || "シーン")) : "画像待ち"),
+          h("div", { class:"small" }, f1(S[i]) + "秒〜　" + (s && !isImg(s) ? f1(c.in) + "→" + f1(c.out) + "　" : "") + "（" + f1(d) + "秒）")),
         h("div", { class:"row nw", style:"margin:0" },
           h("button", { class:"mini", onclick:() => { selClip = i; PV.seek(S[i]); renderClips(); } }, "▶"),
           h("button", { class:"mini", disabled:i === 0, onclick:() => { [p.clips[i - 1], p.clips[i]] = [p.clips[i], p.clips[i - 1]]; projChanged(true); } }, "▲"),
           h("button", { class:"mini", disabled:i === p.clips.length - 1, onclick:() => { [p.clips[i + 1], p.clips[i]] = [p.clips[i], p.clips[i + 1]]; projChanged(true); } }, "▼"),
           h("button", { class:"mini", disabled:p.clips.length <= 1, onclick:() => { p.clips.splice(i, 1); projChanged(true); } }, "✕"))),
-      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "開始"), numCtl(c.in, 0.1, setIn, f1)),
-      h("div", { class:"row nw" }, h("span", { class:"lbl" }, "終了"), numCtl(c.out, 0.1, setOut, f1))
+      h("div", { class:"row nw" }, srcSel),
+      s && !isImg(s) ? h("div", { class:"row nw" }, h("span", { class:"lbl" }, "開始"), numCtl(c.in, 0.1, setIn, f1)) : null,
+      h("div", { class:"row nw" }, h("span", { class:"lbl" }, s && !isImg(s) ? "終了" : "長さ"), s && !isImg(s) ? numCtl(c.out, 0.1, setOut, f1) : numCtl(d, 0.1, v => setOut(c.in + v), f1)),
+      s && !isImg(s) ? h("label", { class:"row small" }, zoomCb, "ズーム（寄り）を入れる", h("button", { class:"mini", style:"flex:none", onclick:() => { const tt = PV.t - S[i]; if (tt < 0 || tt > d) { toast("このカットの再生中に押してください"); return; } c.zoom.at = +tt.toFixed(2); c.zoom.on = true; renderClips(); autosave(); toast("ズーム位置：" + f1(tt) + "秒"); } }, "今の位置で")) : null,
+      h("label", { class:"fld" }, "ナレーション（" + narrInfo + "）"),
+      h("textarea", { rows:2, value:c.narr.text || "", placeholder:"このシーンで話す内容", oninput:e => { c.narr.text = e.target.value; autosave(); PV.redraw(); } }),
+      c.imgPrompt || !s ? h("div", {},
+        h("label", { class:"fld" }, "画像の指示（チャッピー用）"),
+        h("textarea", { rows:2, value:c.imgPrompt || "", placeholder:"例：イカの目と目の間を締める位置を矢印で示す図解", oninput:e => { c.imgPrompt = e.target.value; autosave(); } }),
+        h("div", { class:"row" }, h("button", { class:"mini", onclick:() => copyText(chappyPrompt(c, p), "チャッピー用の指示をコピーしました") }, "チャッピー用の指示をコピー"))) : null
     ));
   });
   const sel = $("#addSrc"); const prev = sel.value; sel.innerHTML = "";
-  state.sources.forEach((s, i) => sel.append(h("option", { value:s.id }, (i + 1) + ". " + s.name + "（" + f1(s.dur) + "秒）")));
+  state.sources.forEach((s, i) => sel.append(h("option", { value:s.id }, (i + 1) + ". " + s.name + (isImg(s) ? "（画像）" : "（" + f1(s.dur) + "秒）"))));
   if (prev && srcById(prev)) sel.value = prev;
 }
 $("#btnAddClip").onclick = () => {
   const p = state.project; const s = srcById($("#addSrc").value); if (!p || !s) return;
   const a = clamp(+$("#addIn").value || 0, 0, s.dur - 0.3), L = clamp(+$("#addLen").value || 3, 0.3, s.dur - a);
   const i = selClip >= 0 ? selClip + 1 : p.clips.length;
-  p.clips.splice(i, 0, { id:uid(), srcId:s.id, in:a, out:a + q(L), hlType:"", hlScore:0, hlT:null, desc:"手動追加" });
+  const a2 = isImg(s) ? 0 : a;
+  p.clips.splice(i, 0, normClip({ id:uid(), srcId:s.id, in:a2, out:a2 + q(L), hlType:"", hlScore:0, hlT:null, desc:"手動追加" }));
   selClip = i; projChanged(true); PV.seek(starts(p)[i]); toast("#" + (i + 1) + " に追加しました");
 };
 $("#pvSplit").onclick = () => {
@@ -1541,7 +1989,8 @@ $("#pvSplit").onclick = () => {
   const t = PV.t; const S = starts(p); const i = PV.clipAt(t); const c = p.clips[i];
   const at = c.in + (t - S[i]);
   if (at - c.in < 0.2 || c.out - at < 0.2) { toast("つなぎ目に近すぎます"); return; }
-  const c2 = Object.assign(deep(c), { id:uid(), in:at, teaser:false }); c.out = at;
+  if (isImg(srcById(c.srcId)) || !c.srcId) { toast("画像のカットは分割できません"); return; }
+  const c2 = Object.assign(deep(c), { id:uid(), in:at, teaser:false, narr:{ text:"" }, zoom:{ on:false, at:0.3 } }); c.out = at;
   p.clips.splice(i + 1, 0, c2); selClip = i + 1; projChanged(true); toast("分割しました");
 };
 function renderTels(){
@@ -1623,8 +2072,8 @@ $("#logoIn").onchange = async e => {
 
 /* ---------- プレビューエンジン ---------- */
 const PV = {
-  v:null, cv:null, p:null, S:[], T:0, t:0, i:0, playing:false, raf:0, cur:null, token:0,
-  actx:null, vGain:null, master:null, bgmBuf:null, bgmNode:null, bgmGain:null, nodes:[], seBufs:{},
+  v:null, cv:null, p:null, S:[], T:0, t:0, i:0, playing:false, raf:0, cur:null, token:0, clock0:0,
+  actx:null, vGain:null, master:null, bgmBuf:null, nodes:[], seBufs:{},
   init(){
     this.v = $("#pvVideo"); this.cv = $("#pvCanvas");
     $("#pvPlay").onclick = () => (this.playing ? this.pause() : this.play());
@@ -1640,7 +2089,10 @@ const PV = {
   setProject(p){ this.p = p; this.recompute(); this.loadAudio(); this.seek(0); },
   recompute(){ if (!this.p) return; this.S = starts(this.p); this.T = totalOf(this.p); $("#pvSeek").max = Math.max(0.01, this.T).toFixed(2); this.t = Math.min(this.t, this.T); },
   clipAt(t){ const S = this.S; for (let i = S.length - 1; i >= 0; i--) if (t >= S[i] - 1e-6) return i; return 0; },
+  kind(c){ const s = srcById(c.srcId); return !s ? "ph" : isImg(s) ? "img" : "vid"; },
   async loadSrc(s){
+    if (!s || isImg(s)) { this.v.style.visibility = "hidden"; try { this.v.pause(); } catch (_) {} return; }
+    this.v.style.visibility = "visible";
     if (this.cur === s.id) return;
     this.cur = s.id; this.v.src = s.url;
     try { await once(this.v, "loadedmetadata", 8000); } catch (_) { log("プレビュー読込失敗"); }
@@ -1652,10 +2104,10 @@ const PV = {
   async seek(t){
     if (!this.p || !this.p.clips.length) return;
     t = clamp(t, 0, Math.max(0, this.T - 0.001));
-    const i = this.clipAt(t), c = this.p.clips[i], s = srcById(c.srcId); if (!s) return;
+    const i = this.clipAt(t), c = this.p.clips[i], s = srcById(c.srcId);
     this.t = t; this.i = i; this.ui();
     await this.loadSrc(s);
-    await this.seekVideo(c.in + (t - this.S[i]));
+    if (s && !isImg(s)) await this.seekVideo(c.in + (t - this.S[i]));
     this.redraw();
   },
   ensureAudio(){
@@ -1670,11 +2122,11 @@ const PV = {
     if (this.actx && this.actx.state !== "running") this.actx.resume().catch(() => {});
     this.applyGain();
   },
+  baseGain(){ const A = this.p && this.p.audio; return A ? (A.orig ? A.origVol : 0) : 1; },
   applyGain(){
     const A = this.p && this.p.audio; if (!A) return;
-    if (this.vGain) this.vGain.gain.value = A.orig ? A.origVol : 0;
+    if (this.vGain) { try { this.vGain.gain.cancelScheduledValues(0); } catch (_) {} this.vGain.gain.value = this.baseGain(); }
     this.v.muted = !A.orig;
-    if (this.bgmGain) this.bgmGain.gain.value = A.bgmVol;
   },
   async decodeBlob(blob){ const ab = await blob.arrayBuffer(); return await new Promise((res, rej) => { const p = this.actx.decodeAudioData(ab, res, rej); if (p && p.then) p.then(res, rej); }); },
   async loadAudio(){
@@ -1699,7 +2151,7 @@ const PV = {
       const g = this.actx.createGain(); g.gain.value = A.bgmVol;
       if (A.fade) { const fs = Math.max(0, T - 2 - t); g.gain.setValueAtTime(A.bgmVol, now + fs); g.gain.linearRampToValueAtTime(0.0001, now + Math.max(fs, T - t)); }
       n.connect(g).connect(this.master); n.start(now, t % this.bgmBuf.duration); n.stop(now + Math.max(0.05, T - t));
-      this.bgmNode = n; this.bgmGain = g; this.nodes.push(n);
+      this.nodes.push(n);
     }
     for (const x of this.p.se) {
       if (x.t < t - 0.01 || !this.seBufs[x.kind]) continue;
@@ -1707,8 +2159,21 @@ const PV = {
       const g = this.actx.createGain(); g.gain.value = x.vol;
       n.connect(g).connect(this.master); n.start(now + (x.t - t)); this.nodes.push(n);
     }
+    // ナレーション＋元の音を小さくする
+    const base = this.baseGain();
+    if (this.vGain) { try { this.vGain.gain.cancelScheduledValues(0); } catch (_) {} this.vGain.gain.setValueAtTime(base, now); }
+    for (const iv of narrIntervals(this.p, this.S)) {
+      if (iv.b <= t) continue;
+      const nr = NARR.get(iv.clipId); if (!nr || !nr.buf) continue;
+      const n = this.actx.createBufferSource(); n.buffer = nr.buf;
+      const g = this.actx.createGain(); g.gain.value = 1.2;
+      n.connect(g).connect(this.master);
+      const off = Math.max(0, t - iv.a);
+      n.start(now + Math.max(0, iv.a - t), off); n.stop(now + (iv.b - t)); this.nodes.push(n);
+      if (this.vGain) { this.vGain.gain.setValueAtTime(base * DUCK, now + Math.max(0, iv.a - t)); this.vGain.gain.setValueAtTime(base, now + (iv.b - t)); }
+    }
   },
-  stopAudio(){ for (const n of this.nodes) { try { n.stop(); } catch (_) {} } this.nodes = []; this.bgmNode = null; this.bgmGain = null; },
+  stopAudio(){ for (const n of this.nodes) { try { n.stop(); } catch (_) {} } this.nodes = []; if (this.vGain) { try { this.vGain.gain.cancelScheduledValues(0); this.vGain.gain.value = this.baseGain(); } catch (_) {} } },
   async play(){
     if (!this.p || !this.p.clips.length) return;
     this.ensureAudio();
@@ -1716,36 +2181,55 @@ const PV = {
     const tok = ++this.token; this.playing = true; this.ui();
     await this.seek(this.t);
     if (tok !== this.token) return;
-    try { await this.v.play(); } catch (e) { log("再生失敗: " + e.message); this.playing = false; this.ui(); return; }
+    const c = this.p.clips[this.i];
+    if (this.kind(c) === "vid") { try { await this.v.play(); } catch (e) { log("再生失敗: " + e.message); this.playing = false; this.ui(); return; } }
+    this.clock0 = performance.now() - this.t * 1000;
     this.startAudio();
     cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame(() => this.step());
   },
   pause(){ this.playing = false; this.token++; try { this.v.pause(); } catch (_) {} this.stopAudio(); cancelAnimationFrame(this.raf); this.ui(); },
   async step(){
     if (!this.playing) return;
-    const c = this.p.clips[this.i];
-    const vt = this.v.currentTime;
-    this.t = clamp(this.S[this.i] + (vt - c.in), 0, this.T);
-    if (vt >= c.out - 0.03 || this.v.ended) {
+    const c = this.p.clips[this.i], k = this.kind(c), d = c.out - c.in;
+    let end;
+    if (k === "vid") { const vt = this.v.currentTime; this.t = clamp(this.S[this.i] + (vt - c.in), 0, this.T); end = vt >= c.out - 0.03 || this.v.ended; }
+    else { this.t = clamp((performance.now() - this.clock0) / 1000, 0, this.T); end = this.t >= this.S[this.i] + d - 0.01; }
+    if (end) {
       if (this.i + 1 >= this.p.clips.length) { this.pause(); this.t = this.T; this.ui(); this.redraw(); return; }
       const tok = this.token, j = this.i + 1, n = this.p.clips[j];
-      this.v.pause(); this.stopAudio();
+      try { this.v.pause(); } catch (_) {} this.stopAudio();
       this.i = j; this.t = this.S[j];
-      await this.loadSrc(srcById(n.srcId)); await this.seekVideo(n.in);
+      const ns = srcById(n.srcId);
+      await this.loadSrc(ns);
+      if (ns && !isImg(ns)) await this.seekVideo(n.in);
       if (tok !== this.token || !this.playing) return;
-      try { await this.v.play(); } catch (_) {}
+      if (ns && !isImg(ns)) { try { await this.v.play(); } catch (_) {} }
+      this.clock0 = performance.now() - this.t * 1000;
       this.startAudio();
     }
     this.redraw(); this.ui();
     this.raf = requestAnimationFrame(() => this.step());
   },
   redraw(){
-    const cv = this.cv; if (!cv || !this.p) return;
+    const cv = this.cv; if (!cv || !this.p || !this.p.clips.length) return;
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const W = Math.round(cv.clientWidth * dpr), H = Math.round(cv.clientHeight * dpr); if (!W || !H) return;
     if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; }
     const c = cv.getContext("2d"); c.clearRect(0, 0, W, H);
-    for (const t of this.p.telops) if (this.t >= t.start && this.t < t.end && t.text.trim()) drawTelop(c, t, W, H);
+    const i = this.clipAt(this.t), clip = this.p.clips[i], s = srcById(clip.srcId), rel = this.t - this.S[i], d = clip.out - clip.in;
+    if (!s) {
+      c.fillStyle = "#1a1410"; c.fillRect(0, 0, W, H);
+      drawTelop(c, { text:"画像待ち\n" + (clip.imgPrompt || "").slice(0, 40), preset:"caption", y:0.5, size:0.8 }, W, H);
+      this.v.style.transform = "";
+    } else if (isImg(s)) {
+      drawKenBurns(c, s.img, W, H, rel / Math.max(0.1, d));
+      this.v.style.transform = "";
+    } else {
+      const z = zoomAt(clip, rel);
+      this.v.style.transform = z > 1.001 ? "scale(" + z.toFixed(3) + ")" : "";
+    }
+    const F = this.p.finish || {};
+    for (const o of overlaysFor(this.p, F.hookOn ? F.hookSel : -1)) if (this.t >= o.start && this.t < o.end) o.draw(c, W, H);
     if (settings.logo.enabled) drawLogo(c, W, H);
   },
   ui(){ $("#pvPlay").textContent = this.playing ? "❚❚" : "▶"; $("#pvTime").textContent = f1(this.t) + " / " + f1(this.T); $("#pvSeek").value = this.t.toFixed(2); }
@@ -1765,26 +2249,33 @@ async function canvasPNG(cv){
   const b = await new Promise(res => cv.toBlob(res, "image/png"));
   return new Uint8Array(await b.arrayBuffer());
 }
-async function renderProject(p, qKey, prog){
+const ZOOMPAN = (W, H, zexpr) => "zoompan=z='" + zexpr + "':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=" + W + "x" + H + ":fps=" + FPS;
+/* 1本または冒頭違いの複数本を書き出す。opt.hookSels=[A,B…]（-1=フックなし） → Blob配列 */
+async function renderProject(p, qKey, prog, opt){
+  opt = opt || {};
+  p = normProject(p);
+  const F = p.finish || {};
+  const sels = opt.hookSels || [F.hookOn ? (F.hookSel || 0) : -1];
   const Q = QUALITY[qKey] || QUALITY.std; const W = Q.w, H = Q.h;
   if (!p.clips.length) throw new Error("カットがありません");
+  p.clips.forEach((c, k) => { if (!srcById(c.srcId)) throw new Error("素材が未設定のシーンがあります（#" + (k + 1) + "）"); });
   await FF.load(); await FF.mountSources();
-  for (const c of p.clips) { const s = srcById(c.srcId); if (!s) throw new Error("素材が見つかりません（削除された可能性）"); if (s.hasAudio == null) await probeSource(s); }
-  const telops = p.telops.filter(t => t.text.trim() && t.end > t.start);
-  await ensureFonts(telops.map(t => t.text));
+  for (const c of p.clips) { const s = srcById(c.srcId); if (!isImg(s) && s.hasAudio == null) await probeSource(s); }
   const qd = p.clips.map(c => Math.max(1 / FPS, q(c.out - c.in)));
   const S = []; let T = 0; for (const d of qd) { S.push(T); T += d; }
   const temp = [];
-  // テロップ・ロゴを画像化
-  const ov = [];
-  for (let i = 0; i < telops.length; i++) {
-    const t = telops[i];
+  // 画面に載せるもの → PNG
+  const sets = sels.map(sel => overlaysFor(p, sel));
+  await ensureFonts(sets.flat().map(o => o.key));
+  const png = {}; let pn = 0;
+  for (const set of sets) for (const o of set) {
+    if (png[o.key]) continue;
     const full = document.createElement("canvas"); full.width = W; full.height = H;
-    const r = drawTelop(full.getContext("2d"), t, W, H);
+    const r = o.draw(full.getContext("2d"), W, H);
     const crop = document.createElement("canvas"); crop.width = r.w; crop.height = r.h;
     crop.getContext("2d").drawImage(full, r.x, r.y, r.w, r.h, 0, 0, r.w, r.h);
-    const name = "tp" + i + ".png"; await FF.write(name, await canvasPNG(crop)); temp.push(name);
-    ov.push({ name, x:r.x, y:r.y, start:t.start, end:t.end });
+    const name = "ov" + (pn++) + ".png"; await FF.write(name, await canvasPNG(crop)); temp.push(name);
+    png[o.key] = { name, x:r.x, y:r.y };
   }
   let logo = null;
   if (settings.logo.enabled && logoImg) {
@@ -1794,106 +2285,150 @@ async function renderProject(p, qKey, prog){
     await FF.write("lg.png", await canvasPNG(cv)); temp.push("lg.png");
     logo = { name:"lg.png", x:r.x, y:r.y };
   }
-  // カットごとに 映像(H.264) と 音声(WAV) を作る
-  const vList = [], aList = [];
-  let done = 0;
-  for (let i = 0; i < p.clips.length; i++) {
+  const k0 = new Set(sets[0].map(o => o.key));
+  const diffSegs = sets.map(set => {
+    const kv = new Set(set.map(o => o.key));
+    const diff = set.filter(o => !k0.has(o.key)).concat(sets[0].filter(o => !kv.has(o.key)));
+    return p.clips.map((_, i) => diff.some(o => o.end > S[i] + 0.001 && o.start < S[i] + qd[i] - 0.001));
+  });
+  const jobs = sels.reduce((a, _, v) => a + (v === 0 ? p.clips.length : diffSegs[v].filter(Boolean).length), 0);
+  let doneJobs = 0;
+  const work = (r, msg) => prog((doneJobs + r) / Math.max(1, jobs) * 0.9, msg);
+  const segV = sels.map(() => []), aList = [];
+  async function renderSeg(i, set, vname, aname){
     const c = p.clips[i], s = srcById(c.srcId), d = qd[i], T0 = S[i];
     const nF = Math.max(1, Math.round(d * FPS));
     const args = ["-hide_banner"];
-    if (Q.fastDecode) args.push("-skip_loop_filter", "all");
-    args.push("-ss", c.in.toFixed(3), "-t", (d + 0.1).toFixed(3), "-i", "/in/" + s.ffName);
+    const img = isImg(s);
+    if (img) args.push("-loop", "1", "-framerate", String(FPS), "-t", (d + 0.2).toFixed(3), "-i", "/in/" + s.ffName);
+    else {
+      if (Q.fastDecode) args.push("-skip_loop_filter", "all");
+      args.push("-ss", c.in.toFixed(3), "-t", (d + 0.1).toFixed(3), "-i", "/in/" + s.ffName);
+    }
     let nIn = 1;
-    const useA = p.audio.orig && s.hasAudio;
+    const useA = !img && p.audio.orig && s.hasAudio;
     let aSrc = "0:a:0";
-    if (!useA) { args.push("-f", "lavfi", "-t", (d + 0.1).toFixed(3), "-i", "anullsrc=r=48000:cl=stereo"); aSrc = nIn + ":a"; nIn++; }
+    if (aname && !useA) { args.push("-f", "lavfi", "-t", (d + 0.1).toFixed(3), "-i", "anullsrc=r=48000:cl=stereo"); aSrc = nIn + ":a"; nIn++; }
     const ins = [];
-    for (const o of ov) if (o.end > T0 + 0.001 && o.start < T0 + d - 0.001) { args.push("-i", o.name); ins.push({ idx:nIn++, o }); }
-    if (logo) { args.push("-i", logo.name); ins.push({ idx:nIn++, o:logo, always:true }); }
-    let f = "[0:v:0]scale=" + W + ":" + H + ":force_original_aspect_ratio=increase,crop=" + W + ":" + H + ",setsar=1,fps=" + FPS + ",tpad=stop_mode=clone:stop_duration=1[v0]";
+    for (const o of set) if (o.end > T0 + 0.001 && o.start < T0 + d - 0.001) { const pg = png[o.key]; args.push("-i", pg.name); ins.push({ idx:nIn++, o, pg }); }
+    if (logo) { args.push("-i", logo.name); ins.push({ idx:nIn++, pg:logo, always:true }); }
+    let f = "[0:v:0]scale=" + W + ":" + H + ":force_original_aspect_ratio=increase,crop=" + W + ":" + H + ",setsar=1";
+    if (img) f += "," + ZOOMPAN(W, H, "1+0.10*on/" + nF);
+    else {
+      f += ",fps=" + FPS;
+      if (c.zoom && c.zoom.on) { const a = Math.max(0, +c.zoom.at || 0).toFixed(3); f += "," + ZOOMPAN(W, H, "if(gte(it," + a + "),min(1.25,1+(it-" + a + ")*2.5),1)"); }
+    }
+    f += ",tpad=stop_mode=clone:stop_duration=1[v0]";
     let last = "v0";
     ins.forEach((x, j) => {
       const en = x.always ? "" : ":enable='between(t," + Math.max(0, x.o.start - T0).toFixed(3) + "," + Math.min(d + 1, x.o.end - T0).toFixed(3) + ")'";
-      f += ";[" + last + "][" + x.idx + ":v]overlay=x=" + x.o.x + ":y=" + x.o.y + en + ":format=auto[v" + (j + 1) + "]"; last = "v" + (j + 1);
+      f += ";[" + last + "][" + x.idx + ":v]overlay=x=" + x.pg.x + ":y=" + x.pg.y + en + ":format=auto[v" + (j + 1) + "]"; last = "v" + (j + 1);
     });
     f += ";[" + last + "]format=yuv420p[vo]";
-    f += ";[" + aSrc + "]aresample=48000,aformat=sample_fmts=s16:channel_layouts=stereo" + (useA ? ",volume=" + p.audio.origVol : "") + ",apad,atrim=0:" + d.toFixed(4) + ",asetpts=PTS-STARTPTS[ao]";
-    const vn = "sg" + i + ".h264", an = "sg" + i + ".wav";   // 映像は生H.264で出し、最後にコマ時刻を振り直して結合（つなぎ目のコマ落ち防止）
+    if (aname) f += ";[" + aSrc + "]aresample=48000,aformat=sample_fmts=s16:channel_layouts=stereo" + (useA ? ",volume=" + p.audio.origVol : "") + ",apad,atrim=0:" + (nF / FPS).toFixed(4) + ",asetpts=PTS-STARTPTS[ao]";
     args.push("-filter_complex", f,
       "-map", "[vo]", "-c:v", "libx264", "-preset", Q.preset, "-crf", String(Q.crf), "-maxrate", "16M", "-bufsize", "32M",
-      "-pix_fmt", "yuv420p", "-g", "60", "-r", String(FPS), "-frames:v", String(nF), "-an", "-f", "h264", vn,
-      "-map", "[ao]", "-c:a", "pcm_s16le", "-t", (nF / FPS).toFixed(4), an);
-    await FF.exec(args, { dur:d, onProg:r => prog((done + r * d) / T * 0.92, "カット " + (i + 1) + "/" + p.clips.length + " を処理中") });
-    temp.push(vn, an); vList.push(vn); aList.push(an); done += d;
+      "-pix_fmt", "yuv420p", "-g", "60", "-r", String(FPS), "-frames:v", String(nF), "-an", "-f", "h264", vname);
+    if (aname) args.push("-map", "[ao]", "-c:a", "pcm_s16le", "-t", (nF / FPS).toFixed(4), aname);
+    await FF.exec(args, { dur:d, onProg:r => work(r, "カット " + (i + 1) + "/" + p.clips.length + " を処理中") });
+    temp.push(vname); if (aname) temp.push(aname);
   }
-  // 結合＋音のミックス
-  prog(0.93, "つなぎ合わせて音を仕上げています");
+  for (let v = 0; v < sels.length; v++) {
+    for (let i = 0; i < p.clips.length; i++) {
+      if (v === 0) { const vn = "sg" + i + ".h264", an = "sg" + i + ".wav"; await renderSeg(i, sets[0], vn, an); segV[0].push(vn); aList.push(an); doneJobs++; }
+      else if (diffSegs[v][i]) { const vn = "sg" + v + "_" + i + ".h264"; await renderSeg(i, sets[v], vn, null); segV[v].push(vn); doneJobs++; }
+      else segV[v].push(segV[0][i]);
+    }
+  }
+  // 音：元の音（ナレ中は小さく）＋BGM＋効果音＋ナレーション
   const enc = new TextEncoder();
-  await FF.write("al.txt", enc.encode(aList.map(x => "file '" + x + "'").join("\n") + "\n"));
-  temp.push("al.txt");
-  const args = ["-hide_banner", "-f", "h264", "-framerate", String(FPS), "-i", "concat:" + vList.join("|"), "-f", "concat", "-safe", "0", "-i", "al.txt"];
-  let idx = 2; const mix = ["[base]"];
-  let f = "[1:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo[base]";
+  await FF.write("al.txt", enc.encode(aList.map(x => "file '" + x + "'").join("\n") + "\n")); temp.push("al.txt");
   const A = p.audio;
+  let bgmName = null;
   if (A.bgm) {
     const r = lib.bgm.find(x => x.key === A.bgm);
-    if (r) {
-      const ext = ((r.name.match(/\.(mp3|m4a|aac|wav|caf|aiff?)$/i) || [".m4a"])[0]).toLowerCase();
-      const nm = "bgm" + ext; await FF.write(nm, new Uint8Array(await r.blob.arrayBuffer())); temp.push(nm);
-      args.push("-stream_loop", "-1", "-i", nm);
-      f += ";[" + idx + ":a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=" + A.bgmVol + ",atrim=0:" + T.toFixed(3) + ",asetpts=PTS-STARTPTS" + (A.fade && T > 2.5 ? ",afade=t=out:st=" + (T - 2).toFixed(3) + ":d=2" : "") + "[bgm]";
-      mix.push("[bgm]"); idx++;
-    } else log("BGMが見つからないため省略");
+    if (r) { const ext = ((r.name.match(/\.(mp3|m4a|aac|wav|caf|aiff?)$/i) || [".m4a"])[0]).toLowerCase(); bgmName = "bgm" + ext; await FF.write(bgmName, new Uint8Array(await r.blob.arrayBuffer())); temp.push(bgmName); }
+    else log("BGMが見つからないため省略");
   }
   const seFiles = {};
   for (let j = 0; j < p.se.length; j++) {
-    const x = p.se[j]; if (x.t >= T) continue;
-    if (!seFiles[x.kind]) {
-      let nm;
-      if (x.kind.startsWith("b:")) { nm = "se_" + x.kind.slice(2) + ".wav"; await FF.write(nm, wavBytes(await synthSE(x.kind.slice(2)))); }
-      else {
-        const r = lib.se.find(y => y.key === x.kind); if (!r) { log("効果音が見つからないため省略"); continue; }
-        const ext = ((r.name.match(/\.(mp3|m4a|aac|wav|caf|aiff?)$/i) || [".m4a"])[0]).toLowerCase();
-        nm = "se_" + j + ext; await FF.write(nm, new Uint8Array(await r.blob.arrayBuffer()));
-      }
-      seFiles[x.kind] = nm; temp.push(nm);
-    }
-    args.push("-i", seFiles[x.kind]);
-    const ms = Math.round(x.t * 1000);
-    f += ";[" + idx + ":a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=" + x.vol + ",adelay=" + ms + ":all=1[s" + j + "]";
-    mix.push("[s" + j + "]"); idx++;
+    const x = p.se[j]; if (x.t >= T || seFiles[x.kind]) continue;
+    let nm = null;
+    if (x.kind.startsWith("b:")) { nm = "se_" + x.kind.slice(2) + ".wav"; await FF.write(nm, wavBytes(await synthSE(x.kind.slice(2)))); }
+    else { const r = lib.se.find(y => y.key === x.kind); if (r) { const ext = ((r.name.match(/\.(mp3|m4a|aac|wav|caf|aiff?)$/i) || [".m4a"])[0]).toLowerCase(); nm = "se_" + j + ext; await FF.write(nm, new Uint8Array(await r.blob.arrayBuffer())); } else log("効果音が見つからないため省略"); }
+    if (nm) { seFiles[x.kind] = nm; temp.push(nm); }
   }
-  if (mix.length > 1) f += ";" + mix.join("") + "amix=inputs=" + mix.length + ":duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.95[aout]";
-  else f += ";[base]anull[aout]";
-  args.push("-filter_complex", f, "-map", "0:v", "-map", "[aout]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", T.toFixed(4), "-movflags", "+faststart", "out.mp4");
-  await FF.exec(args, { dur:T, onProg:r => prog(0.93 + r * 0.06) });
-  const data = await FF.read("out.mp4");
-  for (const nm of temp.concat(["out.mp4"])) await FF.rm(nm);
-  if (!data || !data.byteLength) throw new Error("出力が空でした");
+  const nvs = narrIntervals(p, S);
+  const nFiles = [];
+  for (let k = 0; k < nvs.length; k++) { const nr = NARR.get(nvs[k].clipId); const nm = "nr" + k + nr.ext; await FF.write(nm, new Uint8Array(await nr.blob.arrayBuffer())); temp.push(nm); nFiles.push(nm); }
+  const blobs = [];
+  for (let v = 0; v < sels.length; v++) {
+    prog(0.9 + 0.09 * v / sels.length, "つなぎ合わせて音を仕上げています" + (sels.length > 1 ? "（" + "AB"[v] + "版）" : ""));
+    const args = ["-hide_banner", "-f", "h264", "-framerate", String(FPS), "-i", "concat:" + segV[v].join("|"), "-f", "concat", "-safe", "0", "-i", "al.txt"];
+    let idx = 2; const mix = ["[base]"];
+    let f = "[1:a]aformat=sample_fmts=fltp:sample_rates=48000:channel_layouts=stereo";
+    if (nvs.length) f += ",volume=" + DUCK + ":enable='" + nvs.map(x => "between(t," + x.a.toFixed(3) + "," + x.b.toFixed(3) + ")").join("+") + "'";
+    f += "[base]";
+    if (bgmName) {
+      args.push("-stream_loop", "-1", "-i", bgmName);
+      f += ";[" + idx + ":a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=" + A.bgmVol + ",atrim=0:" + T.toFixed(3) + ",asetpts=PTS-STARTPTS" + (A.fade && T > 2.5 ? ",afade=t=out:st=" + (T - 2).toFixed(3) + ":d=2" : "") + "[bgm]";
+      mix.push("[bgm]"); idx++;
+    }
+    p.se.forEach((x, j) => {
+      if (x.t >= T || !seFiles[x.kind]) return;
+      args.push("-i", seFiles[x.kind]);
+      f += ";[" + idx + ":a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,volume=" + x.vol + ",adelay=" + Math.round(x.t * 1000) + ":all=1[s" + j + "]";
+      mix.push("[s" + j + "]"); idx++;
+    });
+    nvs.forEach((x, k) => {
+      const nd = Math.max(0.1, x.b - x.a);
+      args.push("-i", nFiles[k]);
+      f += ";[" + idx + ":a]aresample=48000,aformat=sample_fmts=fltp:channel_layouts=stereo,atrim=0:" + nd.toFixed(3) + ",asetpts=PTS-STARTPTS,afade=t=out:st=" + Math.max(0, nd - 0.06).toFixed(3) + ":d=0.06,volume=1.2,adelay=" + Math.round(x.a * 1000) + ":all=1[n" + k + "]";
+      mix.push("[n" + k + "]"); idx++;
+    });
+    if (mix.length > 1) f += ";" + mix.join("") + "amix=inputs=" + mix.length + ":duration=first:dropout_transition=0:normalize=0,alimiter=limit=0.95[aout]";
+    else f += ";[base]anull[aout]";
+    const out = "out" + v + ".mp4";
+    args.push("-filter_complex", f, "-map", "0:v", "-map", "[aout]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "-t", T.toFixed(4), "-movflags", "+faststart", out);
+    await FF.exec(args, { dur:T, onProg:r => prog(0.9 + 0.09 * (v + r) / sels.length) });
+    const data = await FF.read(out); await FF.rm(out);
+    if (!data || !data.byteLength) throw new Error("出力が空でした");
+    blobs.push(new Blob([data], { type:"video/mp4" }));
+  }
+  for (const nm of temp) await FF.rm(nm);
   prog(1, "完了");
-  return new Blob([data], { type:"video/mp4" });
+  return blobs;
 }
-async function exportMany(list){
+async function exportMany(list, varB){
   const qk = settings.quality;
   const okCount = await runJob("書き出し", async () => {
     let ok = 0;
     for (let i = 0; i < list.length; i++) {
-      const p = list[i]; const t0 = Date.now();
+      const p = normProject(list[i]); const t0 = Date.now();
+      await loadNarrations(p);
+      const F = p.finish;
+      const sels = [F.hookOn ? (F.hookSel || 0) : -1];
+      if (varB && F.hookOn && F.hooks.filter(Boolean).length > 1) sels.push((sels[0] + 1) % F.hooks.filter(Boolean).length);
       const tag = list.length > 1 ? "（" + (i + 1) + "/" + list.length + "本目）" : "";
       Busy.set(i / list.length, p.name + tag);
-      const blob = await renderProject(p, qk, (r, msg) => Busy.set((i + r) / list.length, msg != null ? p.name + tag + "：" + msg : null));
+      const blobs = await renderProject(p, qk, (r, msg) => Busy.set((i + r) / list.length, msg != null ? p.name + tag + "：" + msg : null), { hookSels:sels });
       const sec = Math.round((Date.now() - t0) / 1000);
-      addResult(p.name, blob, totalOf(p));
-      log("書き出し完了: " + p.name + " / " + mb(blob.size) + " / " + sec + "秒 / " + QUALITY[qk].label);
-      ok++;
+      blobs.forEach((b, k) => addResult(p.name + (blobs.length > 1 ? "（" + "AB"[k] + "版：" + F.hooks[sels[k]] + "）" : ""), b, totalOf(p)));
+      log("書き出し完了: " + p.name + " / " + blobs.map(b => mb(b.size)).join(", ") + " / " + sec + "秒 / " + QUALITY[qk].label);
+      ok += blobs.length;
     }
     return ok;
   });
   if (okCount) { showTab("exp"); toast(okCount + "本書き出しました"); }
 }
 $("#btnExport").onclick = () => {
-  if (!state.project) { toast("先に「生成」タブで候補を開いてください"); showTab("gen"); return; }
-  PV.pause(); exportMany([deep(state.project)]);
+  if (!state.project) { toast("先に「作成」で候補を開いてください"); showTab("make"); return; }
+  PV.pause();
+  const ng = ngCheck(state.project); renderNg(ng);
+  const errs = ng.filter(x => x.lv === "err");
+  if (errs.some(x => x.block)) { toast(errs.find(x => x.block).msg, 4000); return; }
+  if (errs.length && !confirm("NGが" + errs.length + "件あります（" + errs[0].msg + "）。このまま書き出しますか？")) return;
+  exportMany([deep(state.project)], $("#expVarB").checked);
 };
 function stamp(){ const n = new Date(), z = x => String(x).padStart(2, "0"); return n.getFullYear() + z(n.getMonth() + 1) + z(n.getDate()) + "_" + z(n.getHours()) + z(n.getMinutes()) + z(n.getSeconds()); }
 function addResult(name, blob, dur){
@@ -1931,6 +2466,10 @@ $("#btnSaveAll").onclick = () => shareFiles(state.results);
 function openSettings(){
   $("#sheetSettings").hidden = false;
   $("#sKey").value = settings.apiKey;
+  $("#sGasUrl").value = settings.gasUrl || ""; $("#sGasTok").value = settings.gasToken || "";
+  $("#sProducts").value = settings.extraProducts || "";
+  renderPolicy(); renderProdInfo();
+  $("#btnSheetOpen").hidden = !(gasReady() && settings.sheetUrl);
   modelOptions(); renderLibLists();
   $("#log").textContent = logLines.join("\n");
 }
@@ -1948,12 +2487,13 @@ $("#btnKeyShow").onclick = () => { const k = $("#sKey"); k.type = k.type === "pa
 $("#sModel").onchange = e => { settings.model = e.target.value; saveSettings(); };
 $("#btnModels").onclick = async () => {
   settings.apiKey = $("#sKey").value.trim(); saveSettings();
-  if (!settings.apiKey) { $("#sGemMsg").textContent = "APIキーを入れてください"; return; }
+  if (!aiReady()) { $("#sGemMsg").textContent = "GASのURLとトークン（またはAPIキー）を入れてください"; return; }
   $("#sGemMsg").textContent = "取得中…";
   try {
-    const res = await fetch(GEM_URL + "/models?pageSize=200", { headers:{ "x-goog-api-key":settings.apiKey } });
-    const j = await res.json();
-    if (!res.ok) throw new Error((j.error && j.error.message) || res.status);
+    let j, okRes;
+    if (gasReady()) { const g = await gas("geminiModels"); j = JSON.parse(g.body || "{}"); okRes = g.status === 200; }
+    else { const res = await fetch(GEM_URL + "/models?pageSize=200", { headers:{ "x-goog-api-key":settings.apiKey } }); j = await res.json(); okRes = res.ok; }
+    if (!okRes) throw new Error((j.error && j.error.message) || "取得できません");
     const names = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent"))
       .map(m => m.name.replace(/^models\//, "")).filter(n => /gemini/.test(n) && !/(embed|tts|image|live|audio|robotics|computer)/i.test(n));
     if (!names.length) throw new Error("使えるモデルが見つかりません");
@@ -1964,11 +2504,23 @@ $("#btnModels").onclick = async () => {
 };
 $("#btnTest").onclick = async () => {
   settings.apiKey = $("#sKey").value.trim(); saveSettings();
-  if (!settings.apiKey) { $("#sGemMsg").textContent = "APIキーを入れてください"; return; }
+  if (!aiReady()) { $("#sGemMsg").textContent = "GASのURLとトークン（またはAPIキー）を入れてください"; return; }
   $("#sGemMsg").textContent = "テスト中…";
   try { const r = await gemini([{ text:'{"ok":true} とだけJSONで返してください' }], { timeout:30000 }); $("#sGemMsg").innerHTML = '<span class="ok">接続OK（' + r.model + "）</span>"; }
   catch (e) { $("#sGemMsg").innerHTML = '<span class="err">失敗：' + e.message + "</span>"; }
 };
+$("#btnGasTest").onclick = async () => {
+  settings.gasUrl = $("#sGasUrl").value.trim(); settings.gasToken = $("#sGasTok").value.trim(); saveSettings();
+  if (!gasReady()) { $("#sGasMsg").textContent = "URLとトークンを入れてください"; return; }
+  $("#sGasMsg").textContent = "接続中…（初回は台帳の作成で20秒ほどかかります）";
+  try {
+    await loadSheetUrl(false);
+    await Promise.all([loadPolicy(true), loadProducts(true)]);
+    $("#sGasMsg").innerHTML = '<span class="ok">接続OK。台帳・週次方針・商品リスト（' + ((state.sheetProducts || []).length) + "件）を読み込みました</span>";
+    $("#btnSheetOpen").hidden = !settings.sheetUrl; renderAnaMode(); renderMakeForm();
+  } catch (e) { $("#sGasMsg").innerHTML = '<span class="err">失敗：' + e.message + "</span>"; log("GAS接続失敗: " + e.message); }
+};
+$("#btnSheetOpen").onclick = () => { if (settings.sheetUrl) window.open(settings.sheetUrl, "_blank"); };
 async function addAudioFiles(files, kind){
   const keys = [];
   for (const f of files) {
@@ -2002,6 +2554,1187 @@ $("#btnCopyLog").onclick = async () => {
 };
 
 /* =====================================================================
+   ★ 作成（AIが台本を書いて自動編集）
+   ===================================================================== */
+const PRODUCTS = [
+  { name:"アズーロ フルボ（Furbo）", keys:["フルボ"], brand:"AZZURRO" },
+  { name:"アズーロ ヒラメタルⅡ", keys:["ヒラメタルⅡ", "ヒラメタ"], brand:"AZZURRO" },
+  { name:"アズーロ ヒラメタスティック 60B", keys:["ヒラメタスティック"], brand:"AZZURRO" },
+  { name:"アズーロ ブレードⅡ", keys:["ブレードⅡ"], brand:"AZZURRO" },
+  { name:"アズーロ ポテジグ", keys:["ポテジグ"], brand:"AZZURRO" },
+  { name:"アズーロ ポテジグ サワラチューン", keys:["ポテジグ", "サワラチューン"], brand:"AZZURRO" },
+  { name:"アズーロ ポテジグ ヘビー", keys:["ポテジグ", "ヘビー"], brand:"AZZURRO" },
+  { name:"アズーロ プレストスリーク", keys:["プレストスリーク"], brand:"AZZURRO" },
+  { name:"押江込蔵 パープル爆釣液", keys:["爆釣液"], brand:"押江込蔵" },
+  { name:"TSUNEYA 釣り用 六角オモリ", keys:["六角オモリ"], brand:"TSUNEYA" },
+  { name:"染めQ ミッチャクロンマルチ", keys:["ミッチャクロン"], brand:"染めQ" },
+  { name:"東邦産業 超!ケイムラウレタンフィニッシャーEX", keys:["ケイムラ"], brand:"東邦産業" },
+  { name:"ささめ針 ヤイバ 魚絞めマルチシザース YSC-1", keys:["マルチシザース", "ヤイバ"], brand:"ささめ針" },
+  { name:"アクティブ ケンサキ袋", keys:["ケンサキ袋"], brand:"アクティブ" },
+  { name:"キーストン ジェットチェイサー®", keys:["ジェットチェイサー"], brand:"キーストン" },
+  { name:"キザクラ エギボー マスクドシンカー", keys:["マスクドシンカー"], brand:"キザクラ" },
+  { name:"エレコム ラミネートシール（防水・UVカット）A4", keys:["ラミネートシール"], brand:"エレコム" }
+];
+const FISH_WORDS = ["サワラ","サゴシ","タチウオ","太刀魚","ブリ","メジロ","ハマチ","ツバス","ヒラマサ","カンパチ","青物","アジ","サバ","イワシ","マダコ","タコ","アオリイカ","ケンサキイカ","スルメイカ","イカ","真鯛","マダイ","ヒラメ","カワハギ","トラフグ","フグ","シーバス","スズキ","ガシラ","メバル","アコウ","キジハタ","バチキソ","沼島","明石","淡路","家島","神戸","大阪湾","鳴門"];
+const NG_WORDS = ["最強","最高","一切","強烈","史上最","究極","完璧","神ワザ","神業","爆発的"];
+const NG_OPEN = [/^こんにちは/, /^こんばんは/, /^今回は/, /^どうも/, /よろしくお願いします/, /^[^。！!？?、]{1,10}です[。！!]?$/];
+const PURPOSES = { promo:"宣伝", save:"保存狙い", follow:"フォロー狙い" };
+const SE_JA = { "ドン":"don", "シュッ":"whoosh", "ピコン":"pikon", "ジャーン":"jan", "ポン":"pop" };
+function prodKeys(name){ const e = PRODUCTS.find(p => p.name === name); return e ? e.keys : [String(name).replace(/[（(][^）)]*[）)]/g, "").trim().split(/\s+/).pop()]; }
+function allProducts(){
+  const sp = state.sheetProducts && state.sheetProducts.length ? state.sheetProducts : null;
+  const base = sp ? sp.map(x => ({ name:x.name, keys:prodKeys(x.name), brand:x.brand || "", category:x.category || "", note:x.note || "" })) : PRODUCTS;
+  const extra = String(settings.extraProducts || "").split("\n").map(x => x.trim()).filter(Boolean).filter(n => !base.some(b => b.name === n)).map(n => ({ name:n, keys:prodKeys(n), brand:"" }));
+  return base.concat(extra);
+}
+function styleKeyOf(x){ x = String(x || ""); if (/tik/i.test(x)) return "tiktok"; if (/you|ユーチューバー|YouTuber/i.test(x)) return "youtuber"; return "fellows"; }
+function tsec(x){
+  x = String(x || "").trim().replace(/[秒s]/g, ""); if (!x) return NaN;
+  if (x.includes(":")) { const a = x.split(":").map(Number); return a.length === 3 ? a[0] * 3600 + a[1] * 60 + a[2] : a[0] * 60 + a[1]; }
+  return parseFloat(x);
+}
+const RANGE_RE = /(\d+(?::\d+(?:\.\d+)?)?(?:\.\d+)?)\s*[-〜~–ー－]\s*(\d+(?::\d+(?:\.\d+)?)?(?:\.\d+)?)/;
+
+/* ---------- 台本の読み取り（書式の揺れを吸収） ---------- */
+function parseSceneLine(L){
+  const parts = L.split("｜").map(x => x.trim()).filter(Boolean);
+  const sc = { src:null, start:null, end:null, dur:null, narration:"", telop:"", se:"なし", image:"", zoom:false };
+  let first = parts[0].replace(/^\d+[.．、]?\s*/, "").trim();
+  const rest = first ? [first].concat(parts.slice(1)) : parts.slice(1);
+  let found = false;
+  for (const part0 of rest) {
+    const part = part0.replace(/^[（(]|[）)]$/g, "");
+    let m;
+    if ((m = part.match(/^ナレ(?:ーション)?\s*[:：]\s*(.*)$/))) { sc.narration = m[1].replace(/^[「『"“]|[」』"”]$/g, "").trim(); found = true; continue; }
+    if ((m = part.match(/^テ(?:ロップ|キスト)\s*[:：]\s*(.*)$/))) { sc.telop = m[1].replace(/^[「『"“]|[」』"”]$/g, "").trim(); continue; }
+    if ((m = part.match(/^効果音\s*[:：]\s*(.*)$/))) { sc.se = m[1].trim() || "なし"; continue; }
+    if ((m = part.match(/^画像\s*[:：]?\s*(.*)$/))) { sc.image = m[1].trim() || "画像"; found = true; continue; }
+    if (/^ズーム/.test(part)) {
+      const off = /^ズーム\s*[:：]?\s*(なし|無し|無|オフ|off|no|×|✕)/i.test(part);
+      sc.zoom = !off; const z = off ? null : part.match(/(\d+(?:\.\d+)?)/); if (z) sc.zoomAt = +z[1]; continue;
+    }
+    if ((m = part.match(/素材\s*(\d+)/))) {
+      sc.src = +m[1]; found = true;
+      const r = part.replace(/素材\s*\d+/, "").match(RANGE_RE);
+      if (r) { sc.start = tsec(r[1]); sc.end = tsec(r[2]); }
+      continue;
+    }
+    if ((m = part.match(RANGE_RE)) && sc.dur == null) { const a = tsec(m[1]), b = tsec(m[2]); if (isFinite(a) && isFinite(b) && b > a) { sc.dur = +(b - a).toFixed(2); found = true; } continue; }
+  }
+  if (!found) return null;
+  if (sc.dur == null && sc.start != null && sc.end != null && sc.end > sc.start) sc.dur = +(sc.end - sc.start).toFixed(2);
+  if (sc.dur == null) sc.dur = 2;
+  if (sc.src == null && !sc.image) sc.image = "（素材の指定なし）";
+  return sc;
+}
+function purposeKey(x){ x = String(x || ""); if (/宣伝|PR|プロモ|案件/i.test(x)) return "promo"; if (/フォロー/.test(x)) return "follow"; if (/保存/.test(x)) return "save"; return ""; }
+const tagsOf = x => (String(x || "").match(/[#＃][^\s#＃、,，]+/g) || []).map(t => "#" + t.slice(1));
+function parseScript(text){
+  const lines = String(text).replace(/\r/g, "").split("\n");
+  const sc = { title:"", purpose:"", audio:"", hooks:[], scenes:[], question:"", caption:"", hashtags:[], ttCaption:"", ttHashtags:[], ytTitle:"", diag:"", style:"", target:0 };
+  const errors = []; let cont = null;   // 続きの行を受ける欄：caption / ttCaption / diag
+  const KEY = { caption:"caption", tt:"ttCaption", diag:"diag" };
+  lines.forEach((raw, n) => {
+    let L = raw.trim().replace(/\*\*/g, "").replace(/^#{1,4}\s+/, "").replace(/\|/g, "｜").replace(/^[-・*]\s*/, "");
+    L = L.replace(/^【([^】]{1,24})】\s*[:：]?\s*/, "$1：");
+    if (!L) { if (cont && sc[cont]) sc[cont] += "\n"; return; }
+    let m;
+    // 診断メモの中身は、次の台本（タイトル行かシーン行）が来るまで続けて受ける
+    if (cont === "diag" && !/^タイトル\s*[:：]/.test(L) && !(/^\d+\s*｜/.test(L) && /素材|画像|ナレ/.test(L))) { sc.diag += (sc.diag ? "\n" : "") + raw.trim(); return; }
+    const head = (re, fn) => { const mm = L.match(re); if (mm) { fn(mm); return true; } return false; };
+    if (head(/^(?:YouTube|YT|ユーチューブ)\s*(?:ショート)?\s*(?:の)?\s*タイトル[^:：]*[:：]\s*(.*)$/i, mm => { sc.ytTitle = mm[1].trim(); cont = null; })) return;
+    if ((m = L.match(/^タイトル\s*[:：]\s*(.*)$/))) { sc.title = m[1].trim(); cont = null; return; }
+    if ((m = L.match(/^目的\s*[:：]\s*(.*)$/))) { sc.purpose = purposeKey(m[1]); cont = null; return; }
+    if ((m = L.match(/^音源[^:：]*[:：]\s*(.*)$/))) { sc.audio = m[1].trim(); cont = null; return; }
+    if (/^(尺|スタイル)\s*[:：]/.test(L)) {
+      for (const part of L.split("｜")) { const a = part.match(/尺\s*[:：]\s*(\d+)/); if (a) sc.target = +a[1]; const b = part.match(/スタイル\s*[:：]\s*(.+)$/); if (b) sc.style = styleKeyOf(b[1]); }
+      cont = null; return;
+    }
+    if ((m = L.match(/^フック[^:：]*[:：]\s*(.*)$/))) { sc.hooks = m[1].split(/[／/｜]/).map(x => x.trim().replace(/^[ABCＡＢＣ][.．:：）)]\s*/, "").replace(/^[「『]|[」』]$/g, "")).filter(Boolean); cont = null; return; }
+    if (/^ラスト/.test(L)) { const q2 = L.match(/問いかけ\s*[:：]\s*(.+)$/); if (q2) sc.question = q2[1].trim().replace(/^[「『]|[」』]$/g, ""); else errors.push({ line:n + 1, text:raw }); cont = null; return; }
+    if ((m = L.match(/^(?:TikTok|ティックトック|TT)\s*キャプション[^:：]*[:：]\s*(.*)$/i))) { sc.ttCaption = m[1]; cont = KEY.tt; return; }
+    if ((m = L.match(/^(?:TikTok|ティックトック|TT)\s*(?:の)?\s*(?:ハッシュ)?タグ[^:：]*[:：]\s*(.*)$/i))) { sc.ttHashtags = tagsOf(m[1]); cont = null; return; }
+    if ((m = L.match(/^(?:IG|Instagram|インスタ(?:グラム)?)?\s*(?:の)?\s*キャプション[^:：]*[:：]\s*(.*)$/i))) { sc.caption = m[1]; cont = KEY.caption; return; }
+    if ((m = L.match(/^(?:IG|Instagram|インスタ(?:グラム)?)?\s*(?:の)?\s*ハッシュタグ[^:：]*[:：]\s*(.*)$/i))) { sc.hashtags = tagsOf(m[1]); cont = null; return; }
+    if ((m = L.match(/^診断(?:メモ)?[^:：]*[:：]\s*(.*)$/))) { sc.diag = m[1]; cont = KEY.diag; return; }
+    if (/^\d+\s*(｜|[.．、]\s*)/.test(L)) { cont = null; const s1 = parseSceneLine(L); if (s1) sc.scenes.push(s1); else errors.push({ line:n + 1, text:raw }); return; }
+    if (cont) { sc[cont] += (sc[cont] ? "\n" : "") + raw.trim(); return; }
+    errors.push({ line:n + 1, text:raw });
+  });
+  for (const k of ["caption", "ttCaption", "diag"]) sc[k] = String(sc[k] || "").replace(/\n{3,}/g, "\n\n").trim();
+  if (!sc.title) sc.title = (sc.scenes[0] && (sc.scenes[0].telop || sc.scenes[0].narration)) || "台本から作成";
+  if (!sc.hooks.length && sc.scenes[0] && sc.scenes[0].telop) sc.hooks = [sc.scenes[0].telop];
+  return { sc, errors };
+}
+/* 台本 → 編集データ */
+function projectFromScript(sc, origin){
+  const mk = state.make;
+  const style = STYLES[sc.style] ? sc.style : (mk.style || "fellows"); const st = STYLES[style];
+  const clips = []; let T = 0;
+  for (const x of sc.scenes) {
+    let dur = q(clamp(+x.dur || ((+x.end || 0) - (+x.start || 0)) || 2, 0.5, 20));
+    const src = x.src >= 1 ? state.sources[x.src - 1] : null;
+    let cin = 0, sid = null;
+    if (src) {
+      sid = src.id;
+      if (!isImg(src)) {
+        cin = isFinite(+x.start) && x.start != null ? +x.start : bestStartIn(src, dur);
+        cin = clamp(cin, 0, Math.max(0, src.dur - 0.25));
+        if (cin + dur > src.dur - 0.02) cin = Math.max(0, src.dur - 0.02 - dur);
+        dur = q(Math.min(dur, src.dur - 0.02 - cin));
+      }
+    }
+    const zAt = x.zoomAt != null ? clamp(+x.zoomAt, 0, dur) : +(dur * 0.35).toFixed(2);
+    clips.push({ id:uid(), srcId:sid, in:q(cin), out:q(q(cin) + dur), hlType:"", hlScore:0, hlT:null, desc:x.telop || x.narration || "", teaser:false,
+      narr:{ text:String(x.narration || "") }, zoom:{ on:!!x.zoom, at:zAt }, imgPrompt:(x.image && x.image !== "（素材の指定なし）") ? x.image : (src ? "" : (x.image || "")) });
+    T += dur;
+  }
+  const hooks = (sc.hooks || []).map(x => String(x || "").trim()).filter(Boolean).slice(0, 3);
+  if (!hooks.length && sc.title) hooks.push(sc.title.slice(0, 16));
+  const finish = { hookOn:hooks.length > 0, hooks, hookSel:0, hookDur:1.8, subs:true, question:String(sc.question || ""), endTel:true };
+  const p = { id:uid(), style, target:sc.target || mk.dur || 30, pattern:"script", name:sc.title || "作成した台本", clips, telops:[], se:[],
+    audio:{ orig:true, origVol:1, bgm:"", bgmVol:0.25, fade:true }, finish, caption:String(sc.caption || ""), hashtags:(sc.hashtags || []).slice(0, 10),
+    tt:{ caption:String(sc.ttCaption || ""), hashtags:(sc.ttHashtags || []).slice(0, 12) }, yt:{ title:String(sc.ytTitle || "") },
+    audioNote:String(sc.audio || ""), diag:String(sc.diag || ""),
+    meta:{ theme:mk.theme, purpose:sc.purpose || mk.purpose, product:productName(), date:mk.date }, origin:origin || "ai", aiScore:sc.score || null, aiComment:sc.comment || "" };
+  const S = starts(p);
+  sc.scenes.forEach((x, i) => {
+    const d = clips[i].out - clips[i].in;
+    if (x.telop) {
+      let a = S[i] + 0.1; if (finish.hookOn && a < finish.hookDur) a = finish.hookDur;
+      const b = S[i] + d - 0.1;
+      if (b - a >= 0.4) p.telops.push({ id:uid(), text:x.telop, start:+a.toFixed(2), end:+b.toFixed(2), preset:st.telop.hl, y:SCENE_TEL_Y, size:st.size.hl });
+    }
+    const k = SE_JA[String(x.se || "").replace(/[（(].*$/, "").trim()];
+    if (k) p.se.push({ id:uid(), kind:"b:" + k, t:+(S[i] + (clips[i].zoom.on ? clips[i].zoom.at : 0.05)).toFixed(2), vol:0.9 });
+  });
+  p.buzz = buzzScore(p);
+  return normProject(p);
+}
+function bestStartIn(src, dur){
+  const hl = state.highlights.filter(x => x.srcId === src.id && x.on).sort((a, b) => b.score - a.score)[0];
+  if (hl) return clamp(hl.t - dur * 0.4, 0, Math.max(0, src.dur - dur - 0.05));
+  return 0;
+}
+function productName(){ const mk = state.make; return mk.product === "__free" ? String(mk.productFree || "").trim() : (mk.product || ""); }
+/* 編集データ → 台本テキスト（Muse・Claudeとの受け渡し用） */
+function scriptText(p, label){
+  const S = starts(p);
+  const lines = [];
+  if (label) lines.push("■" + label);
+  lines.push("タイトル：" + p.name);
+  lines.push("目的：" + (PURPOSES[(p.meta && p.meta.purpose) || ""] || PURPOSES[state.make && state.make.purpose] || "保存狙い"));
+  lines.push("尺：" + Math.round(totalOf(p)) + "｜スタイル：" + (p.style || "fellows"));
+  lines.push("音源（方向・BPM目安）：" + (p.audioNote || ""));
+  if (p.finish && p.finish.hooks && p.finish.hooks.length) lines.push("フック：" + p.finish.hooks.join("／"));
+  p.clips.forEach((c, i) => {
+    const s = srcById(c.srcId), k = state.sources.indexOf(s) + 1, d = c.out - c.in;
+    const tel = p.telops.find(t => t.start < S[i] + d - 0.05 && t.end > S[i] + 0.05);
+    const se = p.se.find(x => x.t >= S[i] - 0.01 && x.t < S[i] + d);
+    const seJa = se ? (Object.entries(SE_JA).find(([, v]) => "b:" + v === se.kind) || ["なし"])[0] : "なし";
+    const srcPart = s ? (isImg(s) ? "素材" + k : "素材" + k + " " + mmss2(c.in) + "-" + mmss2(c.out)) : "画像：" + (c.imgPrompt || "");
+    const zoom = c.zoom && c.zoom.on ? "ズーム：あり " + f1(c.zoom.at) + "秒" : "ズーム：なし";
+    lines.push((i + 1) + "｜" + mmss2(S[i]) + "-" + mmss2(S[i] + d) + "｜" + srcPart + "｜ナレ：「" + ((c.narr && c.narr.text) || "") + "」｜テロップ：" + (tel ? tel.text.replace(/\n/g, " ") : "") + "｜効果音：" + seJa + "｜" + zoom);
+  });
+  lines.push("ラスト｜問いかけ：" + ((p.finish && p.finish.question) || ""));
+  lines.push("IGキャプション：" + (p.caption || ""));
+  lines.push("IGハッシュタグ（3〜5個）：" + (p.hashtags || []).join(" "));
+  lines.push("TikTokキャプション：" + ((p.tt && p.tt.caption) || ""));
+  lines.push("TikTokハッシュタグ（7個）：" + ((p.tt && p.tt.hashtags) || []).join(" "));
+  lines.push("YouTubeタイトル：" + ((p.yt && p.yt.title) || ""));
+  lines.push("診断メモ：" + (p.diag || ""));
+  return lines.join("\n");
+}
+function mmss2(t){ t = Math.max(0, t); const m = Math.floor(t / 60), s2 = t - m * 60; return m + ":" + (Math.round(s2 * 10) / 10).toFixed(1).padStart(4, "0"); }
+
+/* ---------- バズ予測スコア（8軸：AI 0.6 ＋ 自動判定 0.4）---------- */
+function buzzScore(p){
+  const S = starts(p), T = totalOf(p) || 1, c0 = p.clips[0], F = p.finish || {};
+  const narrs = p.clips.map(c => String((c.narr && c.narr.text) || ""));
+  const tels = p.telops.map(t => t.text).join(" ");
+  const tt = p.tt || { caption:"", hashtags:[] }, yt = p.yt || { title:"" };
+  const caps = [p.caption || "", tt.caption || "", yt.title || ""].join("\n");
+  const textAll = narrs.join(" ") + " " + tels + " " + caps + " " + (F.hooks || []).join(" ") + " " + (F.question || "");
+  const ax = {};
+  // フック
+  let hook = 4;
+  if (F.hookOn && F.hooks && F.hooks[F.hookSel || 0]) hook += 3;
+  if (c0 && c0.out - c0.in <= 2.6) hook += 2;
+  const first = (narrs[0] || "") + (p.telops[0] ? p.telops[0].text : "");
+  if (NG_OPEN.some(r => r.test(first.trim()))) hook -= 4;
+  ax.hook = hook;
+  // 目的との一致
+  const pur = (p.meta && p.meta.purpose) || "save", prod = (p.meta && p.meta.product) || "";
+  const pr = x => /^\s*(#|＃)PR\b/.test(String(x || "").split("\n")[0]);
+  let purpose = 5;
+  if (pur === "promo") {
+    purpose = 2;
+    const keys = prod ? (allProducts().find(x => x.name === prod) || { keys:prodKeys(prod) }).keys : [];
+    if (prod && (textAll.includes(prod) || keys.some(k => k && textAll.includes(k)))) purpose += 4;
+    if (pr(p.caption)) purpose += 2;
+    if (pr(tt.caption)) purpose += 2;
+  } else if (pur === "save") {
+    if (/\d/.test(narrs.join("") + tels)) purpose += 2;
+    if (/保存/.test(caps)) purpose += 2;
+    if (p.clips.length >= 4) purpose += 1;
+  } else {
+    if (/(俺|僕|自分|わし|うち|ワイ)/.test(narrs.join(""))) purpose += 2;
+    if (/フォロー/.test(caps)) purpose += 2;
+    if (p.clips.some(c => { const s = srcById(c.srcId); return s && !isImg(s); })) purpose += 1;
+  }
+  ax.purpose = purpose;
+  // 素材の実在性
+  let content = 0, cn = 0;
+  p.clips.forEach(c => { const s = srcById(c.srcId); if (s && s.ana) { content += meanScore(s, c.in, c.out); cn++; } else if (s) { content += 0.8; cn++; } });
+  content = cn ? clamp(3 + content / cn * 3, 0, 10) : 5;
+  const frac = p.clips.length ? p.clips.filter(c => c.srcId).length / p.clips.length : 0;
+  ax.reality = content * 0.4 + frac * 6;
+  // テンポ（平均カット長＋冒頭3秒の山場予告）
+  const avg = T / Math.max(1, p.clips.length);
+  const base = clamp(10 - Math.max(0, Math.abs(avg - 2.4) - 0.6) * 3, 0, 10);
+  const early = p.clips.filter((c, i) => S[i] < 3);
+  const peakEarly = early.some(c => { const s = srcById(c.srcId); return (c.zoom && c.zoom.on) || (s && s.ana && meanScore(s, c.in, c.out) > 0.5); });
+  ax.tempo = base * 0.7 + (peakEarly ? 3 : 0);
+  // ナレーション
+  const filled = narrs.filter(Boolean).length / Math.max(1, narrs.length);
+  const tooLong = p.clips.filter((c, i) => narrs[i].length > (c.out - c.in) * 6 + 2).length;
+  const ngN = NG_WORDS.filter(w => narrs.join("").includes(w)).length;
+  ax.narration = 10 * filled - 2 * tooLong - 3 * ngN;
+  // ラストの二択
+  const qq = String(F.question || "");
+  ax.question = !qq ? 0 : 5 + (/[？?]/.test(qq) ? 1 : 0) + (/派|どっち|どちら|それとも|[／/]|か[？?].+[？?]|or/i.test(qq) ? 3 : 0) + (qq.length <= 26 ? 1 : 0);
+  // ハッシュタグ構成
+  const ni = (p.hashtags || []).length, nt = (tt.hashtags || []).length;
+  ax.hashtags = 10 - (ni < 3 || ni > 5 ? 3 : 0) - (ni === 0 ? 2 : 0) - (nt !== 7 ? 3 : 0) - (nt === 0 ? 2 : 0);
+  // ルール遵守
+  const ngAll = NG_WORDS.filter(w => textAll.includes(w)).length;
+  ax.rules = 10 - 3 * ngAll - (NG_OPEN.some(r => r.test(first.trim())) ? 3 : 0) - (pur === "promo" && !(pr(p.caption) && pr(tt.caption)) ? 3 : 0) - (/https?:\/\//.test(caps) ? 2 : 0);
+  for (const k in ax) ax[k] = clamp(ax[k], 0, 10);
+  const heur = Math.round(AXES.reduce((a, x) => a + ax[x[0]], 0) / AXES.length * 10);
+  let ai = null, aiAx = null;
+  const a = p.aiScore;
+  if (a) {
+    const ks = AXES.map(x => x[0]).filter(k => isFinite(+a[k]) && a[k] !== "" && a[k] != null);
+    if (ks.length) { aiAx = {}; ks.forEach(k => aiAx[k] = clamp(+a[k], 0, 10)); ai = Math.round(ks.reduce((t, k) => t + aiAx[k], 0) / ks.length * 10); }
+    else if (a.hook != null) ai = Math.round(((+a.hook || 0) * 0.35 + (+a.content || 0) * 0.3 + (+a.tempo || 0) * 0.2 + (+a.trend || 0) * 0.15) * 10);
+  }
+  const axes = {};
+  AXES.forEach(([k]) => { axes[k] = Math.round(aiAx && aiAx[k] != null ? aiAx[k] * 0.6 + ax[k] * 0.4 : ax[k]); });
+  const total = ai != null ? Math.round(ai * 0.6 + heur * 0.4) : heur;
+  return { total, ai, heur, axes, heurAxes:ax, aiAxes:aiAx };
+}
+function axesLine(b){ return AXES.map(x => x[2] + ((b.axes && b.axes[x[0]]) != null ? b.axes[x[0]] : "-")).join("・"); }
+
+/* ---------- 作成タブの画面 ---------- */
+function renderMakeSources(){
+  const box = $("#makeSrcList"); if (!box) return; box.innerHTML = "";
+  if (!state.sources.length) { box.append(h("div", { class:"empty" }, "素材がまだありません")); return; }
+  state.sources.forEach((s, i) => box.append(h("div", { class:"src" },
+    s.thumb ? h("img", { src:s.thumb, alt:"" }) : h("div", { class:"ph" }),
+    h("div", { class:"meta" }, h("b", {}, "素材" + (i + 1) + "　" + s.name), h("div", { class:"small" }, (isImg(s) ? "画像" : f1(s.dur) + "秒") + " / " + s.w + "×" + s.h)),
+    h("button", { class:"mini", onclick:() => removeSource(s.id) }, "削除"))));
+  $("#makeHint").textContent = "素材 " + state.sources.length + "件" + (aiReady() ? "" : "　※作成にはGASの設定が必要です（設定）");
+}
+function renderMakeForm(){
+  const mk = state.make;
+  $("#mkTheme").value = mk.theme || "";
+  const pb = $("#mkPurpose"); pb.innerHTML = "";
+  for (const [k, v] of Object.entries(PURPOSES)) {
+    const r = h("input", { type:"radio", name:"mkp", checked:mk.purpose === k, onchange:() => { mk.purpose = k; $$("#mkPurpose .chip").forEach(x => x.classList.toggle("on", x.contains(r))); saveMake(); } });
+    pb.append(h("label", { class:"chip" + (mk.purpose === k ? " on" : "") }, r, v));
+  }
+  const sel = $("#mkProduct"); sel.innerHTML = ""; sel.append(h("option", { value:"" }, "なし"));
+  for (const pr of allProducts()) sel.append(h("option", { value:pr.name }, pr.name));
+  sel.append(h("option", { value:"__free" }, "一覧にない（手入力）"));
+  sel.value = mk.product && (mk.product === "__free" || allProducts().some(x => x.name === mk.product)) ? mk.product : "";
+  $("#mkProductFree").hidden = sel.value !== "__free"; $("#mkProductFree").value = mk.productFree || "";
+  $("#mkDate").value = mk.date || "";
+  $("#mkDur").value = String(mk.dur || 30);
+  const ss = $("#mkStyle"); ss.innerHTML = ""; for (const [k, v] of Object.entries(STYLES)) ss.append(h("option", { value:k }, v.name)); ss.value = mk.style || "fellows";
+  renderMakeSources(); renderTrend();
+}
+function saveMake(){ settings.make = state.make; saveSettings(); }
+$("#mkTheme").oninput = e => { state.make.theme = e.target.value; saveMake(); };
+$("#mkProduct").onchange = e => { state.make.product = e.target.value; $("#mkProductFree").hidden = e.target.value !== "__free"; if (e.target.value && e.target.value !== "__free" && state.make.purpose !== "promo") { state.make.purpose = "promo"; renderMakeForm(); } saveMake(); };
+$("#mkProductFree").oninput = e => { state.make.productFree = e.target.value; saveMake(); };
+$("#mkDate").onchange = e => { state.make.date = e.target.value; saveMake(); };
+$("#mkDur").onchange = e => { state.make.dur = +e.target.value; saveMake(); };
+$("#mkStyle").onchange = e => { state.make.style = e.target.value; saveMake(); };
+
+const AXES = [
+  ["hook", "フック", "フック", "冒頭1秒で止まるか（変化か結論を先に見せる）"],
+  ["purpose", "目的との一致", "目的", "今回の目的（宣伝／保存狙い／フォロー狙い）に合っているか"],
+  ["reality", "素材の実在性", "実在", "素材に実際にある場面だけで作れているか（秒数が正しいか）"],
+  ["tempo", "テンポ", "テンポ", "冒頭3秒で山場を予告し、中盤で1回展開が変わるか"],
+  ["narration", "ナレーション", "ナレ", "短い言い切り・関西弁の等身大・世界観がそろっているか"],
+  ["question", "ラストの二択", "二択", "釣りの経験者が具体的に答えられる二択か"],
+  ["hashtags", "ハッシュタグ構成", "タグ", "IGは3〜5個、TikTokは7個、軸（魚種・釣法・地名・広域・ブランド）の組み合わせ"],
+  ["rules", "ルール遵守", "ルール", "禁止ワード・冒頭NG・#PR・正式名称・URLなし"]
+];
+function axesText(){ return AXES.map((a, i) => (i + 1) + ". " + a[1] + "（" + a[0] + "）：" + a[3]).join("\n"); }
+function rulesText(){
+  return [
+    "- 冒頭1秒は「変化」か「結論」。冒頭のナレ・テロップに「こんにちは」「今回は」「〇〇です」「よろしくお願いします」を使わない",
+    "- 禁止ワード：最強・最高・一切・強烈、およびそれに類する誇張（史上最・究極・完璧など）。具体的な数字・固有名詞・等身大の言葉で語る",
+    "- ナレは関西弁の話し言葉で、全シーンに入れる。短く言い切る。1シーンのナレは「秒数×6文字」以内（読み切れる長さ）。「バチキソ」（めちゃくちゃ釣れた）はOK",
+    "- テロップは全角14文字以内。フック（冒頭の大見出し）は全角12文字以内で3案、型を変える（結果先出し／問いかけ／数字）",
+    "- ラストは釣りの経験者が具体的に答えられる二択の問いかけ（例：ジグ派？テンヤ派？）",
+    "- 宣伝商品があるときは正式名称だけを使う。宣伝のときはIGとTikTokのキャプションの1行目を #PR にする",
+    "- キャプション（IG・TikTok）に「道具はプロフィールから」を入れる。URLはどこにも書かない",
+    "- IGのハッシュタグは3〜5個（魚種・釣法で2つ、地名1つ、広域1つ、ブランド1つ）。TikTokのハッシュタグはちょうど7個（検索される語を多めに）",
+    "- YouTubeタイトルは全角30文字以内。魚種・釣法・地名のうち2つ以上を入れる",
+    "- 音源は「方向（例：明るいアコギ）・BPMの目安」を書く（BGMは投稿時に各アプリで付ける）",
+    "- 地名は素材から確実に分かる場合と、条件に書かれた場合だけ使う",
+    "- 素材にない場面は作らない。画像で補いたいシーンだけ src を 0 にして image に描く内容を書く（図解・タイトル背景など。文字は入れない前提）"
+  ].join("\n");
+}
+function trendText(){
+  const t = state.trend; if (!t) return "（未取得）";
+  const L = [];
+  if (t.summary) L.push(t.summary);
+  if (t.catches && t.catches.length) L.push("釣果：" + t.catches.slice(0, 6).map(x => [x.fish, x.area, x.method].filter(Boolean).join("・")).join("／"));
+  if (t.season) L.push("旬：" + (t.season.now || []).join("・") + "　これから：" + (t.season.next || []).join("・"));
+  if (t.lures && t.lures.length) L.push("話題の道具：" + t.lures.slice(0, 6).join("・"));
+  if (t.sns && t.sns.length) L.push("SNSの傾向：" + t.sns.slice(0, 4).join("／"));
+  if (t.rules && t.rules.length) L.push("規制・解禁：" + t.rules.slice(0, 4).join("／"));
+  return L.join("\n");
+}
+function materialList(){
+  return state.sources.map((s, i) => "素材" + (i + 1) + "：" + (isImg(s) ? "画像" : "動画 " + f1(s.dur) + "秒（音声" + (s.hasAudio ? "あり" : "なし") + "）") +
+    (s.ai && s.ai.summary ? "　要約：" + s.ai.summary : "")).join("\n");
+}
+function makePrompt(extra){
+  const mk = state.make, st = STYLES[mk.style] || STYLES.fellows;
+  return `あなたは釣り系ショート動画（Instagramリール・TikTok・YouTubeショート）の編集責任者です。
+${extra ? "下の素材メモ" : "添付の素材（動画・画像）"}を見て、バズる台本を3案作ってください。
+
+# アカウント
+fellows_s16（Shoji）。「平日はサラリーマン、週末は瀬戸内の海人」。関西弁の等身大のリアル。視聴者は35〜64歳の釣り経験者（関西中心）。
+最強ジャンルは「締め・持ち帰り・下処理」。リーチ用（テク系）とフォロー用（人が見える実釣系）は役割が別。
+
+# 週次方針（Museが台帳を分析して毎週更新）${policyDate() ? "　" + policyDate() + "更新" : ""}
+${policyText().trim() || "（未設定）"}
+
+# 今週のトレンド
+${trendText()}
+
+# 今回の条件
+テーマ：${mk.theme || "（素材から判断）"}
+目的：${PURPOSES[mk.purpose] || "保存狙い"}
+宣伝商品：${productName() || "なし"}
+投稿予定日：${mk.date || "未定"}
+スタイル：${st.name}
+尺：${mk.dur || 30}秒（3案ともシーンの合計をこの秒数にそろえる）
+
+# 素材
+${materialList()}
+${extra ? "\n# 素材メモ（AIが動画を見て書いたもの）\n" + extra + "\n" : ""}
+# ルール（厳守）
+${rulesText()}
+- 各シーンの start・end は素材の中の秒数。dur はそのシーンの尺（end−start 以下）
+- 魚が掛かる瞬間・竿が大きく曲がる瞬間などは "zoom":true にし、"zoomAt" にシーン内の秒数を書く
+- se は ドン／シュッ／ピコン／ジャーン／ポン／なし のどれか
+- 3案は型を変える（例：結果先出し／手順／等身大の実釣）
+
+# 素材メモ（materials）
+${extra ? "上の素材メモを、そのまま materials に整理して入れてください。" : "動画の素材ごとに、次を書いてください（あとで別のAIが台本を直すときの資料になります）。"}
+- duration：全体の長さ（秒）
+- scenes：場面の区切り（start・end は秒、desc は何が映っているか全角30文字以内）
+- peaks：山場の正確な秒数（0.1秒単位）。type は アワセ／取り込み／締め／魚の顔／その他
+- transcript：音声で話している言葉の書き起こし（秒数を［12.4］の形で前に付ける。話していなければ空文字）
+
+# 採点（score）
+次の8軸を各0〜10で正直に採点してください：
+${axesText()}
+
+次のJSONだけを出力してください：
+{"materials":[{"src":1,"duration":0,"scenes":[{"start":0,"end":0,"desc":""}],"peaks":[{"t":0,"type":"アワセ","desc":""}],"transcript":""}],"candidates":[{"title":"","purpose":"${PURPOSES[mk.purpose] || "保存狙い"}","pattern":"","audio":"","hooks":["","",""],"scenes":[{"src":1,"start":0,"end":2,"dur":2,"narration":"","telop":"","se":"なし","zoom":false,"zoomAt":0,"image":""}],"question":"","igCaption":"","igHashtags":["#"],"ttCaption":"","ttHashtags":["#"],"ytTitle":"","score":{"hook":0,"purpose":0,"reality":0,"tempo":0,"narration":0,"question":0,"hashtags":0,"rules":0},"comment":""}]}`;
+}
+function imageB64(s, max){
+  const im = s.img, r = Math.min(1, max / Math.max(im.naturalWidth, im.naturalHeight));
+  const cv = document.createElement("canvas"); cv.width = Math.round(im.naturalWidth * r); cv.height = Math.round(im.naturalHeight * r);
+  cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height);
+  return cv.toDataURL("image/jpeg", 0.8).split(",")[1];
+}
+async function fetchTrend(silent){
+  if (!settings.gasUrl) return null;
+  try {
+    const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 9000);
+    const u = settings.gasUrl + (settings.gasUrl.includes("?") ? "&" : "?") + "token=" + encodeURIComponent(settings.gasToken || "");
+    const res = await fetch(u, { signal:ctl.signal }); clearTimeout(to);
+    const j = await res.json();
+    if (!j || j.error) throw new Error((j && j.error) || "応答なし");
+    state.trend = j.trend || j; lsSet("frs_trend", state.trend);
+    log("トレンド取得: " + (state.trend.updated || "")); renderTrend();
+    return state.trend;
+  } catch (e) { log("トレンド取得失敗: " + e.message); if (!silent) toast("トレンドを読み込めませんでした（" + e.message + "）"); return null; }
+}
+function renderTrend(){
+  const t = state.trend, card = $("#trendCard"); if (!card) return;
+  card.hidden = !t; if (!t) return;
+  $("#trendDate").textContent = t.updated ? "（" + String(t.updated).slice(0, 10) + "更新）" : "";
+  const b = $("#trendBody"); b.innerHTML = "";
+  if (t.summary) b.append(h("div", { class:"t" }, t.summary));
+  const ul = h("ul");
+  (t.catches || []).slice(0, 4).forEach(x => ul.append(h("li", {}, [x.fish, x.area, x.method].filter(Boolean).join("・") + (x.note ? "：" + x.note : ""))));
+  if (t.season && t.season.next && t.season.next.length) ul.append(h("li", {}, "これから：" + t.season.next.join("・")));
+  if (t.rules && t.rules.length) ul.append(h("li", {}, "規制・解禁：" + t.rules[0]));
+  b.append(ul);
+}
+async function createReels(){
+  if (!state.sources.length) { toast("先に素材を追加してください"); return; }
+  if (!aiReady()) { toast("作成にはGASのURLとトークンが必要です（設定）"); openSettings(); return; }
+  const res = await runJob("作成", async () => {
+    Busy.set(0.02, "今週のトレンドと週次方針を確認中");
+    if (settings.gasUrl) await fetchTrend(true);
+    if (gasReady()) await loadPolicy(true);
+    await FF.load(); await FF.mountSources();
+    const vids = videoSources(); const parts = []; let total = 0;
+    for (let i = 0; i < state.sources.length; i++) {
+      const s = state.sources[i]; const tag = "素材" + (i + 1);
+      if (isImg(s)) { const b64 = imageB64(s, 768); parts.push({ text:tag + "（画像）" }, { inlineData:{ mimeType:"image/jpeg", data:b64 } }); total += b64.length; continue; }
+      Busy.set(0.05 + 0.4 * vids.indexOf(s) / Math.max(1, vids.length), tag + " を解析中（" + s.name + "）");
+      if (!s.ana) { await localAnalyze(s); rebuildHighlights(s); saveAnaCache(s); }
+      const px = await makeProxy(s, null);
+      const b64 = await blobToB64(px); total += b64.length;
+      parts.push({ text:tag + "（動画・" + f1(s.dur) + "秒。時刻は先頭からの秒数）" }, { inlineData:{ mimeType:"video/mp4", data:b64 } });
+    }
+    let r;
+    if (total > 14 * 1048576) {
+      log("素材が大きいため個別解析に切替: " + mb(total));
+      let memo = [];
+      for (let i = 0; i < state.sources.length; i++) {
+        const s = state.sources[i]; if (isImg(s)) continue;
+        Busy.set(0.45 + 0.3 * i / state.sources.length, "素材" + (i + 1) + " をAIが確認中");
+        if (!s.ai) { s.ai = await geminiAnalyze(s, await makeProxy(s, null)); rebuildHighlights(s); saveAnaCache(s); }
+        memo.push("素材" + (i + 1) + "（" + f1(s.dur) + "秒）：" + (s.ai.summary || "") + "\n" + s.ai.highlights.map(x => "  " + f1(x.t0) + "〜" + f1(x.t1) + "秒 山場" + f1(x.t) + "秒 [" + (TYPE_JA[x.type] || x.type) + " " + Math.round(x.score * 10) + "/10] " + x.label).join("\n") + (s.ai.transcript ? "\n  書き起こし：" + s.ai.transcript : ""));
+      }
+      Busy.set(0.8, "AIが台本を書いています");
+      r = await gemini([{ text:makePrompt(memo.join("\n")) }], { timeout:180000 });
+    } else {
+      Busy.set(0.5, "AIが素材を見て台本を書いています（1〜2分）");
+      parts.push({ text:makePrompt("") });
+      r = await gemini(parts, { timeout:240000 });
+    }
+    const list = (r.json && r.json.candidates) || [];
+    if (!list.length) throw new Error("AIの台本が空でした");
+    state.materials = normMaterials(r.json.materials);
+    const tg = a => (Array.isArray(a) ? a : tagsOf(a)).map(x => "#" + String(x).trim().replace(/^[#＃]/, "")).filter(x => x.length > 1);
+    const ps = list.slice(0, 3).map(c => {
+      const sc = { title:String(c.title || ""), hooks:(c.hooks || []).map(String), question:String(c.question || ""),
+        caption:String(c.igCaption || c.caption || ""), hashtags:tg(c.igHashtags || c.hashtags || []),
+        ttCaption:String(c.ttCaption || ""), ttHashtags:tg(c.ttHashtags || []), ytTitle:String(c.ytTitle || ""),
+        audio:String(c.audio || ""), purpose:purposeKey(c.purpose) || state.make.purpose,
+        style:state.make.style, target:state.make.dur, score:c.score || null, comment:String(c.comment || ""),
+        scenes:(c.scenes || []).map(x => ({ src:Math.round(+x.src || 0), start:+x.start, end:+x.end, dur:+x.dur || (+x.end - +x.start), narration:String(x.narration || ""), telop:String(x.telop || ""), se:String(x.se || "なし"), zoom:!!x.zoom, zoomAt:x.zoomAt != null ? +x.zoomAt : null, image:String(x.image || "") })) };
+      return projectFromScript(sc, "ai");
+    }).filter(p => p.clips.length);
+    log("作成: 候補" + ps.length + "本 (" + r.model + ")");
+    return ps;
+  });
+  if (res && res.length) { state.makeCands = res.sort((a, b) => b.buzz.total - a.buzz.total); state.musePkg = null; renderMakeCands(); renderMuseCard(); $("#makeCandCard").scrollIntoView({ behavior:"smooth", block:"start" }); }
+}
+$("#btnMake").onclick = createReels;
+function renderMakeCands(){
+  const box = $("#makeCandList"); box.innerHTML = "";
+  $("#makeCandCard").hidden = !state.makeCands.length;
+  $("#secMat").hidden = !state.sources.length; $("#matText").textContent = materialsText();
+  $("#makeCandTitle").textContent = "候補（" + state.makeCands.length + "本）バズ予測スコア順";
+  state.makeCands.forEach((p, i) => {
+    const b = p.buzz;
+    const cb = h("input", { type:"checkbox", checked:!!p.batch, onchange:e => { p.batch = e.target.checked; } });
+    box.append(h("div", { class:"cand" },
+      h("div", { class:"rk" }, i + 1),
+      h("div", { class:"bd" },
+        h("b", {}, p.name),
+        h("div", {}, h("span", { class:"sc" }, b.total), h("span", { class:"small" }, " 点　" + (b.ai != null ? "AI " + b.ai + "／" : "") + "自動 " + b.heur)),
+        h("div", { class:"small" }, axesLine(b) + "　" + p.clips.length + "シーン・" + f1(totalOf(p)) + "秒"),
+        p.finish.hooks.length ? h("div", { class:"cm" }, "フック：" + p.finish.hooks.join("／")) : null,
+        p.aiComment ? h("div", { class:"cm" }, "AI：" + p.aiComment) : null,
+        p.clips.some(c => !c.srcId) ? h("div", { class:"cm warn" }, "画像待ちのシーンがあります（チャッピーで作成）") : null),
+      h("div", { class:"side" },
+        h("button", { class:"mini", onclick:() => { openProject(deep(p)); showTab("edit"); } }, "開く"),
+        h("label", { class:"small", style:"display:flex;gap:4px;align-items:center" }, cb, "一括"))
+    ));
+  });
+}
+$("#btnMakeBatch").onclick = () => {
+  const list = state.makeCands.filter(c => c.batch);
+  if (!list.length) { toast("一括書き出しする候補にチェックを入れてください"); return; }
+  exportMany(list.map(c => deep(c)));
+};
+$("#btnPaste").onclick = () => {
+  const { sc, errors } = parseScript($("#pasteText").value);
+  const box = $("#pasteErr"); box.innerHTML = "";
+  if (errors.length) box.append(h("div", { class:"t warn" }, "読み取れなかった行（" + errors.length + "）："), ...errors.map(e => h("div", { class:"small" }, e.line + "行目：" + e.text)));
+  if (!sc.scenes.length) { toast("シーン行が見つかりませんでした"); return; }
+  const bad = sc.scenes.filter(x => x.src != null && !state.sources[x.src - 1]);
+  if (bad.length) toast("素材" + bad.map(x => x.src).join("・") + " がありません（画像待ちとして作ります）", 4000);
+  bad.forEach(x => { x.image = x.image || "素材" + x.src + "（未追加）"; x.src = null; });
+  const p = projectFromScript(sc, "paste");
+  log("台本貼り付け: " + sc.scenes.length + "シーン / 未読" + errors.length + "行");
+  openProject(p); showTab("edit");
+};
+
+/* ---------- 素材メモ（AIが動画を見て書いたもの）---------- */
+const PEAK_JA = { hit:"アワセ", landing:"取り込み", fish:"魚の顔", fight:"やり取り" };
+function normMaterials(arr){
+  const out = [];
+  (Array.isArray(arr) ? arr : []).forEach(m => {
+    const k = Math.round(+m.src || 0), s = state.sources[k - 1];
+    if (!s || isImg(s)) return;
+    const cl = t => clamp(+t || 0, 0, s.dur);
+    out.push({ src:k, duration:+(+m.duration || s.dur).toFixed(1),
+      scenes:(Array.isArray(m.scenes) ? m.scenes : []).slice(0, 30).map(x => ({ start:+cl(x.start).toFixed(1), end:+cl(x.end).toFixed(1), desc:String(x.desc || "").slice(0, 60) })),
+      peaks:(Array.isArray(m.peaks) ? m.peaks : []).slice(0, 20).map(x => ({ t:+cl(x.t).toFixed(1), type:String(x.type || "その他").slice(0, 8), desc:String(x.desc || "").slice(0, 60) })),
+      transcript:String(m.transcript || "").slice(0, 1500) });
+  });
+  return out;
+}
+/* AIの素材メモが無い素材は、個別解析（s.ai）か音・動きの自動解析から作る */
+function materialsAll(){
+  return state.sources.map((s, i) => {
+    if (isImg(s)) return { src:i + 1, image:true, name:s.name };
+    const m = state.materials.find(x => x.src === i + 1);
+    if (m) return Object.assign({ name:s.name }, m);
+    const hl = (s.ai && s.ai.highlights) || [];
+    return { src:i + 1, name:s.name, duration:s.dur,
+      scenes:hl.map(x => ({ start:x.t0, end:x.t1, desc:x.label })),
+      peaks:hl.length ? hl.map(x => ({ t:x.t, type:PEAK_JA[x.type] || TYPE_JA[x.type] || "その他", desc:x.label })) : ((s.ana && s.ana.peaks) || []).map(x => ({ t:x.t, type:"その他", desc:x.label })),
+      transcript:(s.ai && s.ai.transcript) || "", auto:!hl.length };
+  });
+}
+function materialsText(){
+  return materialsAll().map(m => {
+    if (m.image) return "素材" + m.src + "（画像・" + m.name + "）";
+    const L = ["素材" + m.src + "（動画・" + m.name + "・" + f1(m.duration) + "秒）" + (m.auto ? "※音と動きの自動解析" : "")];
+    if (m.scenes && m.scenes.length) L.push("  場面：" + m.scenes.map(x => mmss2(x.start) + "-" + mmss2(x.end) + " " + x.desc).join("／"));
+    if (m.peaks && m.peaks.length) L.push("  山場：" + m.peaks.map(x => x.type + " " + mmss2(x.t) + (x.desc ? "（" + x.desc + "）" : "")).join("／"));
+    L.push("  書き起こし：" + (m.transcript || "（なし）"));
+    return L.join("\n");
+  }).join("\n");
+}
+
+/* ---------- Museに送る（依頼文＋カット検証シート＋コンタクトシート）---------- */
+const SCRIPT_FORMAT = `タイトル：〜
+目的：宣伝／保存狙い／フォロー狙い
+尺：30｜スタイル：fellows
+音源（方向・BPM目安）：〜
+フック：A案／B案／C案
+1｜0:00.0-0:02.0｜素材1 0:12.0-0:14.0｜ナレ：「〜」｜テロップ：〜｜効果音：ドン｜ズーム：あり 0.8秒
+2｜0:02.0-0:04.5｜画像：〜（チャッピーで作る図解・文字なし）｜ナレ：「〜」｜テロップ：〜｜効果音：なし｜ズーム：なし
+（シーンの数だけ続ける）
+ラスト｜問いかけ：〜
+IGキャプション：〜（宣伝のときは1行目を #PR）
+IGハッシュタグ（3〜5個）：#〜 #〜
+TikTokキャプション：〜（宣伝のときは1行目を #PR）
+TikTokハッシュタグ（7個）：#〜 #〜
+YouTubeタイトル：〜
+診断メモ：8軸の点数（例：フック8・目的9・実在9・テンポ7・ナレ8・二択8・タグ9・ルール10）と、直した点を3つ以内`;
+function condText(){
+  const mk = state.make;
+  return ["テーマ：" + (mk.theme || "（素材から判断）"), "目的：" + (PURPOSES[mk.purpose] || "保存狙い"), "宣伝商品（正式名称）：" + (productName() || "なし"),
+    "投稿予定日：" + (mk.date || "未定"), "尺：" + (mk.dur || 30) + "秒", "スタイル：" + ((STYLES[mk.style] || STYLES.fellows).name)].join("\n");
+}
+function museReviewText(cands){
+  const L = "ABC";
+  return `fellows_s16のショート動画の台本を3案作りました。添付の画像と下の資料を見て、いちばんバズる1本を選び、直した台本を返してください。
+
+# 今回の条件
+${condText()}
+
+# 今週のトレンド
+${trendText()}
+${settings.sheetUrl && gasReady() ? "\n# 台帳（読んでよい）\n" + settings.sheetUrl + "\n週次方針（" + (policyDate() || "未作成") + "）・商品リスト・数字・方針履歴の各タブ\n" : ""}
+# 素材メモ（AIが動画を見て書いたもの・書き起こしつき）
+${materialsText()}
+
+# 添付画像の見方
+・カット検証シート（案ごとに1枚）：各カットの「始」＝カットの最初のフレーム、「山」＝そのカットの山場。ラベル「案A #3 素材2 0:12.4」＝案Aの3カット目・素材2の0分12.4秒
+・コンタクトシート（素材ごとに1枚）：数秒おきのフレームと時刻。カットの差し替え先を探すのに使ってください
+
+# 評価の8軸（各10点）
+${axesText()}
+
+# ルール（厳守）
+${rulesText()}
+
+# 3案
+${cands.map((p, i) => scriptText(p, "案" + L[i] + "（アプリの予測 " + p.buzz.total + "点／" + axesLine(p.buzz) + "）")).join("\n\n")}
+
+# お願い
+1. 8軸で3案を採点し、いちばん良い案を選ぶ（ほかの案の良いカットを混ぜてもよい）
+2. フック・構成（カットの順番と秒数）・ナレーション・ラストの二択・媒体別のキャプション（IG／TikTok／YouTubeタイトル）・ハッシュタグ・音源の方向を直す
+3. カットの秒数は、画像のラベルの時刻と素材メモの秒数に合わせる。素材にない場面は作らない
+4. 返すのは下の形式の台本だけ。前置き・解説・表は書かない。点数と直した理由は最後の「診断メモ」に書く
+
+# 返す形式（この形のまま。自作アプリが読み取ります）
+${SCRIPT_FORMAT}`;
+}
+const GRAB = new Map();   // srcId → video要素（フレーム取得用）
+async function grabber(s){
+  if (GRAB.has(s.id)) return GRAB.get(s.id);
+  const v = document.createElement("video"); v.muted = true; v.playsInline = true; v.preload = "auto"; v.src = s.url;
+  try { await once(v, "loadeddata", 15000); } catch (_) { try { await once(v, "loadedmetadata", 5000); } catch (__) {} }
+  GRAB.set(s.id, v); return v;
+}
+function freeGrabbers(){ for (const v of GRAB.values()) { v.removeAttribute("src"); try { v.load(); } catch (_) {} } GRAB.clear(); }
+/* 素材 s の t 秒のフレームを、(x,y,w,h) の枠に収めて描く。描けたら true */
+async function drawFrameAt(cx, s, t, x, y, w, hh){
+  cx.fillStyle = "#000"; cx.fillRect(x, y, w, hh);
+  if (!s) return false;
+  let src, sw, sh;
+  if (isImg(s)) { src = s.img; sw = s.img.naturalWidth; sh = s.img.naturalHeight; }
+  else {
+    const v = await grabber(s);
+    const tt = clamp(t, 0, Math.max(0, (v.duration || s.dur) - 0.05));
+    if (Math.abs(v.currentTime - tt) > 0.01 || v.readyState < 2) {
+      const p = once(v, "seeked", 5000); v.currentTime = tt;
+      try { await p; } catch (_) { log("フレーム取得の待ち時間切れ: " + s.name + " " + f1(t)); }
+    }
+    src = v; sw = v.videoWidth || s.w; sh = v.videoHeight || s.h;
+  }
+  if (!sw || !sh) return false;
+  const r = Math.min(w / sw, hh / sh), dw = sw * r, dh = sh * r;
+  try { cx.drawImage(src, x + (w - dw) / 2, y + (hh - dh) / 2, dw, dh); return true; } catch (_) { return false; }
+}
+const SHEET_FONT = '-apple-system,"Hiragino Sans","Hiragino Kaku Gothic ProN","Noto Sans JP",sans-serif';
+function peakOf(c){
+  if (c.zoom && c.zoom.on) return c.in + c.zoom.at;
+  const s = srcById(c.srcId); if (!s || isImg(s)) return c.in;
+  const k = state.sources.indexOf(s) + 1;
+  const m = state.materials.find(x => x.src === k);
+  const mp = m && m.peaks.filter(x => x.t >= c.in && x.t <= c.out);
+  if (mp && mp.length) return mp[0].t;
+  const hl = state.highlights.filter(x => x.srcId === s.id && x.on && x.t >= c.in && x.t <= c.out).sort((a, b) => b.score - a.score)[0];
+  if (hl) return hl.t;
+  return (c.in + c.out) / 2;
+}
+async function cutSheet(p, label, onP){
+  const COLS = 6, CW = 240, FH = 320, LH = 50, HEAD = 92, PAD = 8;
+  const cells = [];
+  p.clips.forEach((c, i) => {
+    const s = srcById(c.srcId), k = state.sources.indexOf(s) + 1;
+    const tag = "案" + label + " #" + (i + 1) + " " + (s ? "素材" + k : "画像待ち");
+    if (!s || isImg(s)) cells.push({ s, t:0, l1:tag, l2:s ? "画像" : String(c.imgPrompt || "").slice(0, 14), kind:"始", c });
+    else { cells.push({ s, t:c.in, l1:tag + " " + mmss2(c.in), l2:"始（カットの頭）", c }); cells.push({ s, t:peakOf(c), l1:tag + " " + mmss2(peakOf(c)), l2:"山（山場）", c }); }
+  });
+  const rows = Math.ceil(cells.length / COLS);
+  const cv = document.createElement("canvas"); cv.width = COLS * CW + PAD * 2; cv.height = HEAD + rows * (FH + LH) + PAD;
+  const cx = cv.getContext("2d");
+  cx.fillStyle = "#16110d"; cx.fillRect(0, 0, cv.width, cv.height);
+  cx.fillStyle = "#ffe14d"; cx.font = "800 30px " + SHEET_FONT; cx.textBaseline = "top";
+  cx.fillText("案" + label + "　カット検証シート", PAD + 4, 12);
+  cx.fillStyle = "#f3ead8"; cx.font = "600 20px " + SHEET_FONT;
+  cx.fillText((p.name || "").slice(0, 40) + "　（" + f1(totalOf(p)) + "秒・" + p.clips.length + "カット）", PAD + 4, 54);
+  for (let i = 0; i < cells.length; i++) {
+    const e = cells[i], x = PAD + (i % COLS) * CW, y = HEAD + Math.floor(i / COLS) * (FH + LH);
+    const ok = await drawFrameAt(cx, e.s, e.t, x + 3, y, CW - 6, FH);
+    if (!ok) { cx.fillStyle = "#3a2f24"; cx.fillRect(x + 3, y, CW - 6, FH); cx.fillStyle = "#cbbd9f"; cx.font = "600 18px " + SHEET_FONT; cx.fillText(e.s ? "取得できません" : "画像待ち", x + 14, y + FH / 2 - 10); }
+    cx.fillStyle = "#f3ead8"; cx.font = "700 17px " + SHEET_FONT; cx.fillText(e.l1, x + 6, y + FH + 5, CW - 10);
+    cx.fillStyle = e.l2.startsWith("山") ? "#ffe14d" : "#cbbd9f"; cx.font = "600 15px " + SHEET_FONT; cx.fillText(e.l2, x + 6, y + FH + 27, CW - 10);
+    if (onP) onP((i + 1) / cells.length);
+  }
+  return cv;
+}
+async function contactSheet(s, k, onP){
+  const dur = s.dur; let step = dur <= 20 ? 1 : dur <= 40 ? 2 : dur <= 75 ? 3 : dur <= 120 ? 5 : 8;
+  while (dur / step > 36) step += 2;
+  const times = []; for (let t = 0; t < dur - 0.05; t += step) times.push(+t.toFixed(2));
+  const COLS = 6, CW = 240, FH = Math.round(CW * clamp(s.h / s.w, 9 / 16, 16 / 9)), HEAD = 62, PAD = 8, GAP = 6;
+  const rows = Math.ceil(times.length / COLS);
+  const cv = document.createElement("canvas"); cv.width = COLS * CW + PAD * 2; cv.height = HEAD + rows * (FH + GAP) + PAD;
+  const cx = cv.getContext("2d");
+  cx.fillStyle = "#16110d"; cx.fillRect(0, 0, cv.width, cv.height);
+  cx.textBaseline = "top"; cx.fillStyle = "#ffe14d"; cx.font = "800 28px " + SHEET_FONT;
+  cx.fillText("素材" + k + "　コンタクトシート", PAD + 4, 10);
+  cx.fillStyle = "#cbbd9f"; cx.font = "600 18px " + SHEET_FONT;
+  cx.fillText(s.name.slice(0, 30) + "　" + f1(dur) + "秒・" + step + "秒ごと", PAD + 440, 18);
+  for (let i = 0; i < times.length; i++) {
+    const x = PAD + (i % COLS) * CW, y = HEAD + Math.floor(i / COLS) * (FH + GAP);
+    await drawFrameAt(cx, s, times[i], x + 3, y, CW - 6, FH);
+    const lab = "素材" + k + " " + mmss2(times[i]);
+    cx.font = "700 17px " + SHEET_FONT; const tw = cx.measureText(lab).width;
+    cx.fillStyle = "rgba(0,0,0,.72)"; cx.fillRect(x + 3, y, tw + 12, 26);
+    cx.fillStyle = "#fff"; cx.fillText(lab, x + 9, y + 4);
+    if (onP) onP((i + 1) / times.length);
+  }
+  return cv;
+}
+const canvasJpeg = cv => new Promise(res => cv.toBlob(res, "image/jpeg", 0.82));
+async function buildMusePackage(){
+  const cands = state.makeCands.slice(0, 3);
+  if (!cands.length) throw new Error("先に「作成」で3案を作ってください");
+  const files = [], vids = videoSources(), L = "ABC";
+  const total = cands.length + vids.length; let done = 0;
+  try {
+    for (let i = 0; i < cands.length; i++) {
+      Busy.set(done / total, "案" + L[i] + "のカット検証シートを作成中");
+      const cv = await cutSheet(cands[i], L[i], r => Busy.set((done + r) / total)); done++;
+      files.push(new File([await canvasJpeg(cv)], "muse_" + (i + 1) + "_案" + L[i] + "_カット.jpg", { type:"image/jpeg" }));
+    }
+    for (const s of vids) {
+      const k = state.sources.indexOf(s) + 1;
+      Busy.set(done / total, "素材" + k + "のコンタクトシートを作成中");
+      const cv = await contactSheet(s, k, r => Busy.set((done + r) / total)); done++;
+      files.push(new File([await canvasJpeg(cv)], "muse_" + (files.length + 1) + "_素材" + k + "_コンタクト.jpg", { type:"image/jpeg" }));
+    }
+  } finally { freeGrabbers(); }
+  const text = museReviewText(cands);
+  log("Museパッケージ: 画像" + files.length + "枚 / " + files.map(f => mb(f.size)).join(", ") + " / 依頼文" + text.length + "文字");
+  return { text, files, urls:files.map(f => URL.createObjectURL(f)) };
+}
+function renderMuseCard(){
+  const card = $("#museCard"); card.hidden = !state.makeCands.length;
+  const pk = state.musePkg; $("#musePkg").hidden = !pk;
+  const box = $("#museThumbs"); box.innerHTML = "";
+  if (!pk) return;
+  $("#musePkgInfo").textContent = "画像 " + pk.files.length + "枚（カット検証シート" + Math.min(3, state.makeCands.length) + "枚・コンタクトシート" + (pk.files.length - Math.min(3, state.makeCands.length)) + "枚）・依頼文 " + pk.text.length + "文字";
+  pk.files.forEach((f, i) => box.append(h("div", { style:"flex:none;text-align:center" },
+    h("img", { src:pk.urls[i], alt:f.name, onclick:() => window.open(pk.urls[i], "_blank") }),
+    h("div", {}, h("button", { class:"mini", onclick:() => saveOneImage(f, pk.urls[i]) }, "保存 " + (i + 1))))));
+}
+async function saveOneImage(f, url){
+  try { if (navigator.canShare && navigator.canShare({ files:[f] })) { await navigator.share({ files:[f] }); return; } }
+  catch (e) { if (e && e.name === "AbortError") return; log("画像の共有エラー: " + e.message); }
+  const a = h("a", { href:url, download:f.name }); document.body.append(a); a.click(); a.remove();
+}
+$("#btnMusePrep").onclick = async () => {
+  if (state.musePkg) state.musePkg.urls.forEach(u => URL.revokeObjectURL(u));
+  state.musePkg = null;
+  const pk = await runJob("Museに送る準備", () => buildMusePackage());
+  if (pk) { state.musePkg = pk; renderMuseCard(); toast("準備できました。②で共有してください"); }
+};
+$("#btnMuseShare").onclick = () => {
+  const pk = state.musePkg; if (!pk) return;
+  try { navigator.clipboard.writeText(pk.text).catch(() => {}); } catch (_) {}
+  const data = { files:pk.files, text:pk.text };
+  let can = false; try { can = !!(navigator.canShare && navigator.canShare(data)); } catch (_) {}
+  if (!can) { try { can = !!(navigator.canShare && navigator.canShare({ files:pk.files })); if (can) delete data.text; } catch (_) {} }
+  if (!can) { copyText(pk.text, "依頼文をコピーしました。画像は下の「保存」で1枚ずつ保存してください"); return; }
+  navigator.share(data).then(() => { log("Museへ共有: 完了"); toast("依頼文はコピー済みです。Museで文字が入っていなければ貼り付けてください", 4500); })
+    .catch(e => { if (e && e.name === "AbortError") return; log("Museへ共有エラー: " + e.message); copyText(pk.text, "共有できなかったため依頼文をコピーしました。画像は「保存」で1枚ずつ"); });
+};
+$("#btnMuseCopy").onclick = () => { if (state.musePkg) copyText(state.musePkg.text, "依頼文をコピーしました"); };
+$("#btnMuseApply").onclick = () => {
+  const raw = $("#museReply").value;
+  const { sc, errors } = parseScript(raw);
+  const box = $("#museErr"); box.innerHTML = "";
+  const dg = $("#museDiag"); dg.hidden = !sc.diag; dg.textContent = sc.diag ? "Museの診断メモ\n" + sc.diag : "";
+  if (errors.length) box.append(h("div", { class:"t warn" }, "読み取れなかった行（" + errors.length + "）："), ...errors.slice(0, 8).map(e => h("div", { class:"small" }, e.line + "行目：" + e.text)));
+  if (!sc.scenes.length) { toast("シーン行が見つかりませんでした（形式を確認）"); return; }
+  const bad = sc.scenes.filter(x => x.src != null && !state.sources[x.src - 1]);
+  if (bad.length) toast("素材" + bad.map(x => x.src).join("・") + " がありません（画像待ちとして作ります）", 4000);
+  bad.forEach(x => { x.image = x.image || "素材" + x.src + "（未追加）"; x.src = null; });
+  const p = projectFromScript(sc, "muse");
+  p.name = p.name || "Museの台本";
+  log("Museの台本: " + sc.scenes.length + "シーン / 未読" + errors.length + "行 / 診断メモ" + (sc.diag ? "あり" : "なし"));
+  openProject(p); showTab("edit"); toast("Museの台本で作りました。ナレーションを録音してください", 3500);
+};
+
+/* ---------- 仕上げ（フック・字幕・問いかけ） ---------- */
+function renderFinish(){
+  const p = state.project; if (!p) return; const F = p.finish;
+  $("#fHookOn").checked = !!F.hookOn; $("#fHookDurV").textContent = f1(F.hookDur || 1.8);
+  const box = $("#fHooks"); box.innerHTML = "";
+  for (let i = 0; i < 3; i++) {
+    const r = h("input", { type:"radio", name:"fhook", checked:(F.hookSel || 0) === i, onchange:() => { F.hookSel = i; autosave(); PV.seek(0.2); } });
+    const t = h("input", { type:"text", value:F.hooks[i] || "", placeholder:"フック案" + (i + 1), oninput:e => { F.hooks[i] = e.target.value; autosave(); PV.redraw(); } });
+    box.append(h("label", {}, r, "ABC"[i], t));
+  }
+  $("#fSubs").checked = F.subs !== false; $("#fQuestion").value = F.question || ""; $("#fEndTel").checked = F.endTel !== false;
+  renderNarrSum();
+}
+$("#fHookOn").onchange = e => { state.project.finish.hookOn = e.target.checked; autosave(); PV.seek(0.2); };
+$("#fSubs").onchange = e => { state.project.finish.subs = e.target.checked; autosave(); PV.redraw(); };
+$("#fQuestion").oninput = e => { state.project.finish.question = e.target.value; autosave(); PV.redraw(); };
+$("#fEndTel").onchange = e => { state.project.finish.endTel = e.target.checked; autosave(); PV.redraw(); };
+function renderNarrSum(){
+  const p = state.project; if (!p || !$("#narrSum")) return;
+  const n = p.clips.filter(c => NARR.has(c.id)).length;
+  $("#narrSum").textContent = "録音済み " + n + "/" + p.clips.length + "シーン";
+}
+
+/* ---------- ナレーション録音 ---------- */
+const REC = { i:0, stream:null, mr:null, chunks:[], t0:0, timer:null, audio:null };
+$("#btnRec").onclick = () => { if (!state.project) return; PV.pause(); REC.i = Math.max(0, PV.clipAt(PV.t)); $("#recSheet").hidden = false; renderRec(); };
+$("#recClose").onclick = () => { stopRec(true); $("#recSheet").hidden = true; renderClips(); renderNarrSum(); PV.redraw(); };
+$("#recPrev").onclick = () => { if (REC.mr) return; REC.i = Math.max(0, REC.i - 1); renderRec(); };
+$("#recNext").onclick = () => { if (REC.mr) return; REC.i = Math.min(state.project.clips.length - 1, REC.i + 1); renderRec(); };
+function renderRec(){
+  const p = state.project, c = p.clips[REC.i], d = c.out - c.in, nr = NARR.get(c.id);
+  $("#recTitle").textContent = "シーン " + (REC.i + 1) + "/" + p.clips.length;
+  $("#recSub").textContent = "このシーンの長さ " + f1(d) + "秒" + (nr ? "　録音済み " + f1(nr.dur) + "秒" + (nr.dur > d + 0.05 ? "（" + f1(nr.dur - d) + "秒オーバー）" : "") : "");
+  $("#recText").textContent = (c.narr && c.narr.text) || "（ナレーションの文面がありません。編集画面で入力できます）";
+  $("#recInfo").textContent = "";
+  $("#recBtn").textContent = REC.mr ? "■ 停止" : "● 録音"; $("#recBtn").classList.toggle("rec", !!REC.mr);
+  $("#recPlay").disabled = !nr; $("#recDel").disabled = !nr; $("#recFit").disabled = !nr;
+}
+function recMime(){
+  const c = ["audio/mp4", "audio/mp4;codecs=mp4a.40.2", "audio/webm;codecs=opus", "audio/webm"];
+  if (!window.MediaRecorder) return null;
+  for (const m of c) { try { if (MediaRecorder.isTypeSupported(m)) return m; } catch (_) {} }
+  return "";
+}
+$("#recBtn").onclick = async () => {
+  if (REC.mr) { stopRec(false); return; }
+  const mime = recMime();
+  if (mime === null) { toast("この端末では録音できません"); return; }
+  try {
+    if (!REC.stream) REC.stream = await navigator.mediaDevices.getUserMedia({ audio:{ echoCancellation:true, noiseSuppression:true } });
+    REC.chunks = [];
+    REC.mr = mime ? new MediaRecorder(REC.stream, { mimeType:mime }) : new MediaRecorder(REC.stream);
+    const clipId = state.project.clips[REC.i].id;
+    REC.mr.ondataavailable = e => { if (e.data && e.data.size) REC.chunks.push(e.data); };
+    REC.mr.onstop = async () => {
+      const type = (REC.mr && REC.mr.mimeType) || mime || "audio/mp4";
+      const blob = new Blob(REC.chunks, { type }); REC.mr = null; clearInterval(REC.timer);
+      if (REC.discard || !blob.size) { REC.discard = false; renderRec(); return; }
+      try { await setNarration(clipId, blob); toast("録音しました"); } catch (e) { toast(e.message); }
+      renderRec(); renderNarrSum();
+    };
+    REC.mr.start(); REC.t0 = Date.now();
+    const d = state.project.clips[REC.i].out - state.project.clips[REC.i].in;
+    REC.timer = setInterval(() => { const el = (Date.now() - REC.t0) / 1000; $("#recInfo").innerHTML = "録音中 " + f1(el) + "秒 / シーン " + f1(d) + "秒" + (el > d ? ' <span class="warn">（長い）</span>' : ""); }, 100);
+    renderRec();
+  } catch (e) { log("録音開始失敗: " + e.message); toast("マイクを使えませんでした（" + e.message + "）"); REC.mr = null; renderRec(); }
+};
+function stopRec(discard){ if (REC.mr) { REC.discard = !!discard; try { REC.mr.stop(); } catch (_) {} } clearInterval(REC.timer); }
+$("#recPlay").onclick = () => { const nr = NARR.get(state.project.clips[REC.i].id); if (!nr) return; try { if (REC.audio) REC.audio.pause(); REC.audio = new Audio(URL.createObjectURL(nr.blob)); REC.audio.play(); } catch (_) {} };
+$("#recDel").onclick = async () => { await deleteNarration(state.project.clips[REC.i].id); renderRec(); renderNarrSum(); };
+$("#recFit").onclick = () => {
+  const p = state.project, c = p.clips[REC.i], nr = NARR.get(c.id); if (!nr) return;
+  const s = srcById(c.srcId), want = q(nr.dur + 0.2);
+  if (!s || isImg(s)) c.out = q(c.in + want);
+  else { const nd = Math.min(want, s.dur - 0.02 - c.in); c.out = q(c.in + nd); if (nd < want - 0.05) toast("素材の長さが足りないため" + f1(nd) + "秒までにしました"); }
+  projChanged(true); renderRec();
+};
+
+/* ---------- NGワードチェック ---------- */
+function ngCheck(p){
+  const out = [], add = (lv, msg, jump, block) => out.push({ lv, msg, jump, block:!!block });
+  const S = starts(p);
+  const scan = (txt, where, jump) => { for (const w of NG_WORDS) if (String(txt || "").includes(w)) add("err", where + "に禁止ワード「" + w + "」", jump); };
+  p.clips.forEach((c, i) => {
+    if (!c.srcId) add("err", "#" + (i + 1) + " の素材（画像）が未設定です", { type:"clip", i }, true);
+    scan(c.narr && c.narr.text, "#" + (i + 1) + " のナレ", { type:"clip", i });
+    const nr = NARR.get(c.id), d = c.out - c.in;
+    if (!nr) add("warn", "#" + (i + 1) + " のナレーションが未録音", { type:"clip", i });
+    else if (nr.dur > d + 0.3) add("warn", "#" + (i + 1) + " のナレがシーンより" + f1(nr.dur - d) + "秒長い（切れます）", { type:"clip", i });
+  });
+  p.telops.forEach((t, k) => scan(t.text, "テロップ「" + t.text.slice(0, 10) + "」", { type:"tel" }));
+  const F = p.finish || {};
+  (F.hooks || []).forEach((x, k) => scan(x, "フック" + "ABC"[k], { type:"finish" }));
+  scan(F.question, "問いかけ", { type:"finish" });
+  const tt = p.tt || { caption:"", hashtags:[] }, yt = p.yt || { title:"" };
+  scan(p.caption, "IGキャプション", { type:"cap" });
+  scan(tt.caption, "TikTokキャプション", { type:"cap", f:"tt" });
+  scan(yt.title, "YouTubeタイトル", { type:"cap", f:"yt" });
+  scan((p.hashtags || []).join(" ") + " " + (tt.hashtags || []).join(" "), "ハッシュタグ", { type:"cap" });
+  const firstTxt = [p.clips[0] && p.clips[0].narr && p.clips[0].narr.text, F.hookOn ? (F.hooks || [])[F.hookSel || 0] : "", ...p.telops.filter(t => t.start < 1.5).map(t => t.text)].filter(Boolean);
+  for (const t of firstTxt) for (const r of NG_OPEN) if (r.test(String(t).trim())) add("err", "冒頭に使わない言い方：「" + String(t).slice(0, 14) + "」", { type:"clip", i:0 });
+  const promo = (p.meta && (p.meta.purpose === "promo" || p.meta.product)) || false;
+  const isPR = x => /^\s*(#|＃)PR\b/.test(String(x || "").split("\n")[0]);
+  if (promo && !isPR(p.caption)) add("err", "宣伝の投稿はIGキャプションの1行目に #PR が必要です", { type:"cap" });
+  if (promo && !isPR(tt.caption)) add("err", "宣伝の投稿はTikTokキャプションの1行目に #PR が必要です", { type:"cap", f:"tt" });
+  const ni = (p.hashtags || []).length, nt = (tt.hashtags || []).length;
+  if (ni > 5) add("warn", "IGのハッシュタグが" + ni + "個（5個まで）", { type:"cap" });
+  else if (ni < 3) add("warn", "IGのハッシュタグが" + ni + "個（3〜5個がおすすめ）", { type:"cap" });
+  if (nt !== 7) add("warn", "TikTokのハッシュタグが" + nt + "個（7個にしてください）", { type:"cap", f:"tt" });
+  if (!String(tt.caption || "").trim()) add("warn", "TikTokのキャプションが空です", { type:"cap", f:"tt" });
+  if (!String(yt.title || "").trim()) add("warn", "YouTubeのタイトルが空です", { type:"cap", f:"yt" });
+  if (/https?:\/\//.test((p.caption || "") + (tt.caption || "") + (yt.title || ""))) add("warn", "キャプションやタイトルのURLはリンクになりません（「道具はプロフィールから」に）", { type:"cap" });
+  if (!F.question) add("warn", "ラストの問いかけが空です", { type:"finish" });
+  if (!out.length) add("ok", "問題は見つかりませんでした", null);
+  return out;
+}
+function renderNg(list){
+  const box = $("#ngList"); box.innerHTML = "";
+  for (const x of list) {
+    box.append(h("div", { class:"ng" },
+      h("span", { class:"lv " + (x.lv === "ok" ? "" : x.lv) }, x.lv === "err" ? "NG" : x.lv === "warn" ? "注意" : "OK"),
+      h("div", { style:"flex:1" }, x.msg),
+      x.jump ? h("button", { class:"mini", style:"flex:none", onclick:() => jumpTo(x.jump) }, "直す") : null));
+  }
+}
+function jumpTo(j){
+  if (j.type === "cap") { const el = $(j.f === "tt" ? "#ttCap" : j.f === "yt" ? "#ytTitle" : "#capText"); el.focus(); el.scrollIntoView({ behavior:"smooth", block:"center" }); return; }
+  showTab("edit");
+  if (j.type === "clip") { selClip = j.i; $("#secClips").open = true; renderClips(); PV.seek(starts(state.project)[j.i] || 0); setTimeout(() => { const el = $$("#clipList .item")[j.i]; if (el) el.scrollIntoView({ behavior:"smooth", block:"center" }); }, 80); }
+  if (j.type === "tel") { $("#secTel").open = true; $("#secTel").scrollIntoView({ behavior:"smooth" }); }
+  if (j.type === "finish") { $("#secFinish").open = true; $("#secFinish").scrollIntoView({ behavior:"smooth" }); }
+}
+$("#btnNg").onclick = () => { if (state.project) renderNg(ngCheck(state.project)); };
+
+/* ---------- 投稿用の文（IG・TikTok・YouTube）---------- */
+function tagCountText(n, lo, hi){ return "ハッシュタグ " + n + "個" + (lo === hi ? (n !== lo ? "（" + lo + "個にしてください）" : "") : (n > hi ? "（" + hi + "個までにしてください）" : n < lo ? "（" + lo + "〜" + hi + "個がおすすめ）" : "")); }
+function renderCap(){
+  const p = state.project; $("#capCard").hidden = !p; $("#ledgerCard").hidden = !p; if (!p) return;
+  normProject(p);
+  $("#expDiag").hidden = !p.diag; $("#expDiag").textContent = p.diag ? "Museの診断メモ\n" + p.diag : "";
+  $("#capText").value = p.caption || ""; $("#tagText").value = (p.hashtags || []).join(" ");
+  $("#tagCount").textContent = tagCountText((p.hashtags || []).length, 3, 5);
+  $("#ttCap").value = p.tt.caption || ""; $("#ttTag").value = (p.tt.hashtags || []).join(" ");
+  $("#ttCount").textContent = tagCountText(p.tt.hashtags.length, 7, 7);
+  $("#ytTitle").value = p.yt.title || ""; $("#ytCount").textContent = (p.yt.title || "").length + "文字";
+  $("#audNote").value = p.audioNote || "";
+  if (!$("#ldPosted").value) $("#ldPosted").value = localDT(new Date());
+}
+function localDT(d){ const z = x => String(x).padStart(2, "0"); return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()) + "T" + z(d.getHours()) + ":" + z(d.getMinutes()); }
+$("#capText").oninput = e => { if (!state.project) return; state.project.caption = e.target.value; autosave(); };
+$("#tagText").oninput = e => { if (!state.project) return; state.project.hashtags = tagsOf(e.target.value); autosave(); $("#tagCount").textContent = tagCountText(state.project.hashtags.length, 3, 5); };
+$("#ttCap").oninput = e => { if (!state.project) return; state.project.tt.caption = e.target.value; autosave(); };
+$("#ttTag").oninput = e => { if (!state.project) return; state.project.tt.hashtags = tagsOf(e.target.value); autosave(); $("#ttCount").textContent = tagCountText(state.project.tt.hashtags.length, 7, 7); };
+$("#ytTitle").oninput = e => { if (!state.project) return; state.project.yt.title = e.target.value; autosave(); $("#ytCount").textContent = e.target.value.length + "文字"; };
+$("#audNote").oninput = e => { if (!state.project) return; state.project.audioNote = e.target.value; autosave(); };
+$("#btnCopyCap").onclick = () => { const p = state.project; if (!p) return; copyText((p.caption || "").trim() + "\n\n" + (p.hashtags || []).join(" "), "IGのキャプションとタグをコピーしました"); };
+$("#btnCopyTag").onclick = () => { const p = state.project; if (!p) return; copyText((p.hashtags || []).join(" "), "IGのタグをコピーしました"); };
+$("#btnCopyTt").onclick = () => { const p = state.project; if (!p) return; copyText((p.tt.caption || "").trim() + "\n\n" + (p.tt.hashtags || []).join(" "), "TikTokのキャプションとタグをコピーしました"); };
+$("#btnCopyYt").onclick = () => { const p = state.project; if (!p) return; copyText((p.yt.title || "").trim(), "YouTubeのタイトルをコピーしました"); };
+
+/* ---------- 台帳（投稿の記録）---------- */
+const fmtDT = v => String(v || "").replace("T", " ");
+function nowStr(){ const d = new Date(), z = x => String(x).padStart(2, "0"); return isoDay(d) + " " + z(d.getHours()) + ":" + z(d.getMinutes()) + ":" + z(d.getSeconds()); }
+function localPosts(){ return lsGet("frs_posts") || []; }
+function ledgerRecord(p){
+  const files = state.results.filter(r => r.name === p.name || r.name.startsWith(p.name + "（")).map(r => r.file);
+  return { createdAt:nowStr(), postedAt:fmtDT($("#ldPosted").value), theme:(p.meta && p.meta.theme) || "", purpose:PURPOSES[(p.meta && p.meta.purpose) || ""] || "",
+    product:(p.meta && p.meta.product) || "", style:(STYLES[p.style] || STYLES.fellows).name, duration:Math.round(totalOf(p)),
+    script:scriptText(p), diag:p.diag || "", ab:$("#ldAB").value, bgm:$("#ldBgm").value.trim(), trial:$("#ldTrial").checked, files:files.join(", ") };
+}
+$("#btnLedger").onclick = async () => {
+  const p = state.project; if (!p) return;
+  const rec = ledgerRecord(p); let id = "";
+  $("#ldMsg").textContent = "記録中…";
+  if (gasReady()) {
+    try { const j = await gas("saveRecord", { record:rec }); id = j.id; }
+    catch (e) { $("#ldMsg").innerHTML = '<span class="err">記録できませんでした：' + e.message + "</span>"; return; }
+  } else id = "L" + stamp();
+  const list = localPosts().filter(x => x.id !== id);
+  list.unshift({ id, title:p.name, postedAt:rec.postedAt, bgm:rec.bgm, trial:rec.trial, ab:rec.ab, sheet:gasReady() });
+  lsSet("frs_posts", list.slice(0, 40));
+  p.ledgerId = id; autosave(); renderMetrics(id);
+  $("#ldMsg").innerHTML = gasReady() ? '<span class="ok">台帳に記録しました（投稿ID ' + id + "）。48時間後に下で数字を入れてください</span>" : '<span class="warn">GAS未設定のため、この端末にだけ記録しました（' + id + "）</span>";
+  log("台帳記録: " + id + " / " + p.name);
+};
+
+/* ---------- 48時間後の数字 ---------- */
+const PLATS = [["IG", "Instagram"], ["TikTok", "TikTok"], ["YouTube", "YouTubeショート"]];
+const MREQ = [["views", "再生数"], ["saves", "保存"], ["shares", "シェア"], ["comments", "コメント"], ["follows", "フォロー増"], ["likes", "いいね"]];
+const MOPT = [["retention", "平均視聴時間/維持率"], ["reach", "リーチ"], ["followerRatio", "フォロワー比率"], ["profileVisits", "プロフィール訪問"]];
+let mtRemote = [];
+function postOptions(){
+  const seen = new Set(), list = [];
+  for (const x of localPosts().concat(mtRemote)) { if (!x || !x.id || seen.has(x.id)) continue; seen.add(x.id); list.push(x); }
+  return list;
+}
+function renderMetrics(selId){
+  const sel = $("#mtPost"), keep = selId || sel.value; sel.innerHTML = "";
+  const list = postOptions();
+  if (!list.length) sel.append(h("option", { value:"" }, "（台帳に記録した投稿がありません）"));
+  for (const x of list) sel.append(h("option", { value:x.id }, (x.postedAt ? x.postedAt.slice(5, 16) + "　" : "") + (x.title || x.theme || x.id)));
+  if (keep && list.some(x => x.id === keep)) sel.value = keep;
+  renderMtForms();
+}
+function renderMtForms(){
+  const box = $("#mtForms"); box.innerHTML = "";
+  const post = postOptions().find(x => x.id === $("#mtPost").value) || {};
+  for (const [k, name] of PLATS) {
+    const g = h("div", { class:"mgrid" });
+    for (const [f, lab] of MREQ) g.append(h("div", {}, h("label", {}, lab + "*"), h("input", { type:"text", inputmode:"numeric", autocomplete:"off", "data-p":k, "data-f":f })));
+    for (const [f, lab] of MOPT) g.append(h("div", { class:"opt2" }, h("label", {}, lab), h("input", { type:"text", "data-p":k, "data-f":f, placeholder:f === "retention" ? "例：8.2秒 / 45%" : f === "followerRatio" ? "例：12%" : "" })));
+    box.append(h("div", { class:"plat", "data-plat":k }, h("h3", {}, name), g,
+      h("div", { class:"mgrid", style:"margin-top:6px" },
+        h("div", {}, h("label", {}, "投稿日時"), h("input", { type:"text", "data-p":k, "data-f":"postedAt", value:post.postedAt || "" })),
+        h("div", {}, h("label", {}, "BGM名"), h("input", { type:"text", "data-p":k, "data-f":"bgm", value:post.bgm || "" }))),
+      h("label", { class:"row small", style:"margin-top:6px" }, h("input", { type:"checkbox", "data-p":k, "data-f":"trial", checked:k === "IG" && !!post.trial }), "トライアル版")));
+  }
+}
+function readMetrics(){
+  const id = $("#mtPost").value; const rows = [], errs = [];
+  for (const [k, name] of PLATS) {
+    const get = f => { const el = $('#mtForms [data-p="' + k + '"][data-f="' + f + '"]'); return el ? (el.type === "checkbox" ? el.checked : String(el.value).trim()) : ""; };
+    const filled = MREQ.filter(([f]) => get(f) !== "");
+    if (!filled.length) continue;
+    const miss = MREQ.filter(([f]) => get(f) === "").map(x => x[1]);
+    if (miss.length) { errs.push(name + "：" + miss.join("・") + " が未入力"); continue; }
+    const bad = MREQ.filter(([f]) => !/^\d+$/.test(get(f).replace(/[,，\s]/g, "").replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)))).map(x => x[1]);
+    if (bad.length) { errs.push(name + "：" + bad.join("・") + " は数字で入れてください"); continue; }
+    const r = { id, platform:k, postedAt:get("postedAt"), bgm:get("bgm"), trial:get("trial") };
+    for (const [f] of MREQ) r[f] = Number(get(f).replace(/[,，\s]/g, "").replace(/[０-９]/g, c => String.fromCharCode(c.charCodeAt(0) - 0xFEE0)));
+    for (const [f] of MOPT) r[f] = get(f);
+    rows.push(r);
+  }
+  return { id, rows, errs };
+}
+function retroText(id, rows, url){
+  const post = postOptions().find(x => x.id === id) || {};
+  const num = r => PLATS.find(x => x[0] === r.platform)[1] + "：" + MREQ.map(([f, l]) => l + r[f]).join("・") + MOPT.filter(([f]) => r[f]).map(([f, l]) => "・" + l + r[f]).join("") + (r.trial ? "（トライアル版）" : "") + (r.bgm ? "（BGM：" + r.bgm + "）" : "");
+  const p = state.project && state.project.ledgerId === id ? state.project : null;
+  return `投稿から48時間の結果です。
+投稿：${post.title || id}（投稿ID ${id}${post.postedAt ? "・" + post.postedAt : ""}）
+${url ? "台帳：" + url + "\n「数字」タブの投稿ID " + id + " の行と、「台帳」タブの同じ投稿IDの行（台本全文・診断メモ）を読んでください。\n" : ""}
+# 数字
+${rows.map(num).join("\n")}
+${!url && p ? "\n# 台本\n" + scriptText(p) + "\n" : ""}
+# お願い（短く）
+1. 良かった点（数字の根拠つき）
+2. 悪かった点
+3. 次の1本で変えること（フック・構成・ナレ・二択・タグ・音源のどれを、どう変えるか）
+4. 来週の週次方針に入れること（1〜2行）${url ? "\n最後に「診断ログ」タブの最後の行の下に1行追加してください（A列：日時／B列：48h振り返り／C列：" + id + "／D列：要点を1行）。" : ""}`;
+}
+$("#mtPost").onchange = renderMtForms;
+$("#btnMtReload").onclick = async () => {
+  if (!gasReady()) { toast("GASが未設定です"); return; }
+  try { const j = await gas("listRecords", { days:30 }); mtRemote = (j.records || []).map(x => ({ id:x.id, title:x.theme, postedAt:String(x.postedAt || ""), bgm:x.bgm, trial:x.trial, ab:x.ab, sheet:true })); renderMetrics(); toast("台帳の投稿 " + mtRemote.length + "件を読み込みました"); }
+  catch (e) { toast("読み込めませんでした（" + e.message + "）"); }
+};
+$("#btnMetrics").onclick = async () => {
+  const { id, rows, errs } = readMetrics();
+  const msg = $("#mtMsg");
+  if (!id) { msg.innerHTML = '<span class="err">先に「投稿した → 台帳に記録」をしてください</span>'; return; }
+  if (errs.length) { msg.innerHTML = '<span class="err">' + errs.join("<br>") + "</span>"; return; }
+  if (!rows.length) { msg.innerHTML = '<span class="err">少なくとも1つの媒体の数字を入れてください</span>'; return; }
+  let url = "";
+  if (gasReady()) {
+    msg.textContent = "保存中…";
+    try { const j = await gas("saveMetrics", { rows }); url = j.url || settings.sheetUrl || ""; if (j.url) { settings.sheetUrl = j.url; saveSettings(); } }
+    catch (e) { msg.innerHTML = '<span class="err">保存できませんでした：' + e.message + "</span>"; return; }
+    msg.innerHTML = '<span class="ok">台帳の「数字」タブに ' + rows.length + "媒体分を保存しました</span>";
+  } else msg.innerHTML = '<span class="warn">GAS未設定のため台帳には保存していません（依頼文に数字を書いています）</span>';
+  $("#mtOut").hidden = false; $("#mtText").textContent = retroText(id, rows, url);
+  log("48h数字: " + id + " / " + rows.map(r => r.platform).join("・"));
+};
+$("#btnMtCopy").onclick = () => copyText($("#mtText").textContent, "振り返りの依頼文をコピーしました。Museに送ってください");
+
+/* ---------- チャッピー（画像生成）用の指示文 ---------- */
+function chappyPrompt(c, p){
+  return `次の仕様で画像を1枚だけ作ってください。作り直しができないので、仕様をすべて守ってください。
+
+【用途】釣りのショート動画（Instagramリール・TikTok）の途中に挟む1枚
+【サイズ】縦長 9:16（1080×1920px）
+【描くもの】${(c.imgPrompt || "").trim() || "（内容を書いてください）"}
+【テーマ】${(p.meta && p.meta.theme) || ""}
+【スタイル】図解・イラスト調。白を基調に、黄色（#FFE14D）をアクセント。線ははっきり、背景はシンプル。スマホでひと目で分かる大きさで描く
+【余白】上から15%と下から25%は、何も描かず背景だけにする（あとで文字を載せるため）
+【入れないもの】文字・数字・記号・ロゴ・透かし・署名（文字はゼロ）／実写風の魚・釣果・人物の顔
+【出力】画像1枚のみ。説明文は不要`;
+}
+
+/* ---------- 週次方針・商品リスト・台帳URL（GAS）---------- */
+function isoDay(d){ d = d || new Date(); const z = x => String(x).padStart(2, "0"); return d.getFullYear() + "-" + z(d.getMonth() + 1) + "-" + z(d.getDate()); }
+function policyText(){ return gasReady() ? ((state.policy && state.policy.text) || "") : (settings.policy || ""); }
+function policyDate(){ return gasReady() ? ((state.policy && state.policy.date) || "") : (settings.policyDate || ""); }
+async function loadPolicy(silent){
+  if (!gasReady()) { renderPolicy(); return null; }
+  try { const j = await gas("getPolicy"); state.policy = j.policy || null; state.policyLoaded = true; log("週次方針: " + (state.policy ? state.policy.date : "なし")); }
+  catch (e) { log("週次方針の読み込み失敗: " + e.message); if (!silent) toast("週次方針を読み込めませんでした（" + e.message + "）"); }
+  renderPolicy(); return state.policy;
+}
+function renderPolicy(){
+  const t = policyText(), d = policyDate();
+  if ($("#sPolicyView")) {
+    $("#sPolicyView").textContent = t || (gasReady() ? (state.policyLoaded ? "（週次方針はまだありません。「週次方針を依頼」をMuseに送ってください）" : "（未読み込み）") : "（GAS未設定。貼り付けた方針はこの端末だけに保存します）");
+    $("#sPolicyDate").textContent = d ? "更新日：" + d + (gasReady() ? "（台帳の週次方針タブ）" : "（この端末）") : "";
+    if (gasReady() && !t && settings.policy && !$("#sPolicy").value) $("#sPolicy").value = settings.policy;
+  }
+  const pl = $("#policyLine");
+  if (pl) pl.textContent = t ? "週次方針：" + (d || "日付なし") + " 更新" + (d && (Date.now() - Date.parse(d)) > 9 * 86400000 ? "（1週間以上前です。設定から依頼してください）" : "") : (gasReady() ? "週次方針：未作成（設定 → 週次方針を依頼）" : "");
+}
+async function loadProducts(silent){
+  if (!gasReady()) return null;
+  try { const j = await gas("getProducts"); state.sheetProducts = (j.products || []).filter(x => x && x.name); lsSet("frs_products", state.sheetProducts); log("商品リスト: " + state.sheetProducts.length + "件（台帳）"); }
+  catch (e) { log("商品リストの読み込み失敗: " + e.message); if (!silent) toast("商品リストを読み込めませんでした"); }
+  renderProdInfo(); return state.sheetProducts;
+}
+function renderProdInfo(){
+  const el = $("#sProdInfo"); if (!el) return;
+  el.textContent = state.sheetProducts && state.sheetProducts.length ? "台帳の「商品リスト」タブから " + state.sheetProducts.length + "件を読み込んでいます。追加・修正はシートで行ってください。"
+    : "商品マスタの正式名称 " + PRODUCTS.length + "件を内蔵しています（GASにつなぐと台帳の商品リストを使います）。";
+}
+async function loadSheetUrl(silent){
+  try { const j = await gas("getSheetUrl", null, { timeout:40000 }); settings.sheetUrl = j.url || ""; saveSettings(); return settings.sheetUrl; }
+  catch (e) { log("台帳URLの取得失敗: " + e.message); if (!silent) throw e; return settings.sheetUrl || ""; }
+}
+
+/* ---------- Museへの依頼文 ---------- */
+function museText(kind){
+  const p = state.project;
+  if (kind === 1) {
+    const url = gasReady() && settings.sheetUrl ? settings.sheetUrl : "";
+    const fmt = `【オーディエンス】年齢・地域・釣りの経験レベル
+【伸びている型】保存・シェアが多い投稿の共通点（具体例つき）
+【伸びていない型】避けるべき型
+【冒頭の掴み】効いているフックの傾向
+【ラストの問いかけ】コメントが付きやすい二択
+【ハッシュタグ】IG（3〜5個）とTikTok（7個）の軸と、避けるタグ
+【音源】合っている音源の方向とBPMの目安
+【今週の重点】投稿の比率（例：実釣報告5・締め/下処理3・道具2）と狙い
+【来週の3本】テーマ案3つ（使う素材・宣伝する商品は商品リストの正式名称）
+【数字】直近7日と30日：表示・リーチ・保存・シェア・コメント・フォロー増減`;
+    if (!url) return `fellows_s16のInstagramの実データ（直近7日・30日・90日）を分析して、ショート動画の台本作りに使う「週次方針」を作ってください。
+自作の編集アプリに貼り付けて、毎回の台本づくりに使います。次の形式を崩さず、全角1000文字以内で出力してください。
+
+${fmt}`;
+    return `fellows_s16の「週次方針」を今週分に更新してください（今日は${isoDay()}）。
+
+1. 次のスプレッドシートを開いて、各タブを読んでください。
+${url}
+・台帳：投稿した動画（台本全文・Museの診断メモ・BGM・トライアル版か）
+・数字：投稿48時間後の各媒体の数字
+・トレンド：毎週月曜に自動で取った瀬戸内の釣果・旬・SNSの傾向
+・方針履歴：これまでの週次方針
+・商品リスト：宣伝する商品の正式名称
+2. Instagramの実データ（直近7日・30日）とあわせて、下の形式で今週の方針を作ってください（見出しは変えない・全角1000文字以内）。
+3. スプレッドシートに書き込んでください。
+・「週次方針」タブのA1セルを、方針の全文で上書き（前の内容は消してよい）
+・「週次方針」タブのB1セルに今日の日付「${isoDay()}」
+・「方針履歴」タブの最後の行の下に1行追加（A列：${isoDay()}／B列：方針の全文／C列：Muse）
+4. 書き込めたら「書き込みました」とだけ返してください。書き込めなかったときは、方針の全文だけを返してください（アプリに貼り付けます）。
+
+# 形式
+${fmt}`;
+  }
+  if (!p) return "";
+  if (kind === 2) return `次のショート動画の台本を、私のアカウントの実データと下の8軸・ルールに照らしてレビューしてください。
+直した台本を下の「返す形式」で出してください（自作アプリが読み取るので、形式は崩さない・前置きは書かない）。点数と直した点は最後の「診断メモ」に書いてください。
+
+# 評価の8軸（各10点）
+${axesText()}
+
+# ルール
+${rulesText()}
+
+# 台本
+${scriptText(p)}
+
+# 返す形式
+${SCRIPT_FORMAT}`;
+  return "";
+}
+$("#btnMuse1").onclick = () => copyText(museText(1), "週次方針の依頼文をコピーしました。Museに貼って送ってください");
+$("#btnMuse2").onclick = () => { if (!state.project) { toast("編集中の動画がありません"); return; } copyText(museText(2), "台本レビューの依頼文をコピーしました"); };
+$("#btnPolicySave").onclick = async () => {
+  const text = $("#sPolicy").value.trim();
+  if (!text) { toast("方針を貼り付けてください"); return; }
+  if (gasReady()) {
+    try { await gas("savePolicy", { text, source:"アプリから貼り付け" }); settings.policy = ""; settings.policyDate = ""; saveSettings(); await loadPolicy(false); $("#sPolicy").value = ""; toast("台帳の週次方針に保存しました"); }
+    catch (e) { toast("保存できませんでした（" + e.message + "）", 4000); }
+  } else { settings.policy = text; settings.policyDate = isoDay(); saveSettings(); renderPolicy(); toast("この端末に保存しました（GAS未設定）"); }
+};
+$("#btnPolicyReload").onclick = async () => { if (!gasReady()) { toast("GASが未設定です"); return; } await loadPolicy(false); toast(state.policy ? "最新の方針を読み込みました（" + state.policy.date + "）" : "週次方針はまだありません"); };
+$("#sProducts").onchange = e => { settings.extraProducts = e.target.value; saveSettings(); renderMakeForm(); };
+$("#sGasUrl").onchange = e => { settings.gasUrl = e.target.value.trim(); saveSettings(); renderAnaMode(); };
+$("#sGasTok").onchange = e => { settings.gasToken = e.target.value.trim(); saveSettings(); renderAnaMode(); };
+$("#btnTrend").onclick = async () => {
+  settings.gasUrl = $("#sGasUrl").value.trim(); settings.gasToken = $("#sGasTok").value.trim(); saveSettings();
+  if (!settings.gasUrl) { $("#sTrendMsg").textContent = "URLを入れてください"; return; }
+  $("#sTrendMsg").textContent = "読み込み中…";
+  const t = await fetchTrend(false);
+  $("#sTrendMsg").innerHTML = t ? '<span class="ok">読み込みました（' + String(t.updated || "").slice(0, 10) + "）</span>" : '<span class="err">読み込めませんでした（URL・トークン・GASの公開設定を確認）</span>';
+};
+
+/* =====================================================================
    タブ・起動
    ===================================================================== */
 function showTab(name){
@@ -2010,8 +3743,15 @@ function showTab(name){
   if (name !== "edit") PV.pause();
   if (name === "ana") { renderAnaMode(); renderAna(); }
   if (name === "gen") renderGenForm();
+  if (name === "make") renderMakeForm();
+  if (name === "src") checkRestore();
   if (name === "edit" && state.project) { setTimeout(() => PV.redraw(), 50); }
-  if (name === "exp") { renderQOpts(); $("#expHint").textContent = state.project ? "編集中：" + state.project.name + "（" + f1(totalOf(state.project)) + "秒）" : "編集中の動画はありません"; }
+  if (name === "exp") {
+    renderQOpts(); renderCap(); renderMetrics();
+    $("#expHint").textContent = state.project ? "編集中：" + state.project.name + "（" + f1(totalOf(state.project)) + "秒）" : "編集中の動画はありません";
+    if (state.project) renderNg(ngCheck(state.project));
+    const F = state.project && state.project.finish; $("#expVarB").disabled = !(F && F.hookOn && F.hooks.filter(Boolean).length > 1);
+  }
   window.scrollTo(0, 0);
 }
 $$("#tabs button").forEach(b => b.onclick = () => showTab(b.dataset.tab));
@@ -2026,10 +3766,17 @@ document.addEventListener("visibilitychange", () => { if (document.hidden) PV.pa
   log("UA: " + navigator.userAgent);
   log("FFmpegWASM: " + (typeof FFmpegWASM !== "undefined") + " / share: " + !!navigator.canShare + " / wakeLock: " + ("wakeLock" in navigator));
   PV.init();
-  renderSources(); renderAnaMode(); renderGenForm(); renderQOpts(); renderResults();
+  state.make = settings.make;
+  if (!state.make.date) state.make.date = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
+  state.trend = lsGet("frs_trend");
+  state.sheetProducts = gasReady() ? lsGet("frs_products") : null;
+  renderSources(); renderAnaMode(); renderGenForm(); renderQOpts(); renderResults(); renderMakeForm();
   try { await loadLib(); await loadLogoImg(); } catch (e) { log("ライブラリ読込失敗: " + e.message); }
   if (!logoImg && settings.logo.enabled) { settings.logo.enabled = false; saveSettings(); }
-  renderGenForm(); checkRestore();
+  renderGenForm(); checkRestore(); renderMakeForm();
+  renderPolicy();
+  if (settings.gasUrl) fetchTrend(true);
+  if (gasReady()) { loadPolicy(true); loadProducts(true).then(() => renderMakeForm()); if (!settings.sheetUrl) loadSheetUrl(true); }
 })();
 </script>
 </body>
