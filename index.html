@@ -562,7 +562,7 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
         / スタイル・テロップ描画 / 効果音 / 候補生成 / ランキング / 編集・プレビュー
         / 書き出し / 画面制御
    ===================================================================== */
-const BUILD = "2026-10-29b";
+const BUILD = "2026-10-29c";
 const FF_BASE   = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
 const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm"; // classWorkerURL指定時はモジュールWorker→ESM版が必須
 const GEM_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -3275,6 +3275,7 @@ function parseScript(text){
     if (head(/^(?:YouTube|YT|ユーチューブ)\s*(?:ショート)?\s*(?:の)?\s*タイトル[^:：]*[:：]\s*(.*)$/i, mm => { sc.ytTitle = mm[1].trim(); cont = null; })) return;
     if ((m = L.match(/^タイトル\s*[:：]\s*(.*)$/))) { sc.title = m[1].trim(); cont = null; return; }
     if ((m = L.match(/^目的\s*[:：]\s*(.*)$/))) { sc.purpose = purposeKey(m[1]); cont = null; return; }
+    if (/^仕上げ\s*[:：]/.test(L)) { cont = null; return; }   // 台帳用の記録行は読み飛ばす
     if ((m = L.match(/^型\s*[:：]\s*(.*)$/))) { sc.type = m[1].trim(); cont = null; return; }
     if ((m = L.match(/^音源[^:：]*[:：]\s*(.*)$/))) { sc.audio = m[1].trim(); cont = null; return; }
     if (/^(尺|スタイル)\s*[:：]/.test(L)) {
@@ -3366,6 +3367,13 @@ function scriptText(p, label){
   lines.push("目的：" + (PURPOSES[(p.meta && p.meta.purpose) || ""] || PURPOSES[state.make && state.make.purpose] || "保存狙い"));
   lines.push("尺：" + Math.round(totalOf(p)) + "｜スタイル：" + (p.style || "fellows"));
   lines.push("音源（方向・BPM目安）：" + (p.audioNote || ""));
+  { // 振り返り用：声・締め・道具テロップ・文字（台帳でMuseが見分ける）
+    const F = p.finish || {}, ai = {}, L = look(); let rec = 0, none = 0;
+    for (const c of p.clips) { if (!NARR.has(c.id)) none++; else if (c.narr && c.narr.ai) ai[c.narr.ai] = (ai[c.narr.ai] || 0) + 1; else rec++; }
+    const vName = id => ((VOICES.find(v => v[0] === id) || [id, id])[1]).replace(/（.*$/, "");
+    const aiTxt = Object.entries(ai).map(([k, n]) => "AI " + vName(k) + " " + n).join("・");
+    lines.push("仕上げ：ナレ " + ([aiTxt, rec ? "自分の声 " + rec : "", none ? "なし " + none : ""].filter(Boolean).join("・") || "なし") + "（シーン数）／締め「こ、れ、が。」" + (F.koreGa ? "あり" : "なし") + "／道具はプロフィールから " + (F.endTel !== false ? "あり" : "なし") + "／文字 " + ((FONTS[L.font] || FONTS.mincho).label.replace(/（.*$/, "")) + "・" + ((ANIMS[L.anim] || "").replace(/（.*$/, "") || L.anim));
+  }
   if (p.finish && p.finish.hooks && p.finish.hooks.length) lines.push("フック：" + p.finish.hooks.join("／"));
   p.clips.forEach((c, i) => {
     const s = srcById(c.srcId), k = state.sources.indexOf(s) + 1, d = cdur(c);
