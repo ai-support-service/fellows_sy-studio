@@ -333,7 +333,8 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
       <div class="small" style="margin-top:4px">選んだ案が本編（A）。書き出し時に「冒頭違い」を選ぶと、次の案でB版も作ります。</div>
       <label class="row small" style="margin-top:10px"><input type="checkbox" id="fSubs"> ナレーションを字幕で出す（キーワードは黄色）</label>
       <label class="fld">ラストの問いかけ（最後の2.5秒）</label><input type="text" id="fQuestion" placeholder="例：ジグ派？テンヤ派？">
-      <label class="row small" style="margin-top:10px"><input type="checkbox" id="fEndTel"> 最後の1秒に「道具はプロフィールから」を出す</label>
+      <label class="row small" style="margin-top:10px"><input type="checkbox" id="fEndTel"> 最後の1秒に「道具はプロフィールから」を出す（宣伝の回は自動でオン）</label>
+      <label class="row small" style="margin-top:10px"><input type="checkbox" id="fKoreGa"> 締めに「こ、れ、が。」を出す（最後の1.3秒・1文字ずつ）</label>
       <label class="row small" style="margin-top:10px"><input type="checkbox" id="fGrade"> 明るさ補正「昼っぽく」（暗いカットほど明るく・白飛びなし。強さはカットごとに調整）</label>
     </details>
     <details class="sec" id="secLook"><summary>文字の見た目（書体・色・動き）</summary>
@@ -561,7 +562,7 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
         / スタイル・テロップ描画 / 効果音 / 候補生成 / ランキング / 編集・プレビュー
         / 書き出し / 画面制御
    ===================================================================== */
-const BUILD = "2026-10-29a";
+const BUILD = "2026-10-29b";
 const FF_BASE   = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
 const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm"; // classWorkerURL指定時はモジュールWorker→ESM版が必須
 const GEM_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -649,7 +650,7 @@ const DEF_SETTINGS = {
   logo:{ enabled:false, pos:"tr", size:0.2, opacity:0.9 },
   gasUrl:"", gasToken:"", policy:"", policyDate:"", extraProducts:"",
   make:{ theme:"", purpose:"save", product:"", productFree:"", date:"", dur:30, style:"fellows" },
-  look:{ font:"mincho", scheme:"fellows", anim:"pop", c1:"#ffffff", c2:"#000000" },
+  look:{ font:"mincho", scheme:"fellows", anim:"slide", c1:"#ffffff", c2:"#000000" },
   voice:"Leda", yomi:"バチキソ=ばちきそ\n40g=40グラム\n30g=30グラム", endTel:true
 };
 let settings = (() => { try { return Object.assign(deep(DEF_SETTINGS), JSON.parse(localStorage.getItem("frs_settings") || "{}")); } catch (_) { return deep(DEF_SETTINGS); } })();
@@ -657,6 +658,7 @@ settings.logo = Object.assign(deep(DEF_SETTINGS.logo), settings.logo || {});
 settings.make = Object.assign(deep(DEF_SETTINGS.make), settings.make || {});
 settings.look = Object.assign(deep(DEF_SETTINGS.look), settings.look || {});
 if (/^gemini-3\.(8|7)-flash$/.test(settings.model || "")) settings.model = GEM_DEFAULT;   // 混雑が続くモデルからの移行
+if (!settings.mig29b) { if (settings.look.anim === "pop") settings.look.anim = "slide"; settings.mig29b = 1; try { localStorage.setItem("frs_settings", JSON.stringify(settings)); } catch (_) {} }   // 文字の動きの標準をスライドへ
 function saveSettings(){ try { localStorage.setItem("frs_settings", JSON.stringify(settings)); } catch (_) {} }
 /* ---------- GAS（Gemini中継・台帳）---------- */
 const gasReady = () => !!(settings.gasUrl && settings.gasToken);
@@ -1800,7 +1802,9 @@ function overlaysFor(p, hookSel){
     const tx = F.hooks[hookSel];
     L.push(A({ key:"h:" + tx, start:0, end:Math.min(F.hookDur || 1.8, T), draw:(c, W, H, ap) => drawTelop(c, { text:tx, preset:"hook", y:HOOK_Y, size:1 }, W, H, ap, an) }, an, tx));
   }
-  if (F.question && F.question.trim()) L.push(A({ key:"q:" + F.question, start:Math.max(0, T - 2.5), end:T + 0.01, draw:(c, W, H, ap) => drawTelop(c, { text:F.question, preset:"question", y:Q_Y, size:1 }, W, H, ap, an) }, an, F.question));
+  const KG = F.koreGa ? Math.min(1.3, T) : 0;
+  if (KG) L.push({ key:"kg:" + T, start:T - KG, end:T + 0.01, anim:"draw", aDur:Math.min(1.0, KG), draw:(c, W, H, ap) => drawKoreGa(c, W, H, ap) });
+  if (F.question && F.question.trim()) L.push(A({ key:"q:" + F.question + ":" + KG, start:Math.max(0, T - KG - 2.5), end:T - KG + 0.01, draw:(c, W, H, ap) => drawTelop(c, { text:F.question, preset:"question", y:Q_Y, size:1 }, W, H, ap, an) }, an, F.question));
   if (F.endTel !== false) L.push({ key:"e:end", start:Math.max(0, T - 1.0), end:T + 0.01, draw:(c, W, H) => drawTelop(c, { text:"道具はプロフィールから", preset:"endtel", y:END_Y, size:1 }, W, H) });
   // 演出（シーンごと）
   p.clips.forEach((c, i) => {
@@ -1814,6 +1818,22 @@ function overlaysFor(p, hookSel){
     }
   });
   return L;
+}
+/* 締め「こ、れ、が。」：3つの文字が1つずつ弾んで出る */
+function drawKoreGa(c, W, H, ap){
+  ap = ap == null ? 1 : ap;
+  const U = ["こ、", "れ、", "が。"], px = Math.round(W * 0.15), gap = px * 1.55, cy = H * 0.5;
+  c.save(); c.font = fontStr("heavy", px); c.textAlign = "center"; c.textBaseline = "middle"; c.lineJoin = "round";
+  U.forEach((u, i) => {
+    const lp = clamp((ap - i / 3) * 3, 0, 1); if (lp <= 0) return;
+    const s = lp < 0.6 ? 0.55 + 0.75 * (lp / 0.6) : 1.3 - 0.3 * ((lp - 0.6) / 0.4);
+    const x = W / 2 + (i - 1) * gap + px * 0.18;
+    c.save(); c.globalAlpha = Math.min(1, lp * 3); c.translate(x, cy); c.scale(s, s);
+    c.lineWidth = px * 0.2; c.strokeStyle = "#000"; c.strokeText(u, 0, 0);
+    c.fillStyle = i === 2 ? "#ffe14d" : "#fff"; c.fillText(u, 0, 0); c.restore();
+  });
+  c.restore();
+  return { x:0, y:0, w:W, h:H };
 }
 /* ストップ＋溜め：画面を少し暗くして、真ん中に大きく */
 function drawStop(c, text, W, H, ap){
@@ -3309,7 +3329,8 @@ function projectFromScript(sc, origin){
   }
   const hooks = (sc.hooks || []).map(x => String(x || "").trim()).filter(Boolean).slice(0, 3);
   if (!hooks.length && sc.title) hooks.push(sc.title.slice(0, 16));
-  const finish = { hookOn:hooks.length > 0, hooks, hookSel:0, hookDur:1.8, subs:true, question:String(sc.question || ""), endTel:settings.endTel !== false };
+  const isPromo = (sc.purpose || mk.purpose) === "promo" || !!productName();
+  const finish = { hookOn:hooks.length > 0, hooks, hookSel:0, hookDur:1.8, subs:true, question:String(sc.question || ""), endTel:isPromo, koreGa:false };
   const p = { id:uid(), style, target:sc.target || mk.dur || 30, pattern:"script", name:sc.title || "作成した台本", clips, telops:[], se:[],
     audio:{ orig:false, origVol:1, bgm:"", bgmVol:0.25, fade:true }, finish, caption:String(sc.caption || ""), hashtags:(sc.hashtags || []).slice(0, 10),
     tt:{ caption:String(sc.ttCaption || ""), hashtags:(sc.ttHashtags || []).slice(0, 12) }, yt:{ title:String(sc.ytTitle || "") },
@@ -3547,15 +3568,15 @@ ${materialList()}
 {"fish":"","materials":[{"src":1,"duration":0,"scenes":[{"start":0,"end":0,"desc":""}],"peaks":[{"t":0,"type":"アワセ","desc":""}],"transcript":"","notes":[{"t":0,"desc":""}],"place":""}]}`;
 }
 const SCRIPT_FORMAT = `タイトル：〜
-型：結果先出し／ノウハウ／等身大 のどれか1つ
+型：結果先出し／ノウハウ／等身大／締め・下処理 のどれか1つ
 目的：宣伝／保存狙い／フォロー狙い
 尺：30｜スタイル：fellows
 音源（方向・BPM目安）：〜
 フック：A案／B案／C案
-1｜起｜0:00.0-0:02.5｜素材1 0:12.0-0:14.5｜ナレ：「〜」｜テロップ：〜｜効果音：ドン｜ズーム：あり 0.8秒｜演出：なし
-2｜承｜0:02.5-0:06.0｜画像：〜（チャッピーで作る図解・文字なし）｜ナレ：「〜」｜テロップ：〜｜効果音：なし｜ズーム：なし｜演出：なし
-3｜転｜0:06.0-0:09.0｜素材2 0:20.0-0:26.0｜ナレ：「〜」｜テロップ：〜｜効果音：シュッ｜ズーム：なし｜演出：早送り ×2／カウンター「4投目」
-4｜転｜0:09.0-0:12.0｜素材1 0:40.0-0:43.0｜ナレ：「〜」｜テロップ：〜｜効果音：ドン｜ズーム：なし｜演出：ストップ 1.5秒「結果は…」
+1｜起｜0:00.0-0:03.0｜素材1 0:12.0-0:15.0｜ナレ：「〜」｜テロップ：〜｜効果音：ドン｜ズーム：あり 0.8秒｜演出：なし
+2｜転｜0:03.0-0:07.0｜画像：〜（チャッピーで作る図解・文字なし）｜ナレ：「〜」｜テロップ：〜｜効果音：なし｜ズーム：なし｜演出：丸囲み 1.0秒 右下
+3｜転｜0:07.0-0:11.0｜素材2 0:20.0-0:28.0｜ナレ：「〜」｜テロップ：〜｜効果音：シュッ｜ズーム：なし｜演出：早送り ×2／カウンター「4投目」
+4｜結｜0:11.0-0:15.0｜素材1 0:40.0-0:44.0｜ナレ：「〜」｜テロップ：〜｜効果音：ドン｜ズーム：なし｜演出：なし
 （シーンの数だけ続ける）
 ラスト｜問いかけ：〜
 IGキャプション：〜（宣伝のときは1行目を #PR）
@@ -3600,20 +3621,24 @@ ${materialsText()}
 ${nImgs ? "・コンタクトシート（動画の素材ごとに1枚）：数秒おきのフレームと時刻。カットを選ぶとき・丸囲みの位置を決めるときに使ってください\n・写真の素材は、そのまま添付しています" : "（添付なし）"}
 
 # 台本の作り方
-1. 型を3つ（結果先出し／ノウハウ／等身大＝失敗→逆転）考え、いちばん伸びる1本を選んで書く。採用した型を「型：」に書く
-2. 起承転結を必ず入れる。各シーンの2番目の欄に 起・承・転・結 のどれかを書く。30秒なら目安は 起0〜3秒／承3〜10秒／転10〜22秒／結22〜30秒（尺が違えば同じ比率で）
-   起：いきなり結果か意外な一言（1秒目で何かが変わる）
-   承：状況と悩みを見せて共感をとる
-   転：展開を変える。失敗→工夫、結果の直前で溜める（素材メモの「転・笑いに使える瞬間」にある失敗・アタリ・ボヤキを使う）
+1. 型を4つの中から考え、いちばん伸びる1本を選んで書く。採用した型を「型：」に書く
+   ・結果先出し：釣れた結果・山場を冒頭で見せ、どうやったかを後で明かす
+   ・ノウハウ：コツ・手順を教える。答えとコツは前半で出し切る（隠さない）
+   ・等身大：失敗→工夫→逆転の実釣報告
+   ・締め・下処理：締め・血抜き・持ち帰り・下処理。このアカウントで一番伸びる型。尺は15秒（条件の尺が30秒でも15〜20秒でよい。「尺：」に実際の秒数を書く）。1つの動作で結果がすぐ見える形にし、手順は前半ですぐ見せる。転は「やりがちな失敗・間違ったやり方」
+2. 流れは起・転・結が基本。承（状況と悩み）は独立させず、起の中に1文でたたむ（承を書くなら2秒以内）。各シーンの2番目の欄に 起・承・転・結 のどれかを書く。30秒なら目安は 起0〜3秒／転3〜20秒／結20〜30秒（尺が違えば同じ比率で）
+   起：いきなり結果か意外な一言（1秒目で何かが変わる）＋状況を1文
+   転：展開を変える。失敗→工夫、やりがちな間違い→正解（素材メモの「転・笑いに使える瞬間」にある失敗・アタリ・ボヤキを使う）
    結：答えと学び→二択の問いかけ→余韻なしで急に終わる
-3. 1本に必ず入れる：冒頭1秒の変化か結論／問いかけで引っ張って答えは後半／中盤で1回展開を変える／結果の直前の溜め／数字か具体的なコツを3つ以上
+3. 1本に必ず入れる：冒頭1秒の変化か結論／中盤で1回展開を変える／数字か具体的なコツを3つ以上。結果先出しと等身大は「問いかけで引っ張って答えは後半」と結果直前の溜めも入れる（ノウハウと締め・下処理は答えを後半に隠さない）
+   締めの「こ、れ、が。」やラストの「道具はプロフィールから」はアプリ側で付けるので、台本には書かない
 4. ${promo ? "今回は宣伝の回なので、笑いどころは入れない" : "笑いどころは軽く1か所まで（関西弁のツッコミ・自虐。例：「また乗らんのかい」）"}
-5. 演出は次の5つから、素材に合うものを2〜3個だけ選ぶ（毎回全部は使わない）。シーン行の「演出：」に書く。使わないシーンは「演出：なし」
-   ・ストップ 〇秒「溜めの言葉」：そのシーンの〇秒で映像を止め、画面を少し暗くして大きな文字（例：ストップ 1.5秒「結果は…」）
-   ・丸囲み 〇秒 位置：〇秒から赤丸と矢印で指す。位置は 左上／上／右上／左／中央／右／左下／下／右下（コンタクトシートで確認）
-   ・カウンター「4投目」：そのシーンの間、上に札を出す
-   ・早送り ×2：素材の範囲を2倍速で見せる（素材の範囲の長さ＝シーンの秒数×2にする）
-   ・区切り「でも…」：シーンの頭に大きな区切りの文字（転の入り口に向く）
+5. 演出は次の4つから、素材に合うものを2〜3個だけ選ぶ（毎回全部は使わない）。視聴者は35〜64歳の経験者なので、煽りより「情報の札」と「ここ見て」が効く。シーン行の「演出：」に書く。使わないシーンは「演出：なし」
+   ・丸囲み 〇秒 位置：〇秒から赤丸と矢印で指す。位置は 左上／上／右上／左／中央／右／左下／下／右下（コンタクトシートで確認）。優先して使う
+   ・カウンター「4投目」：そのシーンの間、上に札を出す。優先して使う
+   ・早送り ×2：巻き取りなど単調な区間だけを2倍速で見せる（素材の範囲の長さ＝シーンの秒数×2にする）
+   ・ストップ 〇秒「溜めの言葉」：本当の山場の直前で1本に1回まで。そのシーンの〇秒で映像を止め、画面を少し暗くして大きな文字（例：ストップ 1.5秒「結果は…」）。ノウハウと締め・下処理では使わない
+   ・「でも…」を画面いっぱいに出す区切りは使わない
 6. 画像は0〜2枚まで。図解か状況イラストがあると伝わるシーンだけ、素材の代わりに「画像：描く内容」を書く（文字なしの絵。文字はアプリが載せる）
 7. 各シーンの秒数は素材メモとコンタクトシートの時刻に合わせる
 
@@ -4075,14 +4100,15 @@ function renderFinish(){
     const t = h("input", { type:"text", value:F.hooks[i] || "", placeholder:"フック案" + (i + 1), oninput:e => { F.hooks[i] = e.target.value; autosave(); PV.redraw(); } });
     box.append(h("label", {}, r, "ABC"[i], t));
   }
-  $("#fSubs").checked = F.subs !== false; $("#fQuestion").value = F.question || ""; $("#fEndTel").checked = F.endTel !== false; $("#fGrade").checked = F.grade !== false;
+  $("#fSubs").checked = F.subs !== false; $("#fQuestion").value = F.question || ""; $("#fEndTel").checked = F.endTel !== false; $("#fKoreGa").checked = !!F.koreGa; $("#fGrade").checked = F.grade !== false;
   renderNarrSum();
 }
 $("#fHookOn").onchange = e => { state.project.finish.hookOn = e.target.checked; autosave(); PV.seek(0.2); };
 $("#fSubs").onchange = e => { state.project.finish.subs = e.target.checked; autosave(); PV.redraw(); };
 $("#fQuestion").oninput = e => { state.project.finish.question = e.target.value; autosave(); PV.redraw(); };
 $("#fGrade").onchange = e => { state.project.finish.grade = e.target.checked; autosave(); renderClips(); PV.redraw(); };
-$("#fEndTel").onchange = e => { state.project.finish.endTel = e.target.checked; settings.endTel = e.target.checked; saveSettings(); autosave(); PV.redraw(); };
+$("#fEndTel").onchange = e => { state.project.finish.endTel = e.target.checked; autosave(); PV.redraw(); };
+$("#fKoreGa").onchange = e => { state.project.finish.koreGa = e.target.checked; autosave(); PV.redraw(); };
 function renderNarrSum(){
   const p = state.project; if (!p || !$("#narrSum")) return;
   const n = p.clips.filter(c => NARR.has(c.id)).length, ai = p.clips.filter(c => NARR.has(c.id) && c.narr.ai).length;
