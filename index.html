@@ -94,6 +94,7 @@ label.fld{display:block;font-size:12px;color:var(--sub);margin:10px 0 4px;font-w
 .stage{position:relative;width:min(100%,calc(58vh * 9 / 16));aspect-ratio:9/16;margin:0 auto;background:#000;border-radius:10px;overflow:hidden}
 .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .stage canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.stage.picking{outline:4px solid #e60012;outline-offset:-4px;cursor:crosshair}
 .ctl{display:flex;gap:8px;align-items:center;margin-top:8px}
 .ctl button{flex:none;width:56px}
 .ctl .tm{font-variant-numeric:tabular-nums;font-size:13px;color:var(--sub);width:96px;text-align:right;flex:none}
@@ -328,6 +329,7 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
       <div class="row"><button class="primary" id="btnTtsAll">🔊 AIでナレーションを作る（全シーン）</button></div>
       <div class="row"><button id="btnRec">🎙 自分で録音する</button></div>
       <div class="small" id="narrSum"></div>
+      <label class="row small"><input type="checkbox" id="fFit"> シーンの長さをセリフに合わせる（セリフのあとの無言を詰める）</label>
       <label class="row small"><input type="checkbox" id="fHookOn"> 冒頭にフックタイトルを出す（<span id="fHookDurV"></span>秒）</label>
       <div class="hooks" id="fHooks"></div>
       <div class="small" style="margin-top:4px">選んだ案が本編（A）。書き出し時に「冒頭違い」を選ぶと、次の案でB版も作ります。</div>
@@ -562,7 +564,7 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
         / スタイル・テロップ描画 / 効果音 / 候補生成 / ランキング / 編集・プレビュー
         / 書き出し / 画面制御
    ===================================================================== */
-const BUILD = "2026-10-29c";
+const BUILD = "2026-11-05a";
 const FF_BASE   = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
 const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm"; // classWorkerURL指定時はモジュールWorker→ESM版が必須
 const GEM_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -1315,7 +1317,7 @@ const STYLES = {
               end:f => f + " GET！" }
 };
 const PRESETS = {
-  "fellows-box":  { label:"fellows ボックス", font:"mincho", fs:66, lh:1.38, color:"#111", box:"rgba(255,255,255,0.80)", border:"rgba(0,0,0,0.35)", inset:12, padX:58, padY:44 },
+  "fellows-box":  { label:"fellows ボックス", font:"mincho", fs:66, lh:1.38, color:"#111", box:"rgba(255,255,255,0.80)", padX:58, padY:44 },
   "fellows-band": { label:"fellows 帯", font:"gothic", fs:44, lh:1.3, color:"#fff", box:"rgba(46,36,30,0.90)", padX:48, padY:22, minW:0.86 },
   "tiktok":       { label:"TikTok 白", font:"heavy", fs:92, lh:1.25, color:"#fff", strokes:[["#000", 18]], shadow:true },
   "tiktok-yellow":{ label:"TikTok 黄", font:"heavy", fs:92, lh:1.25, color:"#ffe14d", strokes:[["#000", 18]], shadow:true },
@@ -1720,12 +1722,23 @@ function zoomAt(c, rel){
   const a = +c.zoom.at || 0; if (rel < a) return 1;
   return Math.min(1.25, 1 + (rel - a) * 2.5);
 }
-function drawKenBurns(c, img, W, H, r){
+const KB_Z = 0.16;
+/* 写真の動き：i番目のシーンの {dir:1寄る/-1引く, cx, cy} */
+function photoMove(p, i){
+  const c = p.clips[i], ci = fxOf(c, "circle");
+  if (ci) { const P = circlePt(ci); return { dir:1, cx:P[0], cy:P[1] }; }
+  let n = 0; for (let k = 0; k < i; k++) { const s = srcById(p.clips[k].srcId); if (s && isImg(s)) n++; }
+  return { dir:n % 2 ? -1 : 1, cx:0.5, cy:0.5 };
+}
+function kbZoom(m, r){ r = clamp(r, 0, 1); return m && m.dir < 0 ? 1 + KB_Z * (1 - r) : 1 + KB_Z * r; }
+function drawKenBurns(c, img, W, H, r, m){
   if (!img || !(img.naturalWidth || img.width)) { c.fillStyle = "#000"; c.fillRect(0, 0, W, H); return; }
-  const z = 1 + 0.10 * clamp(r, 0, 1);
-  const k = Math.max(W / img.naturalWidth, H / img.naturalHeight) * z;
-  const w = img.naturalWidth * k, hh = img.naturalHeight * k;
-  c.drawImage(img, (W - w) / 2, (H - hh) / 2, w, hh);
+  m = m || { dir:1, cx:0.5, cy:0.5 };
+  const z = kbZoom(m, r);
+  const k0 = Math.max(W / img.naturalWidth, H / img.naturalHeight);
+  const w0 = img.naturalWidth * k0, h0 = img.naturalHeight * k0, x0 = (W - w0) / 2, y0 = (H - h0) / 2;
+  const px = m.cx * W, py = m.cy * H;
+  c.drawImage(img, px - (px - x0) * z, py - (py - y0) * z, w0 * z, h0 * z);
 }
 function keywordsOf(p){
   const m = p.meta || {};
@@ -1813,7 +1826,7 @@ function overlaysFor(p, hookSel){
       if (f.type === "counter" && String(f.text || "").trim()) L.push(A({ key:"fc:" + c.id + ":" + f.text, start:a0 + 0.05, end:a0 + d, draw:(cx, W, H, ap) => drawTelop(cx, { text:f.text, preset:"fx-counter", y:0.135, size:1 }, W, H, ap, "pop") }, "pop"));
       if (f.type === "divider" && String(f.text || "").trim()) L.push(A({ key:"fd:" + c.id + ":" + f.text, start:a0, end:a0 + Math.min(d, 0.95), draw:(cx, W, H, ap) => drawTelop(cx, { text:f.text, preset:"fx-divider", y:0.5, size:1 }, W, H, ap, "zoom") }, "zoom"));
       if (f.type === "stop") { const at = clamp(+f.at || 0, 0, Math.max(0, d - 0.3)); L.push(A({ key:"fs:" + c.id + ":" + (f.text || "") + ":" + at, start:a0 + at, end:a0 + d, draw:(cx, W, H, ap) => drawStop(cx, f.text, W, H, ap) }, "pop")); }
-      if (f.type === "circle") { const at = clamp(+f.at || 0, 0, Math.max(0, d - 0.3)); L.push({ key:"fo:" + c.id + ":" + (f.pos || "中央") + ":" + at, start:a0 + at, end:Math.min(a0 + d, a0 + at + 1.8), anim:"draw", aDur:0.4, draw:(cx, W, H, ap) => drawCircle(cx, f.pos, W, H, ap) }); }
+      if (f.type === "circle") { const at = clamp(+f.at || 0, 0, Math.max(0, d - 0.3)); L.push({ key:"fo:" + c.id + ":" + circlePt(f).map(v => v.toFixed(3)).join(",") + ":" + (f.sz || 1) + ":" + at, start:a0 + at, end:Math.min(a0 + d, a0 + at + 1.8), anim:"draw", aDur:0.4, draw:(cx, W, H, ap) => drawCircle(cx, f, W, H, ap) }); }
       if (f.type === "fast" && spd(c) > 1) L.push({ key:"ff:" + c.id + ":" + spd(c), start:a0, end:a0 + d, draw:(cx, W, H) => drawFastBadge(cx, spd(c), W, H) });
     }
   });
@@ -1843,9 +1856,10 @@ function drawStop(c, text, W, H, ap){
   return { x:0, y:0, w:W, h:H };
 }
 /* 丸囲み・矢印：9か所のどこかを赤丸で囲み、外から矢印 */
-function drawCircle(c, pos, W, H, ap){
+function drawCircle(c, f, W, H, ap){
   ap = ap == null ? 1 : ap;
-  const P9 = POS9[pos] || POS9["中央"], x = P9[0] * W, y = P9[1] * H, r = W * 0.13, lw = W * 0.016;
+  if (typeof f === "string") f = { pos:f };
+  const P9 = circlePt(f), x = P9[0] * W, y = P9[1] * H, r = W * 0.13 * clamp(+(f && f.sz) || 1, 0.5, 1.6), lw = W * 0.016;
   const sweep = Math.PI * 2 * ease(ap / 0.75);
   c.save(); c.lineCap = "round";
   c.beginPath(); c.arc(x, y, r, -Math.PI / 2, -Math.PI / 2 + sweep); c.strokeStyle = "#fff"; c.lineWidth = lw * 1.9; c.stroke();
@@ -2131,6 +2145,8 @@ function fitClips(clips, T, cutMin, cutMax){
 /* 演出：ストップ／丸囲み／カウンター／早送り／区切り（シーンごと・シーン内の秒数で持つ） */
 const FX_JA = { stop:"ストップ＋溜め", circle:"丸囲み・矢印", counter:"カウンター", fast:"早送り", divider:"区切りテロップ" };
 const POS9 = { "左上":[0.27, 0.30], "上":[0.5, 0.30], "右上":[0.73, 0.30], "左":[0.27, 0.50], "中央":[0.5, 0.50], "右":[0.73, 0.50], "左下":[0.27, 0.68], "下":[0.5, 0.68], "右下":[0.73, 0.68] };
+const circlePt = f => (f && f.px != null && f.py != null) ? [clamp(+f.px, 0.05, 0.95), clamp(+f.py, 0.05, 0.95)] : (POS9[(f && f.pos) || "中央"] || POS9["中央"]);
+const nearPos9 = (x, y) => Object.entries(POS9).reduce((b, [k, v]) => { const dd = Math.hypot(v[0] - x, (v[1] - y) * 1.6); return dd < b[1] ? [k, dd] : b; }, ["中央", 9])[0];
 const fxOf = (c, type) => (c.fx || []).find(x => x.type === type) || null;
 function spd(c){ const f = fxOf(c, "fast"); return f && !fxOf(c, "stop") ? clamp(+f.speed || 2, 1.25, 4) : 1; }
 const cdur = c => (c.out - c.in) / spd(c);
@@ -2455,6 +2471,26 @@ function renderClips(){
   state.sources.forEach((s, i) => sel.append(h("option", { value:s.id }, (i + 1) + ". " + s.name + (isImg(s) ? "（画像）" : "（" + f1(s.dur) + "秒）"))));
   if (prev && srcById(prev)) sel.value = prev;
 }
+/* 丸囲み：プレビューをタップした位置に置く */
+let circlePick = null;
+function pickCircle(c, f, i){
+  circlePick = { c, f, i };
+  PV.pause && PV.pause();
+  PV.seek(starts(state.project)[i] + clamp((+f.at || 0) + 0.6, 0, Math.max(0, cdur(c) - 0.05)));
+  const st = document.querySelector(".stage"); if (st) { st.classList.add("picking"); st.scrollIntoView({ behavior:"smooth", block:"center" }); }
+  toast("プレビューの、丸で囲みたい所をタップしてください");
+}
+document.addEventListener("click", e => {
+  if (!circlePick) return;
+  const st = document.querySelector(".stage"); if (!st) return;
+  if (!st.contains(e.target)) { if (!e.target.closest || !e.target.closest(".fx")) { circlePick = null; st.classList.remove("picking"); } return; }
+  e.preventDefault(); e.stopPropagation();
+  const r = st.getBoundingClientRect(), x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+  const { f, i, c } = circlePick; circlePick = null; st.classList.remove("picking");
+  f.px = +clamp(x, 0.05, 0.95).toFixed(3); f.py = +clamp(y, 0.05, 0.95).toFixed(3); f.pos = nearPos9(f.px, f.py);
+  projChanged(true); PV.seek(starts(state.project)[i] + clamp((+f.at || 0) + 0.6, 0, Math.max(0, cdur(c) - 0.05)));
+  toast("ここに置きました");
+}, true);
 /* 演出の編集（シーンごと） */
 function fxEditor(c, i){
   const box = h("div", {});
@@ -2465,7 +2501,14 @@ function fxEditor(c, i){
     const d = cdur(c);
     if (f.type === "stop" || f.type === "circle") rows.push(h("div", { class:"row nw" }, h("span", { class:"lbl" }, "位置"), numCtl(+f.at || 0, 0.1, v => { f.at = +clamp(v, 0, Math.max(0, d - 0.3)).toFixed(2); ch(); }, f1), h("span", { class:"small" }, "秒（シーン内）")));
     if (f.type === "stop" || f.type === "counter" || f.type === "divider") rows.push(h("input", { type:"text", value:f.text || "", placeholder:f.type === "stop" ? "結果は…" : f.type === "counter" ? "4投目" : "でも…", onchange:e => { f.text = e.target.value; ch(); } }));
-    if (f.type === "circle") { const sel = h("select", { onchange:e => { f.pos = e.target.value; ch(); } }); Object.keys(POS9).forEach(k2 => sel.append(h("option", { value:k2 }, k2))); sel.value = f.pos || "中央"; rows.push(h("div", { class:"row nw" }, h("span", { class:"lbl" }, "場所"), sel)); }
+    if (f.type === "circle") {
+      const sel = h("select", { onchange:e => { f.pos = e.target.value; delete f.px; delete f.py; ch(); } }); Object.keys(POS9).forEach(k2 => sel.append(h("option", { value:k2 }, k2))); sel.value = f.pos || "中央";
+      if (f.px != null) { sel.prepend(h("option", { value:"" }, "タップした位置")); sel.value = ""; }
+      rows.push(h("div", { class:"row nw" }, h("span", { class:"lbl" }, "場所"), sel));
+      rows.push(h("div", { class:"row" }, h("button", { class:"mini", onclick:() => pickCircle(c, f, i) }, "📍 プレビューをタップして置く")));
+      const sz = h("select", { onchange:e => { f.sz = +e.target.value; ch(); } }); [[0.75, "小"], [1, "中"], [1.3, "大"]].forEach(([v, t]) => sz.append(h("option", { value:v }, t))); sz.value = String(f.sz || 1);
+      rows.push(h("div", { class:"row nw" }, h("span", { class:"lbl" }, "大きさ"), sz));
+    }
     if (f.type === "fast") { const sel = h("select", { onchange:e => { const before = snapScenes(state.project); const old = spd(c); f.speed = +e.target.value; const nw = spd(c); c.out = +(c.in + (c.out - c.in) / old * nw).toFixed(4); projChanged(false); retime(state.project, before); ch(); } }); [1.5, 2, 3].forEach(v => sel.append(h("option", { value:String(v) }, "×" + v))); sel.value = String(+f.speed || 2); rows.push(h("div", { class:"row nw" }, h("span", { class:"lbl" }, "速さ"), sel)); }
     box.append(h("div", { class:"fx" }, ...rows));
   });
@@ -2767,7 +2810,7 @@ const PV = {
       drawTelop(c, { text:"画像待ち\n" + (clip.imgPrompt || "").slice(0, 40), preset:"caption", y:0.5, size:0.8 }, W, H);
       this.v.style.transform = "";
     } else if (isImg(s)) {
-      drawKenBurns(c, gradedImage(s, clipGrade(this.p, clip)), W, H, rel / Math.max(0.1, d));
+      drawKenBurns(c, gradedImage(s, clipGrade(this.p, clip)), W, H, rel / Math.max(0.1, d), photoMove(this.p, i));
       this.v.style.transform = ""; this.v.style.filter = "";
     } else {
       let lum = clipLum(clip);
@@ -2799,7 +2842,7 @@ async function canvasPNG(cv){
   const b = await new Promise(res => cv.toBlob(res, "image/png"));
   return new Uint8Array(await b.arrayBuffer());
 }
-const ZOOMPAN = (W, H, zexpr) => "zoompan=z='" + zexpr + "':x='iw/2-(iw/zoom/2)':y='ih/2-(ih/zoom/2)':d=1:s=" + W + "x" + H + ":fps=" + FPS;
+const ZOOMPAN = (W, H, zexpr, cx, cy) => "zoompan=z='" + zexpr + "':x='(iw-iw/zoom)*" + (cx == null ? 0.5 : +cx).toFixed(4) + "':y='(ih-ih/zoom)*" + (cy == null ? 0.5 : +cy).toFixed(4) + "':d=1:s=" + W + "x" + H + ":fps=" + FPS;
 /* 1本または冒頭違いの複数本を書き出す。opt.hookSels=[A,B…]（-1=フックなし） → Blob配列 */
 async function renderProject(p, qKey, prog, opt){
   opt = opt || {};
@@ -2891,7 +2934,7 @@ async function renderProject(p, qKey, prog, opt){
     let f = "[0:v:0]scale=" + W + ":" + H + ":force_original_aspect_ratio=increase,crop=" + W + ":" + H + ",setsar=1";
     const gp = clipGrade(p, c);
     if (gp) f += "," + gradeFilter(gp, img);
-    if (img) f += "," + ZOOMPAN(W, H, "1+0.10*on/" + nF);
+    if (img) { const m = photoMove(p, i); f += "," + ZOOMPAN(W, H, m.dir < 0 ? (1 + KB_Z) + "-" + KB_Z + "*on/" + nF : "1+" + KB_Z + "*on/" + nF, m.cx, m.cy); }
     else {
       if (sp > 1) f += ",setpts=(PTS-STARTPTS)/" + sp;
       f += ",fps=" + FPS;
@@ -3596,7 +3639,8 @@ YouTubeタイトル：〜
 function condText(){
   const mk = state.make;
   return ["テーマ：" + (mk.theme || "（素材から判断）"), "目的：" + (PURPOSES[mk.purpose] || "保存狙い"), "宣伝商品（正式名称）：" + (productName() || "なし"),
-    "投稿予定日：" + (mk.date || "未定"), "尺：" + (mk.dur || 30) + "秒（シーンの合計をこの秒数に）", "スタイル：" + ((STYLES[mk.style] || STYLES.fellows).name)].join("\n");
+    "投稿予定日：" + (mk.date || "未定"), "尺：" + (mk.dur || 30) + "秒まで（セリフのテンポ優先。短くなってよい）",
+    "素材：動画" + state.sources.filter(s => !isImg(s)).length + "本・写真" + state.sources.filter(s => isImg(s)).length + "枚", "スタイル：" + ((STYLES[mk.style] || STYLES.fellows).name)].join("\n");
 }
 function claudeText(nImgs){
   const promo = state.make.purpose === "promo" || !!productName();
@@ -3639,7 +3683,8 @@ ${nImgs ? "・コンタクトシート（動画の素材ごとに1枚）：数�
    転：展開を変える。失敗→工夫、やりがちな間違い→正解（素材メモの「転・笑いに使える瞬間」にある失敗・アタリ・ボヤキを使う）
    結：答えと学び→二択の問いかけ→余韻なしで急に終わる
 3. 1本に必ず入れる：冒頭1秒の変化か結論／中盤で1回展開を変える／数字か具体的なコツを3つ以上。結果先出しと等身大は「問いかけで引っ張って答えは後半」と結果直前の溜めも入れる（ノウハウと締め・下処理は答えを後半に隠さない）
-   締めの「こ、れ、が。」やラストの「道具はプロフィールから」はアプリ側で付けるので、台本には書かない
+   コツ＝見た人が次の釣行でそのまま使える数字か手順（ジグの重さg・ライン号数・巻く速さ・タナ・時間帯・潮・締め方・冷やし方など）。商品の特徴（色・形・付属のパーツ）はコツに数えない。保存狙いの回はコツを3つ以上、それぞれ数字か具体的な動作つきで
+   ${promo ? "宣伝の回は、商品を「答えの道具」として1回だけはっきり見せる（商品の特徴を並べる構成にしない）。コツの主役は使い方・釣り方\n   " : ""}締めの「こ、れ、が。」やラストの「道具はプロフィールから」はアプリ側で付けるので、台本には書かない
 4. ${promo ? "今回は宣伝の回なので、笑いどころは入れない" : "笑いどころは軽く1か所まで（関西弁のツッコミ・自虐。例：「また乗らんのかい」）"}
 5. 演出は次の4つから、素材に合うものを2〜3個だけ選ぶ（毎回全部は使わない）。視聴者は35〜64歳の経験者なので、煽りより「情報の札」と「ここ見て」が効く。シーン行の「演出：」に書く。使わないシーンは「演出：なし」
    ・丸囲み 〇秒 位置：〇秒から赤丸と矢印で指す。位置は 左上／上／右上／左／中央／右／左下／下／右下（コンタクトシートで確認）。優先して使う
@@ -3648,7 +3693,8 @@ ${nImgs ? "・コンタクトシート（動画の素材ごとに1枚）：数�
    ・ストップ 〇秒「溜めの言葉」：本当の山場の直前で1本に1回まで。そのシーンの〇秒で映像を止め、画面を少し暗くして大きな文字（例：ストップ 1.5秒「結果は…」）。ノウハウと締め・下処理では使わない
    ・「でも…」を画面いっぱいに出す区切りは使わない
 6. 画像は0〜2枚まで。図解か状況イラストがあると伝わるシーンだけ、素材の代わりに「画像：描く内容」を書く（文字なしの絵。文字はアプリが載せる）
-7. 各シーンの秒数は素材メモとコンタクトシートの時刻に合わせる
+7. 各シーンの秒数は素材メモとコンタクトシートの時刻に合わせる。シーンの長さはナレを読み切る長さ（1文字約0.15秒＋0.3秒）が目安で、セリフのあとに無言の時間を作らない（アプリもナレに合わせて詰める）。合計が条件の尺より短くなってよい
+8. 写真の素材は、アプリがゆっくり寄るか引くだけで、ほぼ止まって見える。写真のシーンは1枚4秒以内にし、写真を2枚続けない。今回の条件の「素材」で写真が動画より多いときは、尺を15〜20秒にする（「尺：」に実際の秒数を書く）
 
 # ルール（厳守）
 ${rulesText()}
@@ -4056,19 +4102,33 @@ function splitNarr(x, sr, texts){
   return out;
 }
 /* ナレーションが長いシーンは、ナレに合わせて伸ばす（テロップ・効果音はシーンに付いたまま動く） */
+const NARR_GAP = 0.3;   // セリフのあとに残す間（秒）
 function fitScenesToNarr(p){
-  const before = snapScenes(p); let changed = 0;
+  const before = snapScenes(p); let changed = 0, shrunk = 0;
+  const tight = !(p.finish && p.finish.fitNarr === false);
   p.clips.forEach(c => {
     const nr = NARR.get(c.id); if (!nr) return;
-    const want = q(nr.dur + 0.2), d = cdur(c); if (want <= d + 0.02) return;
+    const want = q(nr.dur + NARR_GAP), d = cdur(c);
+    if (want <= d + 0.02) {
+      // セリフのあとの無言を詰める（止め・丸囲みが見える長さは残す）
+      if (!tight || d - want < 0.15) return;
+      const stop = fxOf(c, "stop"), ci = fxOf(c, "circle");
+      let nd = Math.max(want, 1.0);
+      if (stop) nd = Math.max(nd, (+stop.at || 0) + 1.2);
+      if (nd >= d - 0.1) return;
+      if (ci && (+ci.at || 0) > nd - 1.0) ci.at = +Math.max(0, nd - 1.2).toFixed(2);
+      if (c.zoom && c.zoom.on && +c.zoom.at > nd - 0.3) c.zoom.at = +Math.max(0, nd * 0.35).toFixed(2);
+      c.out = +(c.in + nd * spd(c)).toFixed(4); shrunk++;
+      return;
+    }
     const s = srcById(c.srcId), sp = spd(c);
     if (!s || isImg(s) || fxOf(c, "stop")) { c.out = +(c.in + want * sp).toFixed(4); changed++; return; }
     const need = want * sp; let out = c.in + need;
     if (out > s.dur - 0.02) { c.in = Math.max(0, c.in - (out - (s.dur - 0.02))); out = Math.min(s.dur - 0.02, c.in + need); }
     c.out = +out.toFixed(4); changed++;
   });
-  if (changed) { projChanged(false); retime(p, before); log("ナレに合わせて伸ばしたシーン: " + changed); }
-  return changed;
+  if (changed || shrunk) { projChanged(false); retime(p, before); log("ナレに合わせて伸ばしたシーン: " + changed + "／詰めたシーン: " + shrunk); }
+  return changed + shrunk;
 }
 async function ttsScenes(p, only){
   const list = p.clips.map((c, i) => ({ c, i, t:ttsText(c.narr && c.narr.text) })).filter(x => x.t && (only == null || x.i === only));
@@ -4108,7 +4168,7 @@ function renderFinish(){
     const t = h("input", { type:"text", value:F.hooks[i] || "", placeholder:"フック案" + (i + 1), oninput:e => { F.hooks[i] = e.target.value; autosave(); PV.redraw(); } });
     box.append(h("label", {}, r, "ABC"[i], t));
   }
-  $("#fSubs").checked = F.subs !== false; $("#fQuestion").value = F.question || ""; $("#fEndTel").checked = F.endTel !== false; $("#fKoreGa").checked = !!F.koreGa; $("#fGrade").checked = F.grade !== false;
+  $("#fSubs").checked = F.subs !== false; $("#fQuestion").value = F.question || ""; $("#fEndTel").checked = F.endTel !== false; $("#fKoreGa").checked = !!F.koreGa; $("#fFit").checked = F.fitNarr !== false; $("#fGrade").checked = F.grade !== false;
   renderNarrSum();
 }
 $("#fHookOn").onchange = e => { state.project.finish.hookOn = e.target.checked; autosave(); PV.seek(0.2); };
@@ -4117,6 +4177,7 @@ $("#fQuestion").oninput = e => { state.project.finish.question = e.target.value;
 $("#fGrade").onchange = e => { state.project.finish.grade = e.target.checked; autosave(); renderClips(); PV.redraw(); };
 $("#fEndTel").onchange = e => { state.project.finish.endTel = e.target.checked; autosave(); PV.redraw(); };
 $("#fKoreGa").onchange = e => { state.project.finish.koreGa = e.target.checked; autosave(); PV.redraw(); };
+$("#fFit").onchange = e => { const p = state.project; p.finish.fitNarr = e.target.checked; if (e.target.checked) { const n = fitScenesToNarr(p); toast(n ? "セリフに合わせて" + n + "シーンの長さを直しました" : "直すところはありませんでした"); } autosave(); PV.redraw(); };
 function renderNarrSum(){
   const p = state.project; if (!p || !$("#narrSum")) return;
   const n = p.clips.filter(c => NARR.has(c.id)).length, ai = p.clips.filter(c => NARR.has(c.id) && c.narr.ai).length;
