@@ -492,7 +492,7 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
     <div class="card">
       <h2>Claude（台本）</h2>
       <label class="fld">モデル</label>
-      <select id="sClModel"><option value="claude-opus-5-5">Opus 5.5（標準・1本30〜40円）</option><option value="claude-sonnet-5-5">Sonnet 5.5（1本15〜20円）</option></select>
+      <select id="sClModel"><option value="claude-opus-5-5">Opus 5.5（標準・1本約25円）</option><option value="claude-sonnet-5-5">Sonnet 5.5（1本約12円）</option></select>
       <div class="row"><button id="btnClUsage">今月の利用を確認</button></div>
       <div class="t" id="sClUsage"></div>
       <div class="small">台本の指示は、台帳シートの「台本プロンプト」タブのA1です。ここを直すと、次の台本から2人とも反映されます。</div>
@@ -576,7 +576,7 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
         / スタイル・テロップ描画 / 効果音 / 候補生成 / ランキング / 編集・プレビュー
         / 書き出し / 画面制御
    ===================================================================== */
-const BUILD = "2026-11-15a";
+const BUILD = "2026-11-15b";
 const FF_BASE   = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
 const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm"; // classWorkerURL指定時はモジュールWorker→ESM版が必須
 const GEM_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -3921,7 +3921,7 @@ function renderClaudeCard(){
   const card = $("#claudeCard"); card.hidden = !state.sources.length || !(state.materials.length || state.sources.some(s => s.ai || isImg(s)));
   const pk = state.clPkg; $("#clPkg").hidden = !pk;
   const lbl = CL_MODELS[settings.claudeModel || "claude-opus-5-5"] || "Opus 5.5";
-  $("#btnClAuto").textContent = "🤖 Claudeに台本を書かせる（" + lbl + "・1本" + (/sonnet/.test(settings.claudeModel || "") ? "15〜20" : "30〜40") + "円）";
+  $("#btnClAuto").textContent = "🤖 Claudeに台本を書かせる（" + lbl + "・1本" + (/sonnet/.test(settings.claudeModel || "") ? "約12" : "約25") + "円）";
   const box = $("#clThumbs"); box.innerHTML = "";
   if (!pk) return;
   $("#clPkgInfo").textContent = "画像 " + pk.files.length + "枚・依頼文 " + pk.text.length + "文字";
@@ -3945,7 +3945,7 @@ $("#btnClAuto").onclick = async () => {
     Busy.set(0.3, "画像を準備しています（" + pk.files.length + "枚）");
     const images = [];
     for (const f of pk.files) images.push({ type:f.type || "image/jpeg", data:await blobToB64(f) });
-    Busy.set(0.45, "Claude（" + (CL_MODELS[model] || model) + "）が台本を書いています。1〜3分かかります");
+    Busy.set(0.45, "Claude（" + (CL_MODELS[model] || model) + "）が台本を書いています。1分前後かかります");
     try { return await gas("claude", { model, text:pk.text, images, theme:(state.make && state.make.theme) || "" }, { timeout:330000 }); }
     catch (e) { if (/不明な処理/.test(e.message)) throw new Error("GASが古いままです。新しいGASを貼ってデプロイしてください"); throw e; }
   });
