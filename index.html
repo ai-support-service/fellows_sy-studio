@@ -223,18 +223,22 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
   </div>
   <div class="card muse" id="claudeCard" hidden>
     <h2>② Claudeに台本を頼む</h2>
-    <div class="t">素材メモと画像をClaudeに渡すと、起承転結のある台本とキャプションが返ってきます。</div>
-    <button class="primary" id="btnClPrep">依頼文と画像を作る</button>
+    <div class="t">ボタン1つで、Claudeが素材メモと画像を見て台本とキャプションを書き、そのまま編集まで進みます。</div>
+    <button class="primary" id="btnClAuto">🤖 Claudeに台本を書かせる</button>
+    <div class="small" id="clAutoInfo" style="margin:6px 2px 0"></div>
+    <details class="sec" id="secClManual" style="margin-top:10px"><summary>手動で頼む（Claudeアプリにコピーして貼る）</summary>
+    <button id="btnClPrep">依頼文と画像を作る</button>
     <div id="clPkg" hidden>
       <div class="small" id="clPkgInfo" style="margin-top:8px"></div>
       <div class="thumbs" id="clThumbs"></div>
       <div class="row"><button class="primary" id="btnClShare">画像と依頼文を共有（Claudeへ）</button></div>
       <div class="row"><button id="btnClCopy">依頼文だけコピー</button></div>
-      <div class="small" style="margin-top:6px">共有シートにClaudeが出ないときは「依頼文だけコピー」→ 画像の下の「保存」で写真に保存 → Claudeアプリのfellows_s16プロジェクトで、画像を添付して依頼文を貼ってください。</div>
+      <div class="small" style="margin-top:6px">共有シートにClaudeが出ないときは「依頼文だけコピー」→ 画像の下の「保存」で写真に保存 → Claudeの新しいチャット（プロジェクトは不要）で、画像を添付して依頼文を貼ってください。</div>
     </div>
     <h3>③ Claudeの台本を貼る</h3>
     <textarea id="clReply" rows="8" placeholder="Claudeから返ってきた台本をそのまま貼り付け"></textarea>
     <div class="row"><button class="primary" id="btnClApply">この台本で作る</button></div>
+    </details>
     <div id="clErr"></div>
   </div>
   <div class="card" id="nextCard" hidden>
@@ -486,6 +490,14 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
       </details>
     </div>
     <div class="card">
+      <h2>Claude（台本）</h2>
+      <label class="fld">モデル</label>
+      <select id="sClModel"><option value="claude-opus-5-5">Opus 5.5（標準・1本20〜30円）</option><option value="claude-sonnet-5-5">Sonnet 5.5（1本10〜15円）</option></select>
+      <div class="row"><button id="btnClUsage">今月の利用を確認</button></div>
+      <div class="t" id="sClUsage"></div>
+      <div class="small">台本の指示は、台帳シートの「台本プロンプト」タブのA1です。ここを直すと、次の台本から2人とも反映されます。</div>
+    </div>
+    <div class="card">
       <h2>AI読み上げ（ナレーション）</h2>
       <label class="fld">声</label><select id="sVoice"></select>
       <div class="row"><button id="btnVoiceTest">この声で試聴（1回分使います）</button></div>
@@ -564,7 +576,7 @@ nav#tabs button.on .n{color:var(--mg);opacity:1}
         / スタイル・テロップ描画 / 効果音 / 候補生成 / ランキング / 編集・プレビュー
         / 書き出し / 画面制御
    ===================================================================== */
-const BUILD = "2026-11-05a";
+const BUILD = "2026-11-14a";
 const FF_BASE   = "https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd";
 const CORE_BASE = "https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/esm"; // classWorkerURL指定時はモジュールWorker→ESM版が必須
 const GEM_URL = "https://generativelanguage.googleapis.com/v1beta";
@@ -653,7 +665,7 @@ const DEF_SETTINGS = {
   gasUrl:"", gasToken:"", policy:"", policyDate:"", extraProducts:"",
   make:{ theme:"", purpose:"save", product:"", productFree:"", date:"", dur:30, style:"fellows" },
   look:{ font:"mincho", scheme:"fellows", anim:"slide", c1:"#ffffff", c2:"#000000" },
-  voice:"Leda", yomi:"バチキソ=ばちきそ\n40g=40グラム\n30g=30グラム", endTel:true
+  claudeModel:"claude-opus-5-5", voice:"Leda", yomi:"バチキソ=ばちきそ\n40g=40グラム\n30g=30グラム", endTel:true
 };
 let settings = (() => { try { return Object.assign(deep(DEF_SETTINGS), JSON.parse(localStorage.getItem("frs_settings") || "{}")); } catch (_) { return deep(DEF_SETTINGS); } })();
 settings.logo = Object.assign(deep(DEF_SETTINGS.logo), settings.logo || {});
@@ -3091,6 +3103,7 @@ function openSettings(){
   $("#sheetSettings").hidden = false;
   const vs = $("#sVoice"); vs.innerHTML = ""; VOICES.forEach(([k, v]) => vs.append(h("option", { value:k }, v))); vs.value = settings.voice || "Leda";
   $("#sYomi").value = settings.yomi || "";
+  $("#sClModel").value = settings.claudeModel || "claude-opus-5-5";
   $("#sKey").value = settings.apiKey;
   $("#sGasUrl").value = settings.gasUrl || ""; $("#sGasTok").value = settings.gasToken || "";
   $("#sProducts").value = settings.extraProducts || "";
@@ -3108,6 +3121,12 @@ function modelOptions(list){
 $("#btnSettings").onclick = openSettings;
 $("#sVoice").onchange = e => { settings.voice = e.target.value; saveSettings(); renderNext(); };
 $("#sYomi").onchange = e => { settings.yomi = e.target.value; saveSettings(); };
+$("#sClModel").onchange = e => { settings.claudeModel = e.target.value; saveSettings(); renderClaudeCard(); };
+$("#btnClUsage").onclick = async () => {
+  const box = $("#sClUsage"); box.textContent = "確認中…";
+  try { const j = await gas("claudeUsage", {}); box.textContent = (j.hasKey ? "" : "※GASにANTHROPIC_API_KEYが未設定です。") + j.month + "：" + j.count + "本・約" + j.yen + "円（上限" + j.limit + "本）"; }
+  catch (e) { box.textContent = /不明な処理/.test(e.message) ? "GASが古いままです。新しいGASを貼ってデプロイしてください" : e.message; }
+};
 $("#btnVoiceTest").onclick = async () => {
   $("#sVoiceMsg").textContent = "読み上げ中…";
   let ac = null; try { const AC = window.AudioContext || window.webkitAudioContext; ac = new AC(); ac.resume(); } catch (_) {}   // iPhoneはタップの瞬間に音を有効にしておく
@@ -3901,6 +3920,8 @@ async function buildClaudePackage(){
 function renderClaudeCard(){
   const card = $("#claudeCard"); card.hidden = !state.sources.length || !(state.materials.length || state.sources.some(s => s.ai || isImg(s)));
   const pk = state.clPkg; $("#clPkg").hidden = !pk;
+  const lbl = CL_MODELS[settings.claudeModel || "claude-opus-5-5"] || "Opus 5.5";
+  $("#btnClAuto").textContent = "🤖 Claudeに台本を書かせる（" + lbl + "・1本" + (/sonnet/.test(settings.claudeModel || "") ? "10〜15" : "20〜30") + "円）";
   const box = $("#clThumbs"); box.innerHTML = "";
   if (!pk) return;
   $("#clPkgInfo").textContent = "画像 " + pk.files.length + "枚・依頼文 " + pk.text.length + "文字";
@@ -3913,6 +3934,30 @@ async function saveOneImage(f, url){
   catch (e) { if (e && e.name === "AbortError") return; log("画像の共有エラー: " + e.message); }
   const a = h("a", { href:url, download:f.name }); document.body.append(a); a.click(); a.remove();
 }
+/* ② 自動：アプリ → GAS → Claude API → ③に入れて、そのまま作る */
+const CL_MODELS = { "claude-opus-5-5":"Opus 5.5", "claude-sonnet-5-5":"Sonnet 5.5" };
+$("#btnClAuto").onclick = async () => {
+  if (!gasReady()) { toast("設定でGASのURLとトークンを入れてください"); return; }
+  const model = settings.claudeModel || "claude-opus-5-5";
+  const j = await runJob("Claudeに台本を頼む", async () => {
+    if (!state.clPkg) { const pk = await buildClaudePackage(); state.clPkg = pk; renderClaudeCard(); }
+    const pk = state.clPkg;
+    Busy.set(0.3, "画像を準備しています（" + pk.files.length + "枚）");
+    const images = [];
+    for (const f of pk.files) images.push({ type:f.type || "image/jpeg", data:await blobToB64(f) });
+    Busy.set(0.45, "Claude（" + (CL_MODELS[model] || model) + "）が台本を書いています。30〜90秒かかります");
+    try { return await gas("claude", { model, text:pk.text, images, theme:(state.make && state.make.theme) || "" }, { timeout:330000 }); }
+    catch (e) { if (/不明な処理/.test(e.message)) throw new Error("GASが古いままです。新しいGASを貼ってデプロイしてください"); throw e; }
+  });
+  if (!j || !j.text) return;
+  $("#clReply").value = j.text;
+  log("Claude API: " + j.model + (j.fallback ? "（予備に切替）" : "") + " / 入力" + j.usage.input + "・出力" + j.usage.output + "トークン / 約" + j.usage.yen + "円 / 今月" + j.month.count + "本・約" + j.month.yen + "円");
+  $("#clAutoInfo").textContent = "前回：" + (CL_MODELS[j.model] || j.model) + "・約" + j.usage.yen + "円（今月" + j.month.count + "本・約" + j.month.yen + "円／上限" + j.month.limit + "本）";
+  if (j.cut) toast("台本が長すぎて途中で切れました。足りない所は編集画面で直すか、もう一度押してください", 5000);
+  else toast("台本ができました（約" + j.usage.yen + "円" + (j.fallback ? "・" + (CL_MODELS[j.model] || j.model) + "で作成" : "") + "）", 3500);
+  await $("#btnClApply").onclick();
+  if (!state.project) { $("#secClManual").open = true; $("#clReply").scrollIntoView({ behavior:"smooth", block:"center" }); }
+};
 $("#btnClPrep").onclick = async () => {
   if (state.clPkg) state.clPkg.urls.forEach(u => URL.revokeObjectURL(u));
   state.clPkg = null;
